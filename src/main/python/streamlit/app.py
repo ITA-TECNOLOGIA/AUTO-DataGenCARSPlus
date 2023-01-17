@@ -201,7 +201,21 @@ if general_option == 'Generate a synthetic dataset':
     if context:
         with tab_context:
             st.header('Contexts')
+
 elif general_option == 'Analysis an existing dataset':
-    st.sidebar.write('Analysis an existing dataset')
+    is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data analysis', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
+    if is_analysis == 'Data analysis':  
+        st.write('NOTA: \n - Cargar dataset (user.csv, item.csv, context.csv, rating.csv) \n - Mostrar estadísticas (# users, # items, # contexts, # ratings) \n - Histograma de ratings \n')
+    elif is_analysis == 'Replicate dataset':  
+        st.write('TODO')
+    elif is_analysis == 'Extend dataset':  
+        st.write('TODO')
+    elif is_analysis == 'Recalculate ratings':  
+        st.write('TODO')
+    elif is_analysis == 'Replace NULL values':  
+        st.write('TODO')
+    elif is_analysis == 'Generate user profile':  
+        st.write('TODO')     
+                       
 elif general_option == 'Evaluation of a dataset':
     st.sidebar.write('Evaluation of a dataset')
