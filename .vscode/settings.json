@@ -1,0 +1,28 @@
+{
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.defaultInterpreterPath": "/data/conda_envs/datagencars_env/bin/python",
+    // "python.formatting.autopep8Path": "/data/conda_envs/pct_env/bin/autopep8",
+    
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}/src/main/python",
+    },
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}/src/main/python",
+    },
+    "python.analysis.extraPaths": [
+        "./src/main/python",
+        "./src/main/test/python"
+    ],
+    // https://stackoverflow.com/questions/57166281/how-to-proper-setup-python-source-root-direcory-in-visual-studio-code
+    // https://code.visualstudio.com/docs/python/environments#_environment-variable-definitions-file
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./src/main/test",
+        "-p",
+        "test*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true,
+    "python.formatting.provider": "black"
+}
