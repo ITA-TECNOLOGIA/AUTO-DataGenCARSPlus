@@ -209,6 +209,50 @@ elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data analysis', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
     if is_analysis == 'Data analysis':  
         st.write('NOTA: \n - Cargar dataset (user.csv, item.csv, context.csv, rating.csv) \n - Mostrar estadísticas (# users, # items, # contexts, # ratings) \n - Histograma de ratings \n')
+        option = st.selectbox('Choose between uploading multiple datasets or a single dataset:', ('Multiple datasets', 'Single dataset'))
+        if option == 'Multiple datasets':
+            def load_data(file_types):
+                data = {}
+                for file_type in file_types:
+                    with st.expander(f"Upload your {file_type}.csv file"):
+                        uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
+                        separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ',')", ",")
+                        if uploaded_file is not None:
+                            if not separator:
+                                st.error('Please provide a separator.')
+                            else:
+                                try:
+                                    data[file_type] = pd.read_csv(uploaded_file, sep=separator)
+                                    st.dataframe(data[file_type])
+                                except Exception as e:
+                                    st.error(f"An error occurred while reading the {file_type} file: {str(e)}")
+                                    data[file_type] = None
+                return data
+            data = load_data(["user", "item", "context", "rating"]) #Dictionary with the dataframes
+        elif option == 'Single dataset':
+            data_file = st.file_uploader("Select Data_STS.csv file", type="csv")
+            separator = st.text_input("Enter the separator for your Data_STS.csv file (default is ',')", ",")
+            if data_file is not None:
+                if not separator:
+                    st.error('Please provide a separator.')
+                else:
+                    try:
+                        data = pd.read_csv(data_file, sep=separator)
+                        st.dataframe(data.head())
+                        def create_dataframe(label, data, new_df_name):
+                            columns = st.multiselect(label=label, options=data.columns) #Column name selection
+                            if not columns:
+                                st.error('Please select at least one column')
+                            else:
+                                # Create a new dataframe with the selected columns
+                                new_df = data[columns]
+                                st.dataframe(new_df.head())
+                                return new_df
+                        user_df = create_dataframe('Select the columns for the user dataframe:', data, 'user_df')
+                        item_df = create_dataframe('Select the columns for the item dataframe:', data, 'item_df')
+                        context_df = create_dataframe('Select the columns for the context dataframe:', data, 'context_df')
+                    except Exception as e:
+                        st.error(f"An error occurred while reading the file: {str(e)}")
     elif is_analysis == 'Replicate dataset':  
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
