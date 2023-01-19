@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import datetime
 # from PIL import Image
 import config
 
@@ -209,9 +210,9 @@ elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
     if is_analysis == 'Data visualization':  
         tab1, tab2, tab3, tab4, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings'])
-        def count_missing_values(dataframes_dict, replace_values={}):
+        def replace_count_missing_values(dataframes_dict, replace_values={}):
             """
-            Replace values in dataframes and count missing values.
+            Replace and count missing values in the dataframes dictionary.
             """
             for name, df in dataframes_dict.items():
                 for k,v in replace_values.items():
@@ -219,7 +220,26 @@ elif general_option == 'Analysis an existing dataset':
                 missing_values = df.isnull().sum()
                 st.dataframe(df)
                 st.write(f"Missing values in {name} dataframe:")
-                st.table(missing_values)    
+                st.table(missing_values)
+        def list_attributes_and_ranges(dataframes_dict):
+            """
+            List attributes and ranges for the dataframes dictionary.
+            """
+            for dataframe_name, dataframe in dataframes_dict.items():
+                st.write(f"Attributes and value ranges for {dataframe_name} dataframe:")
+                for column in dataframe.columns:
+                    if dataframe[column].dtype in ['int64', 'float64']:
+                        st.write(f"{column}: {dataframe[column].min()} - {dataframe[column].max()}")
+                    elif dataframe[column].dtype == 'object':
+                        try:
+                            dataframe[column] = pd.to_datetime(dataframe[column], format='%d/%m/%Y')
+                            st.write(f"{column}: {dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}")
+                        except ValueError:
+                            unique_values = dataframe[column].dropna().unique()
+                            unique_values_str = ', '.join([str(value) for value in unique_values])
+                            st.write(f"{column}: {unique_values_str}")
+                    else:
+                        st.write(f"{column} has an unsupported data type")
         with tab1:
             option = st.selectbox('Choose between uploading multiple datasets or a single dataset:', ('Multiple datasets', 'Single dataset'))
             if option == 'Multiple datasets':
@@ -267,7 +287,8 @@ elif general_option == 'Analysis an existing dataset':
                         except Exception as e:
                             st.error(f"An error occurred while reading the file: {str(e)}")
         with tab2:
-            count_missing_values(data,replace_values={"NULL":np.nan,-1:np.nan})
+            replace_count_missing_values(data,replace_values={"NULL":np.nan,-1:np.nan})
+            list_attributes_and_ranges(data)
     elif is_analysis == 'Replicate dataset':  
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
