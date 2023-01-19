@@ -210,36 +210,34 @@ elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
     if is_analysis == 'Data visualization':  
         tab1, tab2, tab3, tab4, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings'])
-        def replace_count_missing_values(dataframes_dict, replace_values={}):
+        def replace_count_missing_values(dataframe, replace_values={}):
             """
-            Replace and count missing values in the dataframes dictionary.
+            Count missing values in the dataframe.
             """
-            for name, df in dataframes_dict.items():
-                for k,v in replace_values.items():
-                    df.replace(k, np.nan, inplace=True)
-                missing_values = df.isnull().sum()
-                st.dataframe(df)
-                st.write(f"Missing values in {name} dataframe:")
-                st.table(missing_values)
-        def list_attributes_and_ranges(dataframes_dict):
+            for k,v in replace_values.items():
+                dataframe.replace(k, np.nan, inplace=True)
+            missing_values = dataframe.isnull().sum()
+            st.dataframe(dataframe)
+            st.write("Missing values:")
+            st.table(missing_values)
+        def list_attributes_and_ranges(dataframe):
             """
-            List attributes and ranges for the dataframes dictionary.
+            List attributes and ranges of the dataframe.
             """
-            for dataframe_name, dataframe in dataframes_dict.items():
-                st.write(f"Attributes and value ranges for {dataframe_name} dataframe:")
-                for column in dataframe.columns:
-                    if dataframe[column].dtype in ['int64', 'float64']:
-                        st.write(f"{column}: {dataframe[column].min()} - {dataframe[column].max()}")
-                    elif dataframe[column].dtype == 'object':
-                        try:
-                            dataframe[column] = pd.to_datetime(dataframe[column], format='%d/%m/%Y')
-                            st.write(f"{column}: {dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}")
-                        except ValueError:
-                            unique_values = dataframe[column].dropna().unique()
-                            unique_values_str = ', '.join([str(value) for value in unique_values])
-                            st.write(f"{column}: {unique_values_str}")
-                    else:
-                        st.write(f"{column} has an unsupported data type")
+            st.write(f"Attributes and value ranges:")
+            for column in dataframe.columns:
+                if dataframe[column].dtype in ['int64', 'float64']:
+                    st.write(f"{column}: {dataframe[column].min()} - {dataframe[column].max()}")
+                elif dataframe[column].dtype == 'object':
+                    try:
+                        dataframe[column] = pd.to_datetime(dataframe[column])
+                        st.write(f"{column}: {dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}")
+                    except ValueError:
+                        unique_values = dataframe[column].dropna().unique()
+                        unique_values_str = ', '.join([str(value) for value in unique_values])
+                        st.write(f"{column}: {unique_values_str}")
+                else:
+                    st.write(f"{column} has an unsupported data type")
         with tab1:
             option = st.selectbox('Choose between uploading multiple datasets or a single dataset:', ('Multiple datasets', 'Single dataset'))
             if option == 'Multiple datasets':
@@ -248,7 +246,7 @@ elif general_option == 'Analysis an existing dataset':
                     for file_type in file_types:
                         with st.expander(f"Upload your {file_type}.csv file"):
                             uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
-                            separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ',')", ",")
+                            separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ';')", ";")
                             if uploaded_file is not None:
                                 if not separator:
                                     st.error('Please provide a separator.')
@@ -283,12 +281,30 @@ elif general_option == 'Analysis an existing dataset':
                             user_df = create_dataframe('Select the columns for the user dataframe:', df, 'user_df')
                             item_df = create_dataframe('Select the columns for the item dataframe:', df, 'item_df')
                             context_df = create_dataframe('Select the columns for the context dataframe:', df, 'context_df')
-                            data = {'user': user_df, 'item': item_df, 'context': context_df} #Dictionary with the dataframes
+                            rating_df = create_dataframe('Select the columns for the rating dataframe:', df, 'rating_df')
+                            data = {'user': user_df, 'item': item_df, 'context': context_df, 'rating': rating_df} #Dictionary with the dataframes
                         except Exception as e:
                             st.error(f"An error occurred while reading the file: {str(e)}")
         with tab2:
-            replace_count_missing_values(data,replace_values={"NULL":np.nan,-1:np.nan})
-            list_attributes_and_ranges(data)
+            if 'user' in data:
+                replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                list_attributes_and_ranges(data['user'])
+            else:
+                st.error("User dataset not found.")
+        with tab3:
+            if 'item' in data:
+                replace_count_missing_values(data['item'],replace_values={"NULL":np.nan,-1:np.nan})
+                list_attributes_and_ranges(data['item'])
+            else:
+                st.error("Item dataset not found.")
+        with tab4:
+            if 'context' in data:
+                replace_count_missing_values(data['context'],replace_values={"NULL":np.nan,-1:np.nan})
+                list_attributes_and_ranges(data['context'])
+            else:
+                st.error("Context dataset not found.")
+        with tab5:
+            st.write('TODO')
     elif is_analysis == 'Replicate dataset':  
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
