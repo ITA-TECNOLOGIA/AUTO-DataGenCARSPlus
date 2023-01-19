@@ -1,9 +1,9 @@
 # sourcery skip: use-fstring-for-concatenation
 import streamlit as st
 import pandas as pd
+import numpy as np
 # from PIL import Image
 import config
-
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -209,6 +209,12 @@ elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
     if is_analysis == 'Data visualization':  
         tab1, tab2, tab3, tab4, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings'])
+        def count_missing_values(dataframes_dict):
+            for name, df in dataframes_dict.items():
+                missing_values = df.isnull().sum()
+                st.dataframe(df)
+                st.write(f"Missing values in {name} dataframe:")
+                st.table(missing_values)
         with tab1:
             option = st.selectbox('Choose between uploading multiple datasets or a single dataset:', ('Multiple datasets', 'Single dataset'))
             if option == 'Multiple datasets':
@@ -255,6 +261,11 @@ elif general_option == 'Analysis an existing dataset':
                             data = {'user': user_df, 'item': item_df, 'context': context_df} #Dictionary with the dataframes
                         except Exception as e:
                             st.error(f"An error occurred while reading the file: {str(e)}")
+        with tab2:
+            missing_values = {"NULL": np.nan, -1: np.nan}
+            for name, df in data.items():
+                df.replace(missing_values, inplace=True)
+            count_missing_values(data)
     elif is_analysis == 'Replicate dataset':  
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
