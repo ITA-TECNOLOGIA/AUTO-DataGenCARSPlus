@@ -2,7 +2,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import datetime
+import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 # from PIL import Image
 import config
 
@@ -302,7 +303,46 @@ elif general_option == 'Analysis an existing dataset':
             else:
                 st.error("Context dataset not found.")
         with tab5:
-            st.write("TODO")
+            if 'rating' in data:
+                # Replace missing values
+                for k,v in {"NULL":np.nan,-1:np.nan}.items():
+                    data['rating'].replace(k, np.nan, inplace=True)
+
+                st.dataframe(data['rating'])
+
+                # Count unique users, items and contexts
+                unique_users = data['rating']["userID"].nunique()
+                unique_items = data['rating']["itemID"].nunique()
+                unique_contexts = data['rating']["contextID"].nunique()
+                unique_counts = {"Users": unique_users, "Items": unique_items, "Contexts": unique_contexts} #Create a dictionary of the unique counts
+                unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count']) #Create a DataFrame from the dictionary
+                st.write("Unique counts:")
+                st.table(unique_counts_df)
+                
+                list_attributes_and_ranges(data['rating'])
+
+                fig, ax = plt.subplots()
+                ax.set_title("Distribution of Ratings", fontdict={'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 16})
+                ax.set_xlabel("Rating", fontdict={'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12})
+                ax.set_ylabel("Frequency", fontdict={'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12})
+                ax.grid(visible=True, color='gray', linestyle='-.', linewidth=0.5)
+                ax.hist(data['rating']["rating"], bins=5, range=(1, 6), rwidth=0.8, color="#0099CC")
+                st.pyplot(fig)
+
+                user_options = data['rating']["userID"].unique() #Get the unique users
+                selected_user = st.selectbox("Select a user:", user_options)
+                filtered_ratings_df = data['rating'].query("userID == @selected_user") #Filter the ratings dataframe by the selected user
+                fig, ax = plt.subplots()
+                ax.set_title("Number of items voted by user "+ str(selected_user), fontdict={'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 16})
+                ax.set_xlabel("Items", fontdict={'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12})
+                ax.set_ylabel("Frequency", fontdict={'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12})
+                ax.grid(visible=True, color='gray', linestyle='-.', linewidth=0.5)
+                min_item = filtered_ratings_df["itemID"].min()
+                max_item = filtered_ratings_df["itemID"].max()
+                ax.hist(filtered_ratings_df["itemID"], bins=unique_items, edgecolor='black', linewidth=1.5)
+                st.pyplot(fig)
+            else:
+                st.error("Ratings dataset not found.")
     elif is_analysis == 'Replicate dataset':  
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
