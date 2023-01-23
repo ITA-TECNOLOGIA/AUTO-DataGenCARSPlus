@@ -228,7 +228,7 @@ elif general_option == 'Analysis an existing dataset':
             """
             List attributes, data types, and value ranges of the dataframe.
             """
-            st.write(f"Attributes, Data types and value ranges:")
+            st.write("Attributes, data types and value ranges:")
             table = []
             for column in dataframe.columns:
                 if dataframe[column].dtype in ['int64', 'float64']:
@@ -243,11 +243,11 @@ elif general_option == 'Analysis an existing dataset':
                         table.append([column, dataframe[column].dtype, unique_values_str])
                 else:
                     table.append([column, dataframe[column].dtype, "unsupported data type"])
-            st.table(pd.DataFrame(table, columns=["Attributes", "Data type", "Value ranges"]))
+            st.table(pd.DataFrame(table, columns=["Attribute name", "Data type", "Value ranges"]))
         with tab1:
             option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
             if option == 'Multiple files':
-                upload_context = st.checkbox("Upload context dataset")
+                upload_context = st.checkbox("With context", value=True)
                 data = {} #Dictionary with the dataframes
                 for file_type in ["user", "item", "context", "rating"]:
                     if file_type == "context":
@@ -278,14 +278,13 @@ elif general_option == 'Analysis an existing dataset':
                             df = pd.read_csv(data_file, sep=separator)
                             st.dataframe(df.head())
                             def create_dataframe(label, df, new_df_name):
-                                columns = st.multiselect(label=label, options=df.columns) #Column name selection
-                                if not columns:
-                                    st.error('Please select at least one column')
-                                else:
+                                if columns := st.multiselect(label=label, options=df.columns):
                                     # Create a new dataframe with the selected columns
                                     new_df = df[columns]
                                     st.dataframe(new_df.head())
                                     return new_df
+                                else:
+                                    st.error('Please select at least one column')
                             data = {'user': create_dataframe('Select the columns for the user dataframe:', df, 'user_df'),
                                     'item': create_dataframe('Select the columns for the item dataframe:', df, 'item_df'),
                                     'context': create_dataframe('Select the columns for the context dataframe:', df, 'context_df'),
