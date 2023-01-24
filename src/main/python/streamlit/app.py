@@ -2,6 +2,9 @@
 import streamlit as st
 # from PIL import Image
 import config
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 # Setting the main page:
@@ -205,9 +208,164 @@ if general_option == 'Generate a synthetic dataset':
     st.download_button(label='Download', data=user_schema_text_area, file_name=schema_type+'_schema.conf')  
 
 elif general_option == 'Analysis an existing dataset':
-    is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data analysis', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
-    if is_analysis == 'Data analysis':  
-        st.write('NOTA: \n - Cargar dataset (user.csv, item.csv, context.csv, rating.csv) \n - Mostrar estadísticas (# users, # items, # contexts, # ratings) \n - Histograma de ratings \n')
+    is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
+    if is_analysis == 'Data visualization':  
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings'])
+        def replace_count_missing_values(dataframe, replace_values=None):
+            """
+            Count missing values in the dataframe.
+            """
+            if replace_values is None:
+                replace_values = {}
+            for k,v in replace_values.items():
+                dataframe.replace(k, np.nan, inplace=True)
+            missing_values = dataframe.isnull().sum()
+            missing_values = pd.DataFrame(missing_values, columns=["Count"])
+            missing_values.reset_index(inplace=True)
+            missing_values.rename(columns={"index": "Attribute name"}, inplace=True)
+            st.dataframe(dataframe)
+            st.write("Missing values:")
+            st.table(missing_values)
+        def list_attributes_and_ranges(dataframe):
+            """
+            List attributes, data types, and value ranges of the dataframe.
+            """
+            st.write("Attributes, data types and value ranges:")
+            table = []
+            for column in dataframe.columns:
+                if dataframe[column].dtype in ['int64', 'float64']:
+                    table.append([column, dataframe[column].dtype, f"{dataframe[column].min()} - {dataframe[column].max()}"])
+                elif dataframe[column].dtype == 'object':
+                    try:
+                        dataframe[column] = pd.to_datetime(dataframe[column])
+                        table.append([column, dataframe[column].dtype, f"{dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}"])
+                    except ValueError:
+                        unique_values = dataframe[column].dropna().unique()
+                        unique_values_str = ', '.join([str(value) for value in unique_values])
+                        table.append([column, dataframe[column].dtype, unique_values_str])
+                else:
+                    table.append([column, dataframe[column].dtype, "unsupported data type"])
+            st.table(pd.DataFrame(table, columns=["Attribute name", "Data type", "Value ranges"]))
+        with tab1:
+            option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
+            if option == 'Multiple files':
+                upload_context = st.checkbox("With context", value=True)
+                data = {} #Dictionary with the dataframes
+                for file_type in ["user", "item", "context", "rating"]:
+                    if file_type == "context":
+                        if not upload_context:
+                            continue
+                    with st.expander(f"Upload your {file_type}.csv file"):
+                        uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
+                        separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ';')", ";")
+                        if uploaded_file is not None:
+                            if not separator:
+                                st.error('Please provide a separator.')
+                            else:
+                                try:
+                                    data[file_type] = pd.read_csv(uploaded_file, sep=separator)
+                                    st.dataframe(data[file_type].head())
+                                except Exception as e:
+                                    st.error(f"An error occurred while reading the {file_type} file: {str(e)}")
+                                    data[file_type] = None
+            elif option == 'Single file':
+                data = {} # Dictionary with the dataframes
+                data_file = st.file_uploader("Select Data_STS.csv file", type="csv")
+                separator = st.text_input("Enter the separator for your Data_STS.csv file (default is '	')", "	")
+                if data_file is not None:
+                    if not separator:
+                        st.error('Please provide a separator.')
+                    else:
+                        try:
+                            df = pd.read_csv(data_file, sep=separator)
+                            st.dataframe(df.head())
+                            def create_dataframe(label, df, new_df_name):
+                                if columns := st.multiselect(label=label, options=df.columns):
+                                    # Create a new dataframe with the selected columns
+                                    new_df = df[columns]
+                                    st.dataframe(new_df.head())
+                                    return new_df
+                                else:
+                                    st.error('Please select at least one column')
+                            data = {'user': create_dataframe('Select the columns for the user dataframe:', df, 'user_df'),
+                                    'item': create_dataframe('Select the columns for the item dataframe:', df, 'item_df'),
+                                    'context': create_dataframe('Select the columns for the context dataframe:', df, 'context_df'),
+                                    'rating': create_dataframe('Select the columns for the rating dataframe:', df, 'rating_df')}
+                        except Exception as e:
+                            st.error(f"An error occurred while reading the file: {str(e)}")
+        with tab2:
+            if 'user' in data and data['user'] is not None:
+                replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                list_attributes_and_ranges(data['user'])
+            else:
+                st.error("User dataset not found.")
+        with tab3:
+            if 'item' in data and data['item'] is not None:
+                replace_count_missing_values(data['item'],replace_values={"NULL":np.nan,-1:np.nan})
+                list_attributes_and_ranges(data['item'])
+            else:
+                st.error("Item dataset not found.")
+        with tab4:
+            if 'context' in data and data['context'] is not None:
+                replace_count_missing_values(data['context'],replace_values={"NULL":np.nan,-1:np.nan})
+                list_attributes_and_ranges(data['context'])
+            else:
+                st.error("Context dataset not found.")
+        with tab5:
+            if 'rating' in data and data['rating'] is not None:
+                # Replace missing values
+                for k,v in {"NULL":np.nan,-1:np.nan}.items():
+                    data['rating'].replace(k, np.nan, inplace=True)
+
+                st.dataframe(data['rating'])
+
+                # Count unique users, items and contexts
+                unique_users = data['rating']["userID"].nunique()
+                unique_items = data['rating']["itemID"].nunique()
+                unique_contexts = data['rating']["contextID"].nunique()
+                unique_ratings = data['rating']["rating"].nunique()
+                unique_counts = {"Users": unique_users, "Items": unique_items, "Contexts": unique_contexts, "Ratings": unique_ratings} # Create a dictionary of the unique counts
+                unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count']) # Create a DataFrame from the dictionary
+                unique_counts_df.reset_index(inplace=True)
+                unique_counts_df.rename(columns={"index": "Attribute name"}, inplace=True)
+                st.write("General statistics:")
+                st.table(unique_counts_df)
+                
+                list_attributes_and_ranges(data['rating'])
+
+                font = {'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12}
+                grid = {'visible':True, 'color':'gray', 'linestyle':'-.', 'linewidth':0.5}
+
+                fig, ax = plt.subplots()
+                ax.set_title("Distribution of ratings", fontdict={'size': 16, **font})
+                ax.set_xlabel("Rating", fontdict=font)
+                ax.set_ylabel("Frequency", fontdict=font)
+                ax.grid(**grid)
+                counts = np.bincount(data['rating']["rating"]) # Count the frequency of each rating
+                for i in range(5):
+                    ax.bar(i+1, counts[i+1], color="#0099CC")
+                    ax.text(i+1, counts[i+1]+1, str(counts[i+1]), ha='center')
+                st.pyplot(fig, clear_figure=True)
+
+                user_options = data['rating'].groupby("userID")["itemID"].nunique().index
+                selected_user = st.selectbox("Select a user:", user_options)
+                filtered_ratings_df = data['rating'][data['rating']['userID'] == selected_user]
+                total_count = len(filtered_ratings_df["itemID"])
+                fig, ax = plt.subplots()
+                ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count})", fontdict={'size': 16, **font})
+                ax.set_xlabel("Items", fontdict=font)
+                ax.set_ylabel("Frequency", fontdict=font)
+                ax.grid(**grid)
+                counts_items = filtered_ratings_df.groupby("itemID").size()
+                ax.bar(counts_items.index, counts_items.values, color="#0099CC")
+                unique_items = np.unique(filtered_ratings_df["itemID"]) #Obtain the unique values and convert them to list
+                ax.set_xticks(unique_items)
+                counts_items = filtered_ratings_df["itemID"].value_counts()
+                for item, count in counts_items.items(): #Add the count of each item to the plot
+                    ax.text(item, count, str(count), ha='center', va='bottom')
+                st.pyplot(fig)
+            else:
+                st.error("Ratings dataset not found.")
     elif is_analysis == 'Replicate dataset':  
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
@@ -217,7 +375,7 @@ elif general_option == 'Analysis an existing dataset':
     elif is_analysis == 'Replace NULL values':  
         st.write('TODO')
     elif is_analysis == 'Generate user profile':  
-        st.write('TODO')     
+        st.write('TODO')
 
 elif general_option == 'Evaluation of a dataset':
     st.sidebar.write('Evaluation of a dataset')
