@@ -1,6 +1,3 @@
-import datetime
-import random
-import time
 import numpy as np
 import pandas as pd
 from surprise import (
@@ -18,29 +15,6 @@ from surprise import (
     Reader
 )
 from surprise.model_selection import cross_validate, KFold
-from tabulate import tabulate
-
-import datetime
-import random
-import time
-import numpy as np
-import pandas as pd
-from surprise import (
-    BaselineOnly,
-    CoClustering,
-    Dataset,
-    KNNBaseline,
-    KNNBasic,
-    KNNWithMeans,
-    NMF,
-    NormalPredictor,
-    SlopeOne,
-    SVD,
-    SVDpp,
-    Reader
-)
-from surprise.model_selection import cross_validate, KFold
-from tabulate import tabulate
 
 # The algorithms to cross-validate
 ALGORITHMS = (
@@ -72,20 +46,21 @@ LINK = {
 }
 
 np.random.seed(0)
-random.seed(0)
 
 df = pd.read_csv(r'resources\dataset_ml_100k\ratings.csv')
-reader = Reader(rating_scale=(1, 5))
-data = Dataset.load_from_df(df[["userId", "movieId", "rating"]], reader)
+data = Dataset.load_from_df(df[["userId", "movieId", "rating"]], reader=Reader(rating_scale=(1, 5)))
 kf = KFold(random_state=0)  # folds will be the same for all algorithms.
 
 table = []
 for algo in ALGORITHMS:
     out = cross_validate(algo, data, ["rmse", "mae"], kf)
     link = LINK[algo.__class__.__name__]
-    mean_rmse = "{:.3f}".format(np.mean(out["test_rmse"]))
-    mean_mae = "{:.3f}".format(np.mean(out["test_mae"]))
+    mean_rmse = np.mean(out["test_rmse"])
+    mean_mae = np.mean(out["test_mae"])
+    print(f"{link}: RMSE={mean_rmse:.3f}, MAE={mean_mae:.3f}")
     table.append([link, mean_rmse, mean_mae])
 
-header = ["Movielens 100k", "RMSE", "MAE"]
-print(tabulate(table, header, tablefmt="pipe"))
+# print(tabulate(table, headers=["Movielens 100k", "RMSE", "MAE"], floatfmt=".3f", tablefmt="pipe"))
+results = pd.DataFrame(table, columns=["Movielens 100k", "RMSE", "MAE"])
+results.to_csv(r'results_ml100k.csv', index=False)
+print(results)
