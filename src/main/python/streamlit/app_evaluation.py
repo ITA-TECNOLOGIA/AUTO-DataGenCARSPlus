@@ -1,4 +1,5 @@
 # sourcery skip: use-fstring-for-concatenation
+import sys
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -375,4 +376,58 @@ elif general_option == 'Analysis an existing dataset':
         st.write('TODO')
 
 elif general_option == 'Evaluation of a dataset':
+    sys.path.append("src/main/python")
+    import rs_surprise
     st.sidebar.write('Evaluation of a dataset')
+    algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"])
+    def select_params(algorithm):
+        if algorithm == "SVD":
+            return {"n_factors": st.number_input("Number of factors", min_value=1, max_value=1000, value=100),
+                    "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
+                    "lr_all": st.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.00, value=0.005, step=0.0001),
+                    "reg_all": st.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.00, value=0.02)}
+        elif algorithm == "KNNBasic":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
+                                    "user_based": st.selectbox("User-based or item-based", ["user", "item"])}}
+        elif algorithm == "BaselineOnly":
+            return {"bsl_options": {"method": st.selectbox("Baseline method", ["als", "sgd"]),
+                                    "reg_i": st.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02),
+                                    "reg_u": st.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02)}}
+        elif algorithm == "CoClustering":
+            return {"n_cltr_u": st.number_input("Number of clusters for users", min_value=1, max_value=1000, value=5),
+                    "n_cltr_i": st.number_input("Number of clusters for items", min_value=1, max_value=1000, value=5)}
+        elif algorithm == "KNNBaseline":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
+                                    "user_based": st.selectbox("User-based or item-based", ["user", "item"])},
+                    "bsl_options": {"method": st.selectbox("Baseline method", ["als", "sgd"]),
+                                    "reg_i": st.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02),
+                                    "reg_u": st.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02)}}
+        elif algorithm == "KNNWithMeans":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
+                                    "user_based": st.selectbox("User-based or item-based", ["user", "item"])}}
+        elif algorithm == "NMF":
+            return {"n_factors": st.number_input("Number of factors", min_value=1, max_value=1000, value=100),
+                    "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
+                    "reg_pu": st.number_input("Regularization term for user factors", min_value=0.0001, max_value=1.0, value=0.02),
+                    "reg_qi": st.number_input("Regularization term for item factors", min_value=0.0001, max_value=1.0, value=0.02)}
+        elif algorithm == "NormalPredictor":
+            return {}
+        elif algorithm == "SlopeOne":
+            return {}
+        elif algorithm == "SVDpp":
+            return {"n_factors": st.number_input("Number of factors", min_value=1, max_value=1000, value=100),
+                    "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
+                    "lr_all": st.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005),
+                    "reg_all": st.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02)}
+    algo_list = []
+    for algorithm in algorithms:
+        params = select_params(algorithm)
+        algo_instance = rs_surprise.create_algorithm(algorithm, params)
+        algo_list.append(algo_instance)
+
+    # for algo in algo_list:
+    #     results = evaluate(algo, data, measures)
+    #     print(results)
