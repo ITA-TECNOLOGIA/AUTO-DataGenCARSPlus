@@ -235,7 +235,7 @@ elif general_option == 'Analysis an existing dataset':
                     table.append([column, dataframe[column].dtype, f"{dataframe[column].min()} - {dataframe[column].max()}"])
                 elif dataframe[column].dtype == 'object':
                     try:
-                        dataframe[column] = pd.to_datetime(dataframe[column])
+                        dataframe[column] = pd.to_datetime(dataframe[column], format='%d/%m/%Y')
                         table.append([column, dataframe[column].dtype, f"{dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}"])
                     except ValueError:
                         unique_values = dataframe[column].dropna().unique()
@@ -248,6 +248,7 @@ elif general_option == 'Analysis an existing dataset':
             option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
             if option == 'Multiple files':
                 upload_context = st.checkbox("With context", value=True)
+                upload_timestamp = st.checkbox("With timestamp", value=True)
                 data = {} #Dictionary with the dataframes
                 for file_type in ["user", "item", "context", "rating"]:
                     if file_type == "context":
@@ -261,7 +262,25 @@ elif general_option == 'Analysis an existing dataset':
                                 st.error('Please provide a separator.')
                             else:
                                 try:
-                                    data[file_type] = pd.read_csv(uploaded_file, sep=separator)
+                                    if file_type == "rating":
+                                        column_names = ["user_id", "item_id", "rating"]
+                                        if upload_context:
+                                            column_names.append("context_id")
+                                        if upload_timestamp:
+                                            column_names.append("timestamp")
+                                        data[file_type] = pd.read_csv(uploaded_file, sep=separator, names=column_names, header=0)
+                                    elif file_type == "user" or file_type == "item":
+                                        df = pd.read_csv(uploaded_file, sep=separator)
+                                        column_names = list(df.columns)
+                                        if file_type == "user":
+                                            column_names[0] = "user_id"
+                                        else:
+                                            column_names[0] = "item_id"
+                                        df.columns = column_names
+                                        data[file_type] = df
+
+                                    else:
+                                        data[file_type] = pd.read_csv(uploaded_file, sep=separator)
                                     st.dataframe(data[file_type].head())
                                 except Exception as e:
                                     st.error(f"An error occurred while reading the {file_type} file: {str(e)}")
@@ -317,19 +336,27 @@ elif general_option == 'Analysis an existing dataset':
 
                 st.dataframe(data['rating'])
 
-                # Count unique users, items and contexts
-                unique_users = data['rating']["userID"].nunique()
-                unique_items = data['rating']["itemID"].nunique()
-                unique_contexts = data['rating']["contextID"].nunique()
+                # Count unique users, items, contexts and timestamps
+                unique_users = data['rating']["user_id"].nunique()
+                unique_items = data['rating']["item_id"].nunique()
+                unique_counts = {"Users": unique_users, "Items": unique_items}
+                if 'context_id' in data['rating'].columns and upload_context:
+                    unique_contexts = data['rating']["context_id"].nunique()
+                    unique_counts["Contexts"] = unique_contexts
+                if 'timestamp' in data['rating'].columns and upload_timestamp:
+                    unique_timestamps = data['rating']["timestamp"].nunique()
+                    unique_counts["Timestamps"] = unique_timestamps
                 unique_ratings = data['rating']["rating"].nunique()
-                unique_counts = {"Users": unique_users, "Items": unique_items, "Contexts": unique_contexts, "Ratings": unique_ratings} #Create a dictionary of the unique counts
-                unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count']) #Create a DataFrame from the dictionary
+                unique_counts["Ratings"] = unique_ratings
+                unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count'])
                 unique_counts_df.reset_index(inplace=True)
                 unique_counts_df.rename(columns={"index": "Attribute name"}, inplace=True)
                 st.write("General statistics:")
                 st.table(unique_counts_df)
                 
                 list_attributes_and_ranges(data['rating'])
+
+                st.session_state["rating"] = data['rating'] #Save the rating dataframe in the session state
 
                 font = {'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12}
                 grid = {'visible':True, 'color':'gray', 'linestyle':'-.', 'linewidth':0.5}
@@ -345,20 +372,20 @@ elif general_option == 'Analysis an existing dataset':
                     ax.text(i+1, counts[i+1]+1, str(counts[i+1]), ha='center')
                 st.pyplot(fig, clear_figure=True)
 
-                user_options = data['rating'].groupby("userID")["itemID"].nunique().index
+                user_options = data['rating'].groupby("user_id")["item_id"].nunique().index
                 selected_user = st.selectbox("Select a user:", user_options)
-                filtered_ratings_df = data['rating'][data['rating']['userID'] == selected_user]
-                total_count = len(filtered_ratings_df["itemID"])
+                filtered_ratings_df = data['rating'][data['rating']['user_id'] == selected_user]
+                total_count = len(filtered_ratings_df["item_id"])
                 fig, ax = plt.subplots()
                 ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count})", fontdict={'size': 16, **font})
                 ax.set_xlabel("Items", fontdict=font)
                 ax.set_ylabel("Frequency", fontdict=font)
                 ax.grid(**grid)
-                counts_items = filtered_ratings_df.groupby("itemID").size()
+                counts_items = filtered_ratings_df.groupby("item_id").size()
                 ax.bar(counts_items.index, counts_items.values, color="#0099CC")
-                unique_items = np.unique(filtered_ratings_df["itemID"]) #Obtain the unique values and convert them to list
+                unique_items = np.unique(filtered_ratings_df["item_id"]) #Obtain the unique values and convert them to list
                 ax.set_xticks(unique_items)
-                counts_items = filtered_ratings_df["itemID"].value_counts()
+                counts_items = filtered_ratings_df["item_id"].value_counts()
                 for item, count in counts_items.items(): #Add the count of each item to the plot
                     ax.text(item, count, str(count), ha='center', va='bottom')
                 st.pyplot(fig)
@@ -376,10 +403,6 @@ elif general_option == 'Analysis an existing dataset':
         st.write('TODO')
 
 elif general_option == 'Evaluation of a dataset':
-    sys.path.append("src/main/python")
-    import rs_surprise
-    st.sidebar.write('Evaluation of a dataset')
-    algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"])
     def select_params(algorithm):
         if algorithm == "SVD":
             return {"n_factors": st.number_input("Number of factors", min_value=1, max_value=1000, value=100),
@@ -422,11 +445,46 @@ elif general_option == 'Evaluation of a dataset':
                     "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
                     "lr_all": st.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005),
                     "reg_all": st.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02)}
+
+    def select_split_strategy(strategy):
+        if strategy == "KFold":
+            return {"n_splits": st.number_input("Number of splits", min_value=2, max_value=10, value=5),
+                    "shuffle": st.checkbox("Shuffle?")}
+        elif strategy == "RepeatedKFold":
+            return {"n_splits": st.number_input("Number of splits", min_value=2, max_value=10, value=5),
+                    "n_repeats": st.number_input("Number of repeats", min_value=1, max_value=10, value=1),
+                    "shuffle": st.checkbox("Shuffle?")}
+        elif strategy == "ShuffleSplit":
+            return {"n_splits": st.number_input("Number of splits", min_value=2, max_value=10, value=5),
+                    "test_size": st.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
+                    "random_state": st.number_input("Random state", min_value=0, max_value=100, value=42)}
+        elif strategy == "LeaveOneOut":
+            return {}
+        elif strategy == "PredefinedKFold":
+            return {"folds_file": st.file_uploader("Upload folds file")}
+        elif strategy == "train_test_split":
+            return {"test_size": st.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
+                    "random_state": st.number_input("Random state", min_value=0, max_value=100, value=42)}
+
+    sys.path.append("src/main/python")
+    import rs_surprise
+    st.sidebar.write('Evaluation of a dataset')
+    
+    algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"])
     algo_list = []
     for algorithm in algorithms:
-        params = select_params(algorithm)
-        algo_instance = rs_surprise.create_algorithm(algorithm, params)
+        algo_params = select_params(algorithm)
+        algo_instance = rs_surprise.create_algorithm(algorithm, algo_params)
         algo_list.append(algo_instance)
+    
+    strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut", "PredefinedKFold", "train_test_split"])
+    strategy_params = select_split_strategy(strategy)
+    strategy_instance = rs_surprise.create_split_strategy(strategy, strategy_params)
+
+    rating = st.session_state["rating"]
+    for train_index, test_index in strategy_instance.split(rating):
+        train_set = rating.iloc[train_index]
+        test_set = rating.iloc[test_index]
 
     # for algo in algo_list:
     #     results = evaluate(algo, data, measures)

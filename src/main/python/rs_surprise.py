@@ -9,6 +9,7 @@ from surprise import (
     SlopeOne,
     SVD,
     SVDpp,
+    model_selection as ms,
     Reader,
     Dataset
 )
@@ -36,3 +37,23 @@ def create_algorithm(algo_name, params=None):
         return NormalPredictor()
     else:
         raise ValueError("Invalid algorithm name")
+
+def create_split_strategy(strategy, params):
+    if strategy == "KFold":
+        return ms.KFold(n_splits=params["n_splits"], shuffle=params["shuffle"])
+    elif strategy == "RepeatedKFold":
+        return ms.RepeatedKFold(n_splits=params["n_splits"], n_repeats=params["n_repeats"], shuffle=params["shuffle"])
+    elif strategy == "ShuffleSplit":
+        return ms.ShuffleSplit(n_splits=params["n_splits"], test_size=params["test_size"], random_state=params["random_state"])
+    elif strategy == "LeaveOneOut":
+        return ms.LeaveOneOut()
+    elif strategy == "PredefinedKFold":
+        folds = []
+        with open(params["folds_file"]) as f:
+            for line in f:
+                folds.append(list(map(int, line.split())))
+        return ms.PredefinedKFold(folds)
+    elif strategy == "train_test_split":
+        return ms.train_test_split(test_size=params["test_size"], random_state=params["random_state"])
+    else:
+        raise ValueError('Invalid split strategy')
