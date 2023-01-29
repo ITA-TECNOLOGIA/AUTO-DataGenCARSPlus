@@ -15,6 +15,9 @@ from surprise import (
 )
 
 def create_algorithm(algo_name, params=None):
+    """
+    Creates an algorithm from its name and parameters
+    """
     if algo_name == "SVD":
         return SVD(**params)
     elif algo_name == "SVDpp":
@@ -39,6 +42,9 @@ def create_algorithm(algo_name, params=None):
         raise ValueError("Invalid algorithm name")
 
 def create_split_strategy(strategy, params):
+    """
+    Creates a split strategy for cross-validation
+    """
     if strategy == "KFold":
         return ms.KFold(n_splits=params["n_splits"], shuffle=params["shuffle"])
     elif strategy == "RepeatedKFold":
@@ -57,3 +63,11 @@ def create_split_strategy(strategy, params):
         return ms.train_test_split(test_size=params["test_size"], random_state=params["random_state"])
     else:
         raise ValueError('Invalid split strategy')
+
+def convert_to_surprise_dataset(df):
+    """
+    Converts a pandas dataframe to a surprise dataset
+    """
+    df = df.drop("timestamp", axis=1) #¡IMPORTANTE!
+    reader = Reader(rating_scale=(1, 5))
+    return Dataset.load_from_df(df, reader)
