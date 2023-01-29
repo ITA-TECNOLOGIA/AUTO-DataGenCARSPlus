@@ -278,7 +278,6 @@ elif general_option == 'Analysis an existing dataset':
                                             column_names[0] = "item_id"
                                         df.columns = column_names
                                         data[file_type] = df
-
                                     else:
                                         data[file_type] = pd.read_csv(uploaded_file, sep=separator)
                                     st.dataframe(data[file_type].head())
@@ -405,86 +404,90 @@ elif general_option == 'Analysis an existing dataset':
 elif general_option == 'Evaluation of a dataset':
     def select_params(algorithm):
         if algorithm == "SVD":
-            return {"n_factors": st.number_input("Number of factors", min_value=1, max_value=1000, value=100),
-                    "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
-                    "lr_all": st.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.00, value=0.005, step=0.0001),
-                    "reg_all": st.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.00, value=0.02)}
+            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100),
+                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
+                    "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.00, value=0.005, step=0.0001),
+                    "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.00, value=0.02)}
         elif algorithm == "KNNBasic":
-            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
-                    "sim_options": {"name": st.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
-                                    "user_based": st.selectbox("User-based or item-based", ["user", "item"])}}
+            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
+                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
+                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"])}}
         elif algorithm == "BaselineOnly":
-            return {"bsl_options": {"method": st.selectbox("Baseline method", ["als", "sgd"]),
-                                    "reg_i": st.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02),
-                                    "reg_u": st.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02)}}
+            return {"bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"]),
+                                    "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02),
+                                    "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02)}}
         elif algorithm == "CoClustering":
-            return {"n_cltr_u": st.number_input("Number of clusters for users", min_value=1, max_value=1000, value=5),
-                    "n_cltr_i": st.number_input("Number of clusters for items", min_value=1, max_value=1000, value=5)}
+            return {"n_cltr_u": st.sidebar.number_input("Number of clusters for users", min_value=1, max_value=1000, value=5),
+                    "n_cltr_i": st.sidebar.number_input("Number of clusters for items", min_value=1, max_value=1000, value=5)}
         elif algorithm == "KNNBaseline":
-            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
-                    "sim_options": {"name": st.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
-                                    "user_based": st.selectbox("User-based or item-based", ["user", "item"])},
-                    "bsl_options": {"method": st.selectbox("Baseline method", ["als", "sgd"]),
-                                    "reg_i": st.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02),
-                                    "reg_u": st.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02)}}
+            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
+                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
+                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"])},
+                    "bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"]),
+                                    "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02),
+                                    "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02)}}
         elif algorithm == "KNNWithMeans":
-            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
-                    "sim_options": {"name": st.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
-                                    "user_based": st.selectbox("User-based or item-based", ["user", "item"])}}
+            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
+                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
+                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"])}}
         elif algorithm == "NMF":
-            return {"n_factors": st.number_input("Number of factors", min_value=1, max_value=1000, value=100),
-                    "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
-                    "reg_pu": st.number_input("Regularization term for user factors", min_value=0.0001, max_value=1.0, value=0.02),
-                    "reg_qi": st.number_input("Regularization term for item factors", min_value=0.0001, max_value=1.0, value=0.02)}
+            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100),
+                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
+                    "reg_pu": st.sidebar.number_input("Regularization term for user factors", min_value=0.0001, max_value=1.0, value=0.02),
+                    "reg_qi": st.sidebar.number_input("Regularization term for item factors", min_value=0.0001, max_value=1.0, value=0.02)}
         elif algorithm == "NormalPredictor":
             return {}
         elif algorithm == "SlopeOne":
             return {}
         elif algorithm == "SVDpp":
-            return {"n_factors": st.number_input("Number of factors", min_value=1, max_value=1000, value=100),
-                    "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
-                    "lr_all": st.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005),
-                    "reg_all": st.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02)}
+            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100),
+                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
+                    "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005),
+                    "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02)}
 
     def select_split_strategy(strategy):
         if strategy == "KFold":
-            return {"n_splits": st.number_input("Number of splits", min_value=2, max_value=10, value=5),
-                    "shuffle": st.checkbox("Shuffle?")}
+            return {"n_splits": st.sidebar.number_input("Number of splits", min_value=2, max_value=10, value=5),
+                    "shuffle": st.sidebar.checkbox("Shuffle?")}
         elif strategy == "RepeatedKFold":
-            return {"n_splits": st.number_input("Number of splits", min_value=2, max_value=10, value=5),
-                    "n_repeats": st.number_input("Number of repeats", min_value=1, max_value=10, value=1),
-                    "shuffle": st.checkbox("Shuffle?")}
+            return {"n_splits": st.sidebar.number_input("Number of splits", min_value=2, max_value=10, value=5),
+                    "n_repeats": st.sidebar.number_input("Number of repeats", min_value=1, max_value=10, value=1),
+                    "shuffle": st.sidebar.checkbox("Shuffle?")}
         elif strategy == "ShuffleSplit":
-            return {"n_splits": st.number_input("Number of splits", min_value=2, max_value=10, value=5),
-                    "test_size": st.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
-                    "random_state": st.number_input("Random state", min_value=0, max_value=100, value=42)}
+            return {"n_splits": st.sidebar.number_input("Number of splits", min_value=2, max_value=10, value=5),
+                    "test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
+                    "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
         elif strategy == "LeaveOneOut":
             return {}
         elif strategy == "PredefinedKFold":
-            return {"folds_file": st.file_uploader("Upload folds file")}
+            return {"folds_file": st.sidebar.file_uploader("Upload folds file")}
         elif strategy == "train_test_split":
-            return {"test_size": st.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
-                    "random_state": st.number_input("Random state", min_value=0, max_value=100, value=42)}
+            return {"test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
+                    "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
 
     sys.path.append("src/main/python")
     import rs_surprise
     st.sidebar.write('Evaluation of a dataset')
     
-    algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"])
-    algo_list = []
-    for algorithm in algorithms:
-        algo_params = select_params(algorithm)
-        algo_instance = rs_surprise.create_algorithm(algorithm, algo_params)
-        algo_list.append(algo_instance)
+    with st.sidebar.expander("Algorithm selection"):
+        algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"], default="SVD")
+        algo_list = []
+        for algorithm in algorithms:
+            algo_params = select_params(algorithm)
+            algo_instance = rs_surprise.create_algorithm(algorithm, algo_params)
+            algo_list.append(algo_instance)
     
-    strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut", "PredefinedKFold", "train_test_split"])
-    strategy_params = select_split_strategy(strategy)
-    strategy_instance = rs_surprise.create_split_strategy(strategy, strategy_params)
+    with st.sidebar.expander("Split strategy selection"):
+        strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut", "PredefinedKFold", "train_test_split"])
+        strategy_params = select_split_strategy(strategy)
+        strategy_instance = rs_surprise.create_split_strategy(strategy, strategy_params)
+        
+        if "rating" in st.session_state:
+            rating = st.session_state["rating"]
+        else:
+            st.error("No rating dataset loaded")
 
-    rating = st.session_state["rating"]
-    for train_index, test_index in strategy_instance.split(rating):
-        train_set = rating.iloc[train_index]
-        test_set = rating.iloc[test_index]
+        # for train_index, test_index in strategy_instance.split(rs_surprise.convert_to_surprise_dataset(rating)):
 
     # for algo in algo_list:
     #     results = evaluate(algo, data, measures)
