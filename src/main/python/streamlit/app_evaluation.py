@@ -484,11 +484,21 @@ elif general_option == 'Evaluation of a dataset':
         
         if "rating" in st.session_state:
             rating = st.session_state["rating"]
+            data = rs_surprise.convert_to_surprise_dataset(rating)
         else:
             st.error("No rating dataset loaded")
-
+        
         # for train_index, test_index in strategy_instance.split(rs_surprise.convert_to_surprise_dataset(rating)):
 
-    # for algo in algo_list:
-    #     results = evaluate(algo, data, measures)
-    #     print(results)
+    with st.sidebar.expander("Metrics selection"):
+        metrics = st.sidebar.multiselect("Select one or more metrics", ["RMSE", "MSE", "MAE", "FCP"], default="MAE")
+
+    if st.sidebar.button("Cross Validate"):
+        for algo in algo_list:
+            results, cv_time = rs_surprise.evaluate_recommender(algo, strategy_instance, metrics, data)
+            st.write("Results for", algo)
+            st.write("Evaluation time:", cv_time)
+            st.write("Metrics:", metrics)
+            st.write("Split strategy:", strategy)
+            st.write("Results:")
+            st.write(pd.DataFrame(results).mean())

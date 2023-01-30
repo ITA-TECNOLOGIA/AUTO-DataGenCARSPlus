@@ -1,3 +1,5 @@
+import time
+import datetime
 from surprise import (
     BaselineOnly,
     CoClustering,
@@ -71,3 +73,9 @@ def convert_to_surprise_dataset(df):
     df = df.drop("timestamp", axis=1) #¡IMPORTANTE!
     reader = Reader(rating_scale=(1, 5))
     return Dataset.load_from_df(df, reader)
+
+def evaluate_recommender(algo, split_strategy, metrics, data):
+    start = time.time()
+    results = ms.cross_validate(algo, data, metrics, split_strategy)
+    cv_time = str(datetime.timedelta(seconds=int(time.time() - start)))
+    return results, cv_time
