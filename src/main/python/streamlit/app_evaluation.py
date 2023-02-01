@@ -467,18 +467,6 @@ elif general_option == 'Evaluation of a dataset':
         elif strategy == "train_test_split":
             return {"test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
                     "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
-    
-    # def evaluate_algo(algo_list, strategy_instance, metrics_list, data, k, threshold):
-    #     results = []
-    #     for algo in algo_list:
-    #         for trainset, testset in strategy_instance.split(data):
-    #             cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics_list, cv=strategy_instance)
-    #             algo.fit(trainset)
-    #             predictions = algo.test(testset)
-    #             precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
-    #             ndcgs = rs_surprise.ndcg_at_k(predictions, k=k)
-    #             results.append({"algo": algo, "cross_validate_results": cross_validate_results, "precisions": precisions, "recalls": recalls, "f1_scores": f1_scores, "mean_average_precisions": maps, "ndcgs": ndcgs})
-    #     return results
 
     def evaluate_algo(algo_list, strategy_instance, metrics_list, data, k, threshold):
         results = []
@@ -495,16 +483,19 @@ elif general_option == 'Evaluation of a dataset':
                 avg_f1_scores = np.mean(list(f1_scores.values()))
                 avg_maps = np.mean(list(maps.values()))
                 avg_ndcgs = np.mean(list(ndcgs.values()))
+                avg_cross_validate_results = {metric: np.mean(cross_validate_results[metric]) for metric in cross_validate_results}
 
-                results.append({
-                    "algo": algo,
-                    "cross_validate_results": cross_validate_results,
-                    "avg_precision": avg_precisions,
-                    "avg_recall": avg_recalls,
-                    "avg_f1_score": avg_f1_scores,
-                    "avg_mean_average_precision": avg_maps,
-                    "avg_ndcg": avg_ndcgs
-                })
+                row = {
+                    "Algorithm": type(algo).__name__,
+                    "Precision": avg_precisions,
+                    "Recall": avg_recalls,
+                    "F1 Score": avg_f1_scores,
+                    "MAP": avg_maps,
+                    "NDCG": avg_ndcgs
+                }
+                for key, value in avg_cross_validate_results.items():
+                    row[key] = np.mean(value)
+                results.append(row)
         return results
 
     st.sidebar.write('Evaluation of a dataset')
@@ -533,4 +524,4 @@ elif general_option == 'Evaluation of a dataset':
     if st.sidebar.button("Cross Validate"):
         results = evaluate_algo(algo_list, strategy_instance, metrics, data, k=5, threshold=4)
         st.write("Evaluation Results")
-        st.write(results)
+        st.write(pd.DataFrame(results))
