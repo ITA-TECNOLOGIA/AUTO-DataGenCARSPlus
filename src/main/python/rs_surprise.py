@@ -130,29 +130,6 @@ def precision_recall_at_k(predictions, k=10, threshold=3.5):
 
     return precisions, recalls, f1_scores, maps
 
-# def ndcg_at_k(predictions, k=10, threshold=3.5):
-#     """
-#     Return Normalized Discounted Cumulative Gain (NDCG) at k
-#     Source: https://gist.github.com/bwhite/3726239
-#     """
-#     dcg_values = []
-#     idcg_values = []
-#     for uid, _, true_r, est, _ in predictions:
-#         actual = np.asarray([x >= threshold for x in true_r])
-#         # sort the predictions for the user and keep k items
-#         top_k = np.argsort(est)[::-1][:k]
-#         # calculate the DCG for the user
-#         dcg = 0
-#         for i, item in enumerate(top_k):
-#             dcg += (2**actual[item] - 1) / np.log2(i + 2)
-#         dcg_values.append(dcg)
-#         # calculate the IDCG for the user
-#         idcg = 0
-#         for i, item in enumerate(np.argsort(actual)[::-1][:k]):
-#             idcg += (2**actual[item] - 1) / np.log2(i + 2)
-#         idcg_values.append(idcg)
-#     return np.mean(np.divide(dcg_values, idcg_values))
-
 def ndcg_at_k(predictions, k=10, threshold=3.5):
     """
     Return Normalized Discounted Cumulative Gain (NDCG) at k for each user

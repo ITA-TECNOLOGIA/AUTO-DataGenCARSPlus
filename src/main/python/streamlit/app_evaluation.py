@@ -468,6 +468,18 @@ elif general_option == 'Evaluation of a dataset':
             return {"test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
                     "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
     
+    # def evaluate_algo(algo_list, strategy_instance, metrics_list, data, k, threshold):
+    #     results = []
+    #     for algo in algo_list:
+    #         for trainset, testset in strategy_instance.split(data):
+    #             cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics_list, cv=strategy_instance)
+    #             algo.fit(trainset)
+    #             predictions = algo.test(testset)
+    #             precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
+    #             ndcgs = rs_surprise.ndcg_at_k(predictions, k=k)
+    #             results.append({"algo": algo, "cross_validate_results": cross_validate_results, "precisions": precisions, "recalls": recalls, "f1_scores": f1_scores, "mean_average_precisions": maps, "ndcgs": ndcgs})
+    #     return results
+
     def evaluate_algo(algo_list, strategy_instance, metrics_list, data, k, threshold):
         results = []
         for algo in algo_list:
@@ -477,7 +489,22 @@ elif general_option == 'Evaluation of a dataset':
                 predictions = algo.test(testset)
                 precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
                 ndcgs = rs_surprise.ndcg_at_k(predictions, k=k)
-                results.append({"algo": algo, "cross_validate_results": cross_validate_results, "precisions": precisions, "recalls": recalls, "f1_scores": f1_scores, "mean_average_precisions": maps, "ndcgs": ndcgs})
+
+                avg_precisions = np.mean(list(precisions.values()))
+                avg_recalls = np.mean(list(recalls.values()))
+                avg_f1_scores = np.mean(list(f1_scores.values()))
+                avg_maps = np.mean(list(maps.values()))
+                avg_ndcgs = np.mean(list(ndcgs.values()))
+
+                results.append({
+                    "algo": algo,
+                    "cross_validate_results": cross_validate_results,
+                    "avg_precision": avg_precisions,
+                    "avg_recall": avg_recalls,
+                    "avg_f1_score": avg_f1_scores,
+                    "avg_mean_average_precision": avg_maps,
+                    "avg_ndcg": avg_ndcgs
+                })
         return results
 
     st.sidebar.write('Evaluation of a dataset')
