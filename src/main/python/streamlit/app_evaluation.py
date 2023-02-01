@@ -1,12 +1,9 @@
 # sourcery skip: use-fstring-for-concatenation
-import datetime
 import sys
-import time
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import defaultdict
 from surprise import model_selection
 # from PIL import Image
 import config
@@ -479,7 +476,8 @@ elif general_option == 'Evaluation of a dataset':
                 algo.fit(trainset)
                 predictions = algo.test(testset)
                 precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
-                results.append({"algo": algo, "cross_validate_results": cross_validate_results, "precisions": precisions, "recalls": recalls, "f1_scores": f1_scores, "mean_average_precisions": maps})
+                ndcgs = rs_surprise.ndcg_at_k(predictions, k=k)
+                results.append({"algo": algo, "cross_validate_results": cross_validate_results, "precisions": precisions, "recalls": recalls, "f1_scores": f1_scores, "mean_average_precisions": maps, "ndcgs": ndcgs})
         return results
 
     st.sidebar.write('Evaluation of a dataset')
