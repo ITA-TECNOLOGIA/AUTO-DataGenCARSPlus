@@ -1,11 +1,17 @@
 # sourcery skip: use-fstring-for-concatenation
+import datetime
 import sys
+import time
 import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import defaultdict
+from surprise import model_selection
 # from PIL import Image
 import config
+sys.path.append("src/main/python")
+import rs_surprise
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -464,11 +470,19 @@ elif general_option == 'Evaluation of a dataset':
         elif strategy == "train_test_split":
             return {"test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
                     "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
-
-    sys.path.append("src/main/python")
-    import rs_surprise
-    st.sidebar.write('Evaluation of a dataset')
     
+    def evaluate_algo(algo_list, strategy_instance, metrics_list, data, k, threshold):
+        results = []
+        for algo in algo_list:
+            for trainset, testset in strategy_instance.split(data):
+                cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics_list, cv=strategy_instance)
+                algo.fit(trainset)
+                predictions = algo.test(testset)
+                precisions, recalls = rs_surprise.precision_recall_at_k(predictions, k, threshold)
+                results.append({"algo": algo, "cross_validate_results": cross_validate_results, "precisions": precisions, "recalls": recalls})
+        return results
+
+    st.sidebar.write('Evaluation of a dataset')
     with st.sidebar.expander("Algorithm selection"):
         algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"], default="SVD")
         algo_list = []
@@ -487,18 +501,11 @@ elif general_option == 'Evaluation of a dataset':
             data = rs_surprise.convert_to_surprise_dataset(rating)
         else:
             st.error("No rating dataset loaded")
-        
-        # for train_index, test_index in strategy_instance.split(rs_surprise.convert_to_surprise_dataset(rating)):
 
     with st.sidebar.expander("Metrics selection"):
-        metrics = st.sidebar.multiselect("Select one or more metrics", ["RMSE", "MSE", "MAE", "FCP"], default="MAE")
+        metrics = st.sidebar.multiselect("Select one or more metrics", ["RMSE", "MSE", "MAE", "FCP", "Precission", "Recall"], default="MAE")
 
     if st.sidebar.button("Cross Validate"):
-        for algo in algo_list:
-            results, cv_time = rs_surprise.evaluate_recommender(algo, strategy_instance, metrics, data)
-            st.write("Results for", algo)
-            st.write("Evaluation time:", cv_time)
-            st.write("Metrics:", metrics)
-            st.write("Split strategy:", strategy)
-            st.write("Results:")
-            st.write(pd.DataFrame(results).mean())
+        results = evaluate_algo(algo_list, strategy_instance, metrics, data, k=5, threshold=4)
+        st.write("Evaluation Results")
+        st.write(results)
