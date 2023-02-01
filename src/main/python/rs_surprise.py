@@ -75,7 +75,7 @@ def convert_to_surprise_dataset(df):
 
 def precision_recall_at_k(predictions, k=10, threshold=3.5):
     """
-    Return precision and recall at k metrics for each user
+    Return precision, recall, F1-score and MAP at k metrics for each user
     Source: https://github.com/NicolasHug/Surprise/blob/master/examples/precision_recall_at_k.py
     """
 
@@ -86,6 +86,8 @@ def precision_recall_at_k(predictions, k=10, threshold=3.5):
 
     precisions = dict()
     recalls = dict()
+    f1_scores = dict()
+    maps = dict()
     for uid, user_ratings in user_est_true.items():
 
         # Sort user ratings by estimated value
@@ -105,12 +107,24 @@ def precision_recall_at_k(predictions, k=10, threshold=3.5):
 
         # Precision@K: Proportion of recommended items that are relevant
         # When n_rec_k is 0, Precision is undefined. We here set it to 0.
-
-        precisions[uid] = n_rel_and_rec_k / n_rec_k if n_rec_k != 0 else 0
+        precision = n_rel_and_rec_k / n_rec_k if n_rec_k != 0 else 0
+        precisions[uid] = precision
 
         # Recall@K: Proportion of relevant items that are recommended
         # When n_rel is 0, Recall is undefined. We here set it to 0.
+        recall = n_rel_and_rec_k / n_rel if n_rel != 0 else 0
+        recalls[uid] = recall
 
-        recalls[uid] = n_rel_and_rec_k / n_rel if n_rel != 0 else 0
+        # F1-score@K: Harmonic mean of precision and recall
+        f1_score = 2 * ((precision * recall) / (precision + recall)) if precision + recall != 0 else 0
+        f1_scores[uid] = f1_score
 
-    return precisions, recalls
+        # Mean Average Precision (MAP)
+        ap_values = []
+        for i, (est, true_r) in enumerate(user_ratings):
+            if true_r >= threshold:
+                ap_values.append(precisions[uid] * (i + 1) / (i + 1))
+        map_value = sum(ap_values) / n_rel if n_rel != 0 else 0
+        maps[uid] = map_value
+
+    return precisions, recalls, f1_scores, maps

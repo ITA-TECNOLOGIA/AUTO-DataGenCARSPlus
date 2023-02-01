@@ -478,8 +478,8 @@ elif general_option == 'Evaluation of a dataset':
                 cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics_list, cv=strategy_instance)
                 algo.fit(trainset)
                 predictions = algo.test(testset)
-                precisions, recalls = rs_surprise.precision_recall_at_k(predictions, k, threshold)
-                results.append({"algo": algo, "cross_validate_results": cross_validate_results, "precisions": precisions, "recalls": recalls})
+                precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
+                results.append({"algo": algo, "cross_validate_results": cross_validate_results, "precisions": precisions, "recalls": recalls, "f1_scores": f1_scores, "mean_average_precisions": maps})
         return results
 
     st.sidebar.write('Evaluation of a dataset')
@@ -503,7 +503,7 @@ elif general_option == 'Evaluation of a dataset':
             st.error("No rating dataset loaded")
 
     with st.sidebar.expander("Metrics selection"):
-        metrics = st.sidebar.multiselect("Select one or more metrics", ["RMSE", "MSE", "MAE", "FCP", "Precission", "Recall"], default="MAE")
+        metrics = st.sidebar.multiselect("Select one or more metrics", ["RMSE", "MSE", "MAE", "FCP", "Precission, Recall and F1-Score", "NDGC", "MAP"], default="MAE")
 
     if st.sidebar.button("Cross Validate"):
         results = evaluate_algo(algo_list, strategy_instance, metrics, data, k=5, threshold=4)
