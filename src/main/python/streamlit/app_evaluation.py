@@ -471,45 +471,52 @@ elif general_option == 'Evaluation of a dataset':
     def evaluate_algo(algo_list, strategy_instance, metrics, data, k, threshold):
         results = []
         fold_counter = {} # To count the number of folds for each algorithm
-        for algo in algo_list:
-            for trainset, testset in strategy_instance.split(data):
-                cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics, cv=strategy_instance)
-                algo.fit(trainset)
-                predictions = algo.test(testset)
-                precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
-                ndcgs = rs_surprise.ndcg_at_k(predictions, k=k)
+        total_folds = len(algo_list) * strategy_instance.n_splits
+        fold_count = 0
+        with st.spinner("Evaluating algorithms..."):
+            progress_bar = st.progress(0)
+            for algo in algo_list:
+                for trainset, testset in strategy_instance.split(data):
+                    fold_count += 1
+                    cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics, cv=strategy_instance)
+                    algo.fit(trainset)
+                    predictions = algo.test(testset)
+                    precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
+                    ndcgs = rs_surprise.ndcg_at_k(predictions, k=k)
 
-                avg_precisions = np.mean(list(precisions.values()))
-                avg_recalls = np.mean(list(recalls.values()))
-                avg_f1_scores = np.mean(list(f1_scores.values()))
-                avg_maps = np.mean(list(maps.values()))
-                avg_ndcgs = np.mean(list(ndcgs.values()))
-                avg_cross_validate_results = {metric: np.mean(cross_validate_results[metric]) for metric in cross_validate_results}
+                    avg_precisions = np.mean(list(precisions.values()))
+                    avg_recalls = np.mean(list(recalls.values()))
+                    avg_f1_scores = np.mean(list(f1_scores.values()))
+                    avg_maps = np.mean(list(maps.values()))
+                    avg_ndcgs = np.mean(list(ndcgs.values()))
+                    avg_cross_validate_results = {metric: np.mean(cross_validate_results[metric]) for metric in cross_validate_results}
 
-                row = {
-                    "Algorithm": type(algo).__name__,
-                    "Precision": avg_precisions,
-                    "Recall": avg_recalls,
-                    "F1 Score": avg_f1_scores,
-                    "MAP": avg_maps,
-                    "NDCG": avg_ndcgs
-                }
+                    row = {
+                        "Algorithm": type(algo).__name__,
+                        "Precision": avg_precisions,
+                        "Recall": avg_recalls,
+                        "F1 Score": avg_f1_scores,
+                        "MAP": avg_maps,
+                        "NDCG": avg_ndcgs
+                    }
 
-                # Modify the name of the metrics to be more readable
-                for key, value in avg_cross_validate_results.items():
-                    if key == "fit_time":
-                        row["Time (train)"] = value
-                    elif key == "test_time":
-                        row["Time (test)"] = value
+                    # Modify the name of the metrics to be more readable
+                    for key, value in avg_cross_validate_results.items():
+                        if key == "fit_time":
+                            row["Time (train)"] = value
+                        elif key == "test_time":
+                            row["Time (test)"] = value
+                        else:
+                            row[key.replace("test_", "").upper()] = value
+
+                    if type(algo).__name__ in fold_counter:
+                        fold_counter[type(algo).__name__] += 1
                     else:
-                        row[key.replace("test_", "").upper()] = value
-
-                if type(algo).__name__ in fold_counter:
-                    fold_counter[type(algo).__name__] += 1
-                else:
-                    fold_counter[type(algo).__name__] = 1
-                row["Fold"] = fold_counter[type(algo).__name__]
-                results.append(row)
+                        fold_counter[type(algo).__name__] = 1
+                    row["Fold"] = fold_counter[type(algo).__name__]
+                    results.append(row)
+                    progress_bar.progress(fold_count/total_folds)
+        progress_bar.empty()
         df = pd.DataFrame(results)
         cols = ["Fold"] + [col for col in df.columns if col != "Fold"] # Move the "Fold" column to the first position
         df = df[cols]
