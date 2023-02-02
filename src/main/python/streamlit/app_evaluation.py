@@ -468,11 +468,12 @@ elif general_option == 'Evaluation of a dataset':
             return {"test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
                     "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
 
-    def evaluate_algo(algo_list, strategy_instance, metrics_list, data, k, threshold):
+    def evaluate_algo(algo_list, strategy_instance, metrics, data, k, threshold):
         results = []
+        fold_counter = {} # To count the number of folds for each algorithm
         for algo in algo_list:
             for trainset, testset in strategy_instance.split(data):
-                cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics_list, cv=strategy_instance)
+                cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics, cv=strategy_instance)
                 algo.fit(trainset)
                 predictions = algo.test(testset)
                 precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
@@ -493,35 +494,52 @@ elif general_option == 'Evaluation of a dataset':
                     "MAP": avg_maps,
                     "NDCG": avg_ndcgs
                 }
+
+                # Modify the name of the metrics to be more readable
                 for key, value in avg_cross_validate_results.items():
-                    row[key] = np.mean(value)
+                    if key == "fit_time":
+                        row["Time (train)"] = value
+                    elif key == "test_time":
+                        row["Time (test)"] = value
+                    else:
+                        row[key.replace("test_", "").upper()] = value
+
+                if type(algo).__name__ in fold_counter:
+                    fold_counter[type(algo).__name__] += 1
+                else:
+                    fold_counter[type(algo).__name__] = 1
+                row["Fold"] = fold_counter[type(algo).__name__]
                 results.append(row)
-        return results
+        df = pd.DataFrame(results)
+        cols = ["Fold"] + [col for col in df.columns if col != "Fold"] # Move the "Fold" column to the first position
+        df = df[cols]
+        return df
 
-    st.sidebar.write('Evaluation of a dataset')
-    with st.sidebar.expander("Algorithm selection"):
-        algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"], default="SVD")
-        algo_list = []
-        for algorithm in algorithms:
-            algo_params = select_params(algorithm)
-            algo_instance = rs_surprise.create_algorithm(algorithm, algo_params)
-            algo_list.append(algo_instance)
+    st.sidebar.title('Evaluation of a dataset')
+    st.sidebar.header("Algorithm selection")
+    algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"], default="SVD")
+    algo_list = []
+    for algorithm in algorithms:
+        algo_params = select_params(algorithm)
+        algo_instance = rs_surprise.create_algorithm(algorithm, algo_params)
+        algo_list.append(algo_instance)
+        st.sidebar.markdown("""---""")
     
-    with st.sidebar.expander("Split strategy selection"):
-        strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut", "PredefinedKFold", "train_test_split"])
-        strategy_params = select_split_strategy(strategy)
-        strategy_instance = rs_surprise.create_split_strategy(strategy, strategy_params)
-        
-        if "rating" in st.session_state:
-            rating = st.session_state["rating"]
-            data = rs_surprise.convert_to_surprise_dataset(rating)
-        else:
-            st.error("No rating dataset loaded")
+    st.sidebar.header("Split strategy selection")
+    strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut", "PredefinedKFold", "train_test_split"])
+    strategy_params = select_split_strategy(strategy)
+    strategy_instance = rs_surprise.create_split_strategy(strategy, strategy_params)
+    
+    if "rating" in st.session_state:
+        rating = st.session_state["rating"]
+        data = rs_surprise.convert_to_surprise_dataset(rating)
+    else:
+        st.error("No rating dataset loaded")
 
-    with st.sidebar.expander("Metrics selection"):
-        metrics = st.sidebar.multiselect("Select one or more metrics", ["RMSE", "MSE", "MAE", "FCP", "Precission, Recall and F1-Score", "NDGC", "MAP"], default="MAE")
+    st.sidebar.header("Metrics selection")
+    metrics = st.sidebar.multiselect("Select one or more cross validation metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1 Score", "MAP", "NDCG"], default="MAE")
 
-    if st.sidebar.button("Cross Validate"):
+    if st.sidebar.button("Evaluate"):
         results = evaluate_algo(algo_list, strategy_instance, metrics, data, k=5, threshold=4)
         st.write("Evaluation Results")
         st.write(pd.DataFrame(results))
