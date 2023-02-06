@@ -4,11 +4,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from surprise import model_selection
 # from PIL import Image
 import config
 sys.path.append("src/main/python")
-import rs_surprise
+import rs_surprise.surprise_helpers as surprise_helpers
+import rs_surprise.evaluation as evaluation
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -468,7 +468,7 @@ elif general_option == 'Evaluation of a dataset':
             return {"test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
                     "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
 
-    def evaluate_algo(algo_list, strategy_instance, metrics, data, k, threshold):
+    def evaluate_algo(algo_list, strategy_instance, metrics, data):
         results = []
         fold_counter = {} # To count the number of folds for each algorithm
         total_folds = len(algo_list) * strategy_instance.n_splits
@@ -476,46 +476,37 @@ elif general_option == 'Evaluation of a dataset':
         with st.spinner("Evaluating algorithms..."):
             progress_bar = st.progress(0)
             for algo in algo_list:
-                for trainset, testset in strategy_instance.split(data):
-                    fold_count += 1
-                    cross_validate_results = model_selection.cross_validate(algo, data, measures=metrics, cv=strategy_instance)
-                    algo.fit(trainset)
-                    predictions = algo.test(testset)
-                    precisions, recalls, f1_scores, maps = rs_surprise.precision_recall_at_k(predictions, k, threshold)
-                    ndcgs = rs_surprise.ndcg_at_k(predictions, k=k)
-
-                    avg_precisions = np.mean(list(precisions.values()))
-                    avg_recalls = np.mean(list(recalls.values()))
-                    avg_f1_scores = np.mean(list(f1_scores.values()))
-                    avg_maps = np.mean(list(maps.values()))
-                    avg_ndcgs = np.mean(list(ndcgs.values()))
-                    avg_cross_validate_results = {metric: np.mean(cross_validate_results[metric]) for metric in cross_validate_results}
-
-                    row = {
-                        "Algorithm": type(algo).__name__,
-                        "Precision": avg_precisions,
-                        "Recall": avg_recalls,
-                        "F1 Score": avg_f1_scores,
-                        "MAP": avg_maps,
-                        "NDCG": avg_ndcgs
-                    }
+                fold_count += 1
+                cross_validate_results = evaluation.cross_validate(algo, data, measures=metrics, cv=strategy_instance)
+                for i in range(strategy_instance.n_splits):
+                    row = {}
+                    algo_name = type(algo).__name__
+                    row["Algorithm"] = algo_name
 
                     # Modify the name of the metrics to be more readable
-                    for key, value in avg_cross_validate_results.items():
+                    for key, value in cross_validate_results.items():
                         if key == "fit_time":
-                            row["Time (train)"] = value
+                            row["Time (train)"] = value[i]
                         elif key == "test_time":
-                            row["Time (test)"] = value
+                            row["Time (test)"] = value[i]
+                        elif key == "test_f1_score":
+                            row["F1-score"] = value[i]
+                        elif key == "test_recall":
+                            row["Recall"] = value[i]
+                        elif key == "test_precision":
+                            row["Precision"] = value[i]
                         else:
-                            row[key.replace("test_", "").upper()] = value
-
-                    if type(algo).__name__ in fold_counter:
-                        fold_counter[type(algo).__name__] += 1
+                            row[key.replace("test_", "").upper()] = value[i]
+                        
+                    if algo_name in fold_counter:
+                        fold_counter[algo_name] += 1
                     else:
-                        fold_counter[type(algo).__name__] = 1
-                    row["Fold"] = fold_counter[type(algo).__name__]
+                        fold_counter[algo_name] = 1
+                    row["Fold"] = fold_counter[algo_name]
+
                     results.append(row)
-                    progress_bar.progress(fold_count/total_folds)
+
+                progress_bar.progress(fold_count/total_folds)
         progress_bar.empty()
         df = pd.DataFrame(results)
         cols = ["Fold"] + [col for col in df.columns if col != "Fold"] # Move the "Fold" column to the first position
@@ -528,25 +519,25 @@ elif general_option == 'Evaluation of a dataset':
     algo_list = []
     for algorithm in algorithms:
         algo_params = select_params(algorithm)
-        algo_instance = rs_surprise.create_algorithm(algorithm, algo_params)
+        algo_instance = surprise_helpers.create_algorithm(algorithm, algo_params)
         algo_list.append(algo_instance)
         st.sidebar.markdown("""---""")
     
     st.sidebar.header("Split strategy selection")
     strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut", "PredefinedKFold", "train_test_split"])
     strategy_params = select_split_strategy(strategy)
-    strategy_instance = rs_surprise.create_split_strategy(strategy, strategy_params)
+    strategy_instance = surprise_helpers.create_split_strategy(strategy, strategy_params)
     
     if "rating" in st.session_state:
         rating = st.session_state["rating"]
-        data = rs_surprise.convert_to_surprise_dataset(rating)
+        data = surprise_helpers.convert_to_surprise_dataset(rating)
     else:
         st.error("No rating dataset loaded")
 
     st.sidebar.header("Metrics selection")
-    metrics = st.sidebar.multiselect("Select one or more cross validation metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1 Score", "MAP", "NDCG"], default="MAE")
+    metrics = st.sidebar.multiselect("Select one or more cross validation metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
 
     if st.sidebar.button("Evaluate"):
-        results = evaluate_algo(algo_list, strategy_instance, metrics, data, k=5, threshold=4)
+        results = evaluate_algo(algo_list, strategy_instance, metrics, data)
         st.write("Evaluation Results")
         st.write(pd.DataFrame(results))

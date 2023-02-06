@@ -1,7 +1,12 @@
 import surprise
-from src.main.python import rs_surprise
+from surprise import rs_surprise
 import unittest
 import logging
+
+"""
+Test cases for the surprise module
+Usage: python -m unittest src\main\test\datagencars\surprise\test_surprise.py
+"""
 
 class TestCreateAlgorithm(unittest.TestCase):
     def test_valid_algorithm_name(self):
