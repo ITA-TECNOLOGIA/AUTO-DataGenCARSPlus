@@ -489,7 +489,7 @@ elif general_option == 'Evaluation of a dataset':
                         elif key == "test_time":
                             row["Time (test)"] = value[i]
                         elif key == "test_f1_score":
-                            row["F1-score"] = value[i]
+                            row["F1_Score"] = value[i]
                         elif key == "test_recall":
                             row["Recall"] = value[i]
                         elif key == "test_precision":
@@ -575,19 +575,19 @@ elif general_option == 'Evaluation of a dataset':
     st.sidebar.header("Metrics selection")
     metrics = st.sidebar.multiselect("Select one or more cross validation metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
 
-    if st.sidebar.button("Evaluate"):
-        results_df = evaluate_algo(algo_list, strategy_instance, metrics, data)
-        st.subheader("Evaluation Results:")
-        st.write(pd.DataFrame(results_df))
-        # results_df.to_csv("results.csv", index=False)    
-        st.session_state["results"] = results_df #Save the results dataframe in the session state
+    # if st.sidebar.button("Evaluate"):
+    #     results_df = evaluate_algo(algo_list, strategy_instance, metrics, data)
+    #     st.subheader("Evaluation Results:")
+    #     st.write(pd.DataFrame(results_df))
+    #     # results_df.to_csv("results.csv", index=False)    
+    #     st.session_state["results"] = results_df #Save the results dataframe in the session state
 
-    if "results" in st.session_state:
-        results_df = st.session_state["rating"]
-        # results_df = pd.read_csv("results.csv")
-        st.subheader("Algorithm evaluation results")
-        algorithm = st.selectbox("Select an algorithm to plot", algorithms)
-        visualize_results_algo(results_df, algorithm)
-        st.subheader("Metric evaluation results")
-        metric = st.selectbox("Select a metric to plot", metrics)
-        visualize_results_metric(results_df, "MAE")
+    # if "results" in st.session_state:
+    #     results_df = st.session_state["rating"]
+    results_df = pd.read_csv("results.csv")
+    st.subheader("Algorithm evaluation results")
+    algorithm = st.selectbox("Select an algorithm to plot", algorithms)
+    visualize_results_algo(results_df, algorithm)
+    st.subheader("Metric evaluation results")
+    metric = st.selectbox("Select a metric to plot", metrics)
+    visualize_results_metric(results_df, metric)
