@@ -4,6 +4,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 # from PIL import Image
 import config
 sys.path.append("src/main/python")
@@ -407,35 +408,35 @@ elif general_option == 'Analysis an existing dataset':
 elif general_option == 'Evaluation of a dataset':
     def select_params(algorithm):
         if algorithm == "SVD":
-            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100),
-                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
-                    "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.00, value=0.005, step=0.0001),
-                    "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.00, value=0.02)}
+            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_svd'),
+                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svd'),
+                    "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.00, value=0.005, step=0.0001, key='lr_all_svd'),
+                    "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.00, value=0.02, key='reg_all_svd')}
         elif algorithm == "KNNBasic":
-            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
-                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
-                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"])}}
+            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbasic'),
+                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnbasic'),
+                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnbasic')}}
         elif algorithm == "BaselineOnly":
-            return {"bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"]),
-                                    "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02),
-                                    "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02)}}
+            return {"bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_baselineonly'),
+                                    "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_i_baselineonly'),
+                                    "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_u_baselineonly')}}
         elif algorithm == "CoClustering":
             return {"n_cltr_u": st.sidebar.number_input("Number of clusters for users", min_value=1, max_value=1000, value=5),
                     "n_cltr_i": st.sidebar.number_input("Number of clusters for items", min_value=1, max_value=1000, value=5)}
         elif algorithm == "KNNBaseline":
-            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
-                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
-                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"])},
-                    "bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"]),
-                                    "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02),
-                                    "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02)}}
+            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbaseline'),
+                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnbaseline'),
+                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnbaseline')},
+                    "bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_knnbaseline'),
+                                    "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_i_knnbaseline'),
+                                    "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_u_knnbaseline')}}
         elif algorithm == "KNNWithMeans":
-            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40),
-                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"]),
-                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"])}}
+            return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithmeans'),
+                    "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnwithmeans'),
+                                    "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnwithmeans')}}
         elif algorithm == "NMF":
-            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100),
-                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
+            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_nmf'),
+                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_nmf'),
                     "reg_pu": st.sidebar.number_input("Regularization term for user factors", min_value=0.0001, max_value=1.0, value=0.02),
                     "reg_qi": st.sidebar.number_input("Regularization term for item factors", min_value=0.0001, max_value=1.0, value=0.02)}
         elif algorithm == "NormalPredictor":
@@ -443,10 +444,10 @@ elif general_option == 'Evaluation of a dataset':
         elif algorithm == "SlopeOne":
             return {}
         elif algorithm == "SVDpp":
-            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100),
-                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20),
-                    "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005),
-                    "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02)}
+            return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_svdpp'),
+                    "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svdpp'),
+                    "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005, key='lr_all_svdpp'),
+                    "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_all_svdpp')}
 
     def select_split_strategy(strategy):
         if strategy == "KFold":
@@ -471,10 +472,8 @@ elif general_option == 'Evaluation of a dataset':
     def evaluate_algo(algo_list, strategy_instance, metrics, data):
         results = []
         fold_counter = {} # To count the number of folds for each algorithm
-        total_folds = len(algo_list) * strategy_instance.n_splits
         fold_count = 0
         with st.spinner("Evaluating algorithms..."):
-            progress_bar = st.progress(0)
             for algo in algo_list:
                 fold_count += 1
                 cross_validate_results = evaluation.cross_validate(algo, data, measures=metrics, cv=strategy_instance)
@@ -505,13 +504,52 @@ elif general_option == 'Evaluation of a dataset':
                     row["Fold"] = fold_counter[algo_name]
 
                     results.append(row)
-
-                progress_bar.progress(fold_count/total_folds)
-        progress_bar.empty()
         df = pd.DataFrame(results)
         cols = ["Fold"] + [col for col in df.columns if col != "Fold"] # Move the "Fold" column to the first position
         df = df[cols]
         return df
+
+    def visualize_results_algo(df, algorithm):
+        # Filter the dataframe for the chosen algorithm
+        filtered_df = df[df["Algorithm"] == algorithm]
+
+        # Create the line chart
+        fig = go.Figure()
+        for metric in [col for col in df.columns if col not in ["Algorithm", "Fold", "Time (train)", "Time (test)"]]:
+            # Create a trace for the current metric
+            fig.add_trace(go.Scatter(
+                x=filtered_df["Fold"],
+                y=filtered_df[metric],
+                name=metric
+            ))
+
+        fig.update_layout(
+            xaxis_title="Fold",
+            yaxis_title="Value",
+            legend=dict(title="Metrics")
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    def visualize_results_metric(df, metric):
+        algorithms = df["Algorithm"].unique()
+        fig = go.Figure()
+        for algorithm in algorithms:
+            # Filter the dataframe for the current algorithm
+            filtered_df = df[df["Algorithm"] == algorithm]
+
+            # Create the line chart for the current metric
+            fig.add_trace(go.Scatter(
+                x=filtered_df["Fold"],
+                y=filtered_df[metric],
+                name=algorithm
+            ))
+
+        fig.update_layout(
+            xaxis_title="Fold",
+            yaxis_title="Value",
+            legend=dict(title="Algorithms")
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
     st.sidebar.title('Evaluation of a dataset')
     st.sidebar.header("Algorithm selection")
@@ -538,6 +576,18 @@ elif general_option == 'Evaluation of a dataset':
     metrics = st.sidebar.multiselect("Select one or more cross validation metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
 
     if st.sidebar.button("Evaluate"):
-        results = evaluate_algo(algo_list, strategy_instance, metrics, data)
-        st.write("Evaluation Results")
-        st.write(pd.DataFrame(results))
+        results_df = evaluate_algo(algo_list, strategy_instance, metrics, data)
+        st.subheader("Evaluation Results:")
+        st.write(pd.DataFrame(results_df))
+        # results_df.to_csv("results.csv", index=False)    
+        st.session_state["results"] = results_df #Save the results dataframe in the session state
+
+    if "results" in st.session_state:
+        results_df = st.session_state["rating"]
+        # results_df = pd.read_csv("results.csv")
+        st.subheader("Algorithm evaluation results")
+        algorithm = st.selectbox("Select an algorithm to plot", algorithms)
+        visualize_results_algo(results_df, algorithm)
+        st.subheader("Metric evaluation results")
+        metric = st.selectbox("Select a metric to plot", metrics)
+        visualize_results_metric(results_df, "MAE")
