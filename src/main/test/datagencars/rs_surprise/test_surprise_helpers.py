@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 """
-Test cases for the surprise module
+Test cases for the surprise helpers module
 Usage: python -m unittest src\main\test\datagencars\rs_surprise\test_surprise_helpers.py
 """
 

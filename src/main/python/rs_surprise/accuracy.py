@@ -184,6 +184,8 @@ def fcp(predictions, verbose=True):
     return fcp
 
 def precision(predictions, verbose=True):
+    if not predictions:
+        raise ValueError("Prediction list is empty.")
     k = 10
     threshold = 3.5
 
@@ -212,6 +214,8 @@ def recall(predictions, verbose=True):
     """
     Compute Recall at k metric for each user
     """
+    if not predictions:
+        raise ValueError("Prediction list is empty.")
     k = 10
     threshold = 3.5
     user_est_true = defaultdict(list)
@@ -227,13 +231,24 @@ def recall(predictions, verbose=True):
         recall = n_rel_and_rec_k / n_rel if n_rel != 0 else 0
         recalls.append(recall)
     if verbose:
-        print(f"Recalls: {recalls:1.4f}")
+        print(f"Recalls: {recalls}")
     return np.mean(recalls)
 
 def f1_score(predictions, verbose=True):
     """
     Compute F1 Score at k metric for each user
+    Args:
+        predictions (:obj:`list` of :obj:`Prediction\
+            <surprise.prediction_algorithms.predictions.Prediction>`):
+            A list of predictions, as returned by the :meth:`test()
+            <surprise.prediction_algorithms.algo_base.AlgoBase.test>` method.
+        verbose: If True, will print computed value. Default is ``True``.
+
+    Returns:
+        The F1 Score of predictions.
     """
+    if not predictions:
+        raise ValueError("Prediction list is empty.")
     k = 10
     threshold = 3.5
     user_est_true = defaultdict(list)
@@ -254,10 +269,15 @@ def f1_score(predictions, verbose=True):
         f1_scores[uid] = f1_score
     result = np.mean(list(f1_scores.values()))
     if verbose:
-        print(f"F1-score: {result:1.4f}")
+        print(f"F1_Score: {result:1.4f}")
     return result
 
 def map(predictions, verbose=True):
+    """
+    Compute Mean Average Precision at k metric for each user
+    """
+    if not predictions:
+        raise ValueError("Prediction list is empty.")
     k=10
     threshold=3.5
     # First map the predictions to each user.
@@ -284,19 +304,19 @@ def map(predictions, verbose=True):
         map_value = sum(ap_values) / n_rel if n_rel != 0 else 0
         maps[uid] = map_value
         if verbose:
-            print(f"MAP: {maps:1.4f}")
+            print(f"MAP: {maps}")
     return np.mean(list(maps.values()))
 
 def ndcg(predictions, verbose=True):
     """
-    Return Normalized Discounted Cumulative Gain (NDCG) at k for each user
+    Compute Normalized Discounted Cumulative Gain (NDCG) at k for each user
     """
+    if not predictions:
+        raise ValueError("Prediction list is empty.")
     k=10
-    threshold=3.5
     user_est_true = defaultdict(list)
     for uid, _, true_r, est, _ in predictions:
         user_est_true[uid].append((est, true_r))
-
     ndcgs = dict()
     for uid, user_ratings in user_est_true.items():
         # Sort user ratings by estimated value
@@ -306,9 +326,8 @@ def ndcg(predictions, verbose=True):
         ideal_dcg = sorted(discount_gain, reverse=True)
         ndcg = sum(discount_gain[:k])/sum(ideal_dcg[:k]) if sum(ideal_dcg[:k]) != 0 else 0
         ndcgs[uid] = ndcg
-
     if verbose:
-        print(f"NDCG: {ndcgs:1.4f}")
+        print(f"NDCG: {ndcgs}")
     return np.mean(list(ndcgs.values()))
 
 """
