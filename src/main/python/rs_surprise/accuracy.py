@@ -183,119 +183,117 @@ def fcp(predictions, verbose=True):
         print(f"FCP:  {fcp:1.4f}")
     return fcp
 
-def precision(predictions, verbose=True):
+"""
+Precision and Recall at k metrics for each user functions are inspired by the following source:
+https://github.com/NicolasHug/Surprise/blob/master/examples/precision_recall_at_k.py
+Furthermore, the function was modified to include the F1-score and MAP metrics.
+"""
+
+def init_user_est_true(predictions):
     if not predictions:
         raise ValueError("Prediction list is empty.")
-    k = 10
-    threshold = 3.5
 
+    # First map the predictions to each user.
     user_est_true = defaultdict(list)
     for uid, _, true_r, est, _ in predictions:
         user_est_true[uid].append((est, true_r))
 
-    precisions = []
-    for uid, user_ratings in user_est_true.items():
-        user_ratings.sort(key=lambda x: x[0], reverse=True)
-        n_rec_k = sum((est >= threshold) for (est, _) in user_ratings[:k])
-        n_rel_and_rec_k = sum(
-            ((true_r >= threshold) and (est >= threshold))
-            for (est, true_r) in user_ratings[:k]
-        )
-        precision = n_rel_and_rec_k / n_rec_k if n_rec_k != 0 else 0
-        precisions.append(precision)
-    
-    precision = np.mean(precisions)
+    return user_est_true
 
+def init_n_rel_and_rec_k(user_ratings):
+    k=10
+    threshold=3.5
+
+    # Sort user ratings by estimated value
+    user_ratings.sort(key=lambda x: x[0], reverse=True)
+
+    # Number of relevant items
+    n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
+
+    # Number of recommended items in top k
+    n_rec_k = sum((est >= threshold) for (est, _) in user_ratings[:k])
+
+    # Number of relevant and recommended items in top k
+    n_rel_and_rec_k = sum(
+        ((true_r >= threshold) and (est >= threshold))
+        for (est, true_r) in user_ratings[:k]
+    )
+
+    return n_rel, n_rec_k, n_rel_and_rec_k
+
+def precision(predictions, verbose=True):
+    """
+    Compute precision at k metric for each user
+    """
+    user_est_true = init_user_est_true(predictions)
+
+    precisions = dict()
+    for uid, user_ratings in user_est_true.items():
+        n_rel, n_rec_k, n_rel_and_rec_k = init_n_rel_and_rec_k(user_ratings)
+
+        # Precision@K: Proportion of recommended items that are relevant
+        # When n_rec_k is 0, Precision is undefined. We here set it to 0.
+        precision = n_rel_and_rec_k / n_rec_k if n_rec_k != 0 else 0
+        precisions[uid] = precision
+    
+    precision = np.mean(list(precisions.values()))
     if verbose:
         print(f"Precision: {precision:1.4f}")
     return precision
 
 def recall(predictions, verbose=True):
     """
-    Compute Recall at k metric for each user
+    Compute recall at k metric for each user
     """
-    if not predictions:
-        raise ValueError("Prediction list is empty.")
-    k = 10
-    threshold = 3.5
-    user_est_true = defaultdict(list)
-    for uid, _, true_r, est, _ in predictions:
-        user_est_true[uid].append((est, true_r))
-    recalls = []
+    user_est_true = init_user_est_true(predictions)
+
+    recalls = dict()
     for uid, user_ratings in user_est_true.items():
-        n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
-        n_rel_and_rec_k = sum(
-            ((true_r >= threshold) and (est >= threshold))
-            for (est, true_r) in user_ratings[:k]
-        )
+        n_rel, n_rec_k, n_rel_and_rec_k = init_n_rel_and_rec_k(user_ratings)
+
+        # Recall@K: Proportion of relevant items that are recommended
+        # When n_rel is 0, Recall is undefined. We here set it to 0.
         recall = n_rel_and_rec_k / n_rel if n_rel != 0 else 0
-        recalls.append(recall)
+        recalls[uid] = recall
+
+    recall = np.mean(list(recalls.values()))
     if verbose:
-        print(f"Recalls: {recalls}")
-    return np.mean(recalls)
+        print(f"Recalls: {recall:1.4f}")
+    return recall
 
 def f1_score(predictions, verbose=True):
     """
     Compute F1 Score at k metric for each user
-    Args:
-        predictions (:obj:`list` of :obj:`Prediction\
-            <surprise.prediction_algorithms.predictions.Prediction>`):
-            A list of predictions, as returned by the :meth:`test()
-            <surprise.prediction_algorithms.algo_base.AlgoBase.test>` method.
-        verbose: If True, will print computed value. Default is ``True``.
-
-    Returns:
-        The F1 Score of predictions.
     """
-    if not predictions:
-        raise ValueError("Prediction list is empty.")
-    k = 10
-    threshold = 3.5
-    user_est_true = defaultdict(list)
-    for uid, _, true_r, est, _ in predictions:
-        user_est_true[uid].append((est, true_r))
+    user_est_true = init_user_est_true(predictions)
+
     f1_scores = dict()
     for uid, user_ratings in user_est_true.items():
-        user_ratings.sort(key=lambda x: x[0], reverse=True)
-        n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
-        n_rec_k = sum((est >= threshold) for (est, _) in user_ratings[:k])
-        n_rel_and_rec_k = sum(
-            ((true_r >= threshold) and (est >= threshold))
-            for (est, true_r) in user_ratings[:k]
-        )
+        n_rel, n_rec_k, n_rel_and_rec_k = init_n_rel_and_rec_k(user_ratings)
+
+        # F1-score@K: Harmonic mean of precision and recall at k over all users
         precision = n_rel_and_rec_k / n_rec_k if n_rec_k != 0 else 0
         recall = n_rel_and_rec_k / n_rel if n_rel != 0 else 0
         f1_score = 2 * ((precision * recall) / (precision + recall)) if precision + recall != 0 else 0
         f1_scores[uid] = f1_score
-    result = np.mean(list(f1_scores.values()))
+    
+    f1_score = np.mean(list(f1_scores.values()))
     if verbose:
-        print(f"F1_Score: {result:1.4f}")
-    return result
+        print(f"F1_Score: {f1_score:1.4f}")
+    return f1_score
 
 def map(predictions, verbose=True):
     """
-    Compute Mean Average Precision at k metric for each user
-    """
-    if not predictions:
-        raise ValueError("Prediction list is empty.")
-    k=10
-    threshold=3.5
-    # First map the predictions to each user.
-    user_est_true = defaultdict(list)
-    for uid, _, true_r, est, _ in predictions:
-        user_est_true[uid].append((est, true_r))
+    Compute Mean Average Precision (MAP) at k metric for each user
+    """    
+    user_est_true = init_user_est_true(predictions)
+
     maps = dict()
+    threshold=3.5
     for uid, user_ratings in user_est_true.items():
-        # Sort user ratings by estimated value
-        user_ratings.sort(key=lambda x: x[0], reverse=True)
-        # Number of relevant items
-        n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
-        # Number of relevant and recommended items in top k
-        n_rel_and_rec_k = sum(
-            ((true_r >= threshold) and (est >= threshold))
-            for (est, true_r) in user_ratings[:k]
-        )
-        # Mean Average Precision (MAP)
+        n_rel, n_rec_k, n_rel_and_rec_k = init_n_rel_and_rec_k(user_ratings)
+        
+        # MAP@K: Mean of average precision at k over all users
         ap_values = []
         for i, (est, true_r) in enumerate(user_ratings):
             if true_r >= threshold:
@@ -303,97 +301,30 @@ def map(predictions, verbose=True):
                 ap_values.append(precision)
         map_value = sum(ap_values) / n_rel if n_rel != 0 else 0
         maps[uid] = map_value
-        if verbose:
-            print(f"MAP: {maps}")
-    return np.mean(list(maps.values()))
+    
+    map_value = np.mean(list(maps.values()))
+    if verbose:
+        print(f"MAP: {map_value:1.4f}")
+    return map_value
 
 def ndcg(predictions, verbose=True):
     """
     Compute Normalized Discounted Cumulative Gain (NDCG) at k for each user
     """
-    if not predictions:
-        raise ValueError("Prediction list is empty.")
-    k=10
-    user_est_true = defaultdict(list)
-    for uid, _, true_r, est, _ in predictions:
-        user_est_true[uid].append((est, true_r))
+    user_est_true = init_user_est_true(predictions)
+
     ndcgs = dict()
+    k=10
     for uid, user_ratings in user_est_true.items():
-        # Sort user ratings by estimated value
         user_ratings.sort(key=lambda x: x[0], reverse=True)
+        # NDGC@K: Normalized discounted cumulative gain at k over all users
         true_r = [x[1] for x in user_ratings]
         discount_gain = [((2**x[1])-1)/math.log2(x[0]+1) for x in enumerate(true_r, start=1)]
         ideal_dcg = sorted(discount_gain, reverse=True)
         ndcg = sum(discount_gain[:k])/sum(ideal_dcg[:k]) if sum(ideal_dcg[:k]) != 0 else 0
         ndcgs[uid] = ndcg
+    
+    ndcg = np.mean(list(ndcgs.values()))
     if verbose:
-        print(f"NDCG: {ndcgs}")
-    return np.mean(list(ndcgs.values()))
-
-"""
-Precision and Recall at k metrics for each user functions are inspired by the link´s source.
-Furthermore, the function was modified to include the F1-score and MAP metrics.
-"""
-# def precision_recall_at_k(predictions, verbose=True):
-#     """
-#     Return precision, recall, F1-score and MAP at k metrics for each user
-#     Source: https://github.com/NicolasHug/Surprise/blob/master/examples/precision_recall_at_k.py
-#     """
-#     k=10
-#     threshold=3.5
-
-#     # First map the predictions to each user.
-#     user_est_true = defaultdict(list)
-#     for uid, _, true_r, est, _ in predictions:
-#         user_est_true[uid].append((est, true_r))
-
-#     precisions = dict()
-#     recalls = dict()
-#     f1_scores = dict()
-#     maps = dict()
-#     for uid, user_ratings in user_est_true.items():
-
-#         # Sort user ratings by estimated value
-#         user_ratings.sort(key=lambda x: x[0], reverse=True)
-
-#         # Number of relevant items
-#         n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
-
-#         # Number of recommended items in top k
-#         n_rec_k = sum((est >= threshold) for (est, _) in user_ratings[:k])
-
-#         # Number of relevant and recommended items in top k
-#         n_rel_and_rec_k = sum(
-#             ((true_r >= threshold) and (est >= threshold))
-#             for (est, true_r) in user_ratings[:k]
-#         )
-
-#         # Precision@K: Proportion of recommended items that are relevant
-#         # When n_rec_k is 0, Precision is undefined. We here set it to 0.
-#         precision = n_rel_and_rec_k / n_rec_k if n_rec_k != 0 else 0
-#         precisions[uid] = precision
-
-#         # Recall@K: Proportion of relevant items that are recommended
-#         # When n_rel is 0, Recall is undefined. We here set it to 0.
-#         recall = n_rel_and_rec_k / n_rel if n_rel != 0 else 0
-#         recalls[uid] = recall
-
-#         # F1-score@K: Harmonic mean of precision and recall
-#         f1_score = 2 * ((precision * recall) / (precision + recall)) if precision + recall != 0 else 0
-#         f1_scores[uid] = f1_score
-
-#         # Mean Average Precision (MAP)
-#         ap_values = []
-#         for i, (est, true_r) in enumerate(user_ratings):
-#             if true_r >= threshold:
-#                 ap_values.append(precisions[uid] * (i + 1) / (i + 1))
-#         map_value = sum(ap_values) / n_rel if n_rel != 0 else 0
-#         maps[uid] = map_value
-
-#         if verbose:
-#             print(f"Precissions: {precisions:1.4f}")
-#             print(f"Recalls: {recalls:1.4f}")
-#             print(f"F1-score: {f1_scores:1.4f}")
-#             print(f"MAP: {maps:1.4f}")
-
-#     return precisions, recalls, f1_scores, maps
+        print(f"NDCG: {ndcg:1.4f}")
+    return ndcg
