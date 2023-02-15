@@ -412,6 +412,30 @@ elif general_option == 'Analysis an existing dataset':
                 for item, count in counts_items.items(): #Add the count of each item to the plot
                     ax.text(item, count, str(count), ha='center', va='bottom')
                 st.pyplot(fig)
+
+                users = data['rating']['user_id'].unique()
+                users = ["All users"] + list(users)
+                selected_user = st.selectbox("Select user", users)
+
+                # Filter the ratings dataset by user
+                if selected_user == "All users":
+                    filtered_ratings = data['rating']
+                else:
+                    filtered_ratings = data['rating'][data['rating']['user_id'] == selected_user]
+
+                # Calculate the vote standard deviation and average vote per user and for all of the users
+                if len(filtered_ratings) > 0:
+                    vote_std = filtered_ratings['rating'].std()
+                    user_avg_vote = filtered_ratings.groupby('user_id')['rating'].mean()
+                    all_users_avg_vote = filtered_ratings['rating'].mean()
+
+                    # Create a streamlit table to show the results
+                    if selected_user == "All users":
+                        st.write(f"Vote standard deviation: {vote_std:.2f}")
+                        st.write(f"Average vote for all users: {all_users_avg_vote:.2f}")
+                    else:
+                        st.write(f"Vote standard deviation: {vote_std:.2f}")
+                        st.write(f"Average vote for user {selected_user}: {user_avg_vote[selected_user]:.2f}")
             else:
                 st.error("Ratings dataset not found.")
     elif is_analysis == 'Replicate dataset':  
