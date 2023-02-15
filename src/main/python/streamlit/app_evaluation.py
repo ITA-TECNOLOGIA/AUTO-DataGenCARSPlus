@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
+import altair as alt
 # from PIL import Image
 import config
 sys.path.append("src/main/python")
@@ -248,6 +249,22 @@ elif general_option == 'Analysis an existing dataset':
                 else:
                     table.append([column, dataframe[column].dtype, "unsupported data type"])
             st.table(pd.DataFrame(table, columns=["Attribute name", "Data type", "Value ranges"]))
+        def plot_column_attributes_count(dataframe):
+            """
+            Plot the count of each attribute of a selected column.
+            """
+            column = st.selectbox("Select an attribute", dataframe.columns)
+            if dataframe[column].dtype == 'datetime64[ns]':
+                data = dataframe.groupby(pd.Grouper(key=column, freq='M')).size().reset_index(name='count')
+                data[column] = data[column].dt.strftime('%B %Y')  # Format dates to show month and year
+            else:
+                data = dataframe.groupby(column).size().reset_index(name='count') # Group the data by the selected column and count the occurrences of each attribute            
+            chart = alt.Chart(data).mark_bar().encode(
+                x=alt.X(column + ':O', title='Attribute values'),
+                y=alt.Y('count:Q', title='Count'),
+                tooltip=['count']
+            ).interactive()
+            st.altair_chart(chart, use_container_width=True)
         with tab1:
             option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
             if option == 'Multiple files':
@@ -317,18 +334,21 @@ elif general_option == 'Analysis an existing dataset':
             if 'user' in data and data['user'] is not None:
                 replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
                 list_attributes_and_ranges(data['user'])
+                plot_column_attributes_count(data['user'])
             else:
                 st.error("User dataset not found.")
         with tab3:
             if 'item' in data and data['item'] is not None:
                 replace_count_missing_values(data['item'],replace_values={"NULL":np.nan,-1:np.nan})
                 list_attributes_and_ranges(data['item'])
+                plot_column_attributes_count(data['item'])
             else:
                 st.error("Item dataset not found.")
         with tab4:
             if 'context' in data and data['context'] is not None:
                 replace_count_missing_values(data['context'],replace_values={"NULL":np.nan,-1:np.nan})
                 list_attributes_and_ranges(data['context'])
+                plot_column_attributes_count(data['context'])
             else:
                 st.error("Context dataset not found.")
         with tab5:
@@ -575,19 +595,19 @@ elif general_option == 'Evaluation of a dataset':
     st.sidebar.header("Metrics selection")
     metrics = st.sidebar.multiselect("Select one or more cross validation metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
 
-    # if st.sidebar.button("Evaluate"):
-    #     results_df = evaluate_algo(algo_list, strategy_instance, metrics, data)
-    #     st.subheader("Evaluation Results:")
-    #     st.write(pd.DataFrame(results_df))
+    if st.sidebar.button("Evaluate"):
+        results_df = evaluate_algo(algo_list, strategy_instance, metrics, data)
+        st.subheader("Evaluation Results:")
+        st.write(pd.DataFrame(results_df))
     #     # results_df.to_csv("results.csv", index=False)    
     #     st.session_state["results"] = results_df #Save the results dataframe in the session state
 
     # if "results" in st.session_state:
     #     results_df = st.session_state["rating"]
-    results_df = pd.read_csv("results.csv")
-    st.subheader("Algorithm evaluation results")
-    algorithm = st.selectbox("Select an algorithm to plot", algorithms)
-    visualize_results_algo(results_df, algorithm)
-    st.subheader("Metric evaluation results")
-    metric = st.selectbox("Select a metric to plot", metrics)
-    visualize_results_metric(results_df, metric)
+    # results_df = pd.read_csv("results.csv")
+    # st.subheader("Algorithm evaluation results")
+    # algorithm = st.selectbox("Select an algorithm to plot", algorithms)
+    # visualize_results_algo(results_df, algorithm)
+    # st.subheader("Metric evaluation results")
+    # metric = st.selectbox("Select a metric to plot", metrics)
+    # visualize_results_metric(results_df, metric)
