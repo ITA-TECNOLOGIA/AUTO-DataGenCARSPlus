@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import altair as alt
+import seaborn as sns
 # from PIL import Image
 import config
 sys.path.append("src/main/python")
@@ -215,7 +216,7 @@ if general_option == 'Generate a synthetic dataset':
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
     if is_analysis == 'Data visualization':  
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings'])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Correlation analysis'])
         def replace_count_missing_values(dataframe, replace_values={}):
             """
             Count missing values in the dataframe.
@@ -290,13 +291,15 @@ elif general_option == 'Analysis an existing dataset':
                                         if upload_timestamp:
                                             column_names.append("timestamp")
                                         data[file_type] = pd.read_csv(uploaded_file, sep=separator, names=column_names, header=0)
-                                    elif file_type == "user" or file_type == "item":
+                                    elif file_type == "user" or file_type == "item" or file_type == "context":
                                         df = pd.read_csv(uploaded_file, sep=separator)
                                         column_names = list(df.columns)
                                         if file_type == "user":
                                             column_names[0] = "user_id"
-                                        else:
+                                        elif file_type == "item":
                                             column_names[0] = "item_id"
+                                        elif file_type == "context":
+                                            column_names[0] = "context_id"
                                         df.columns = column_names
                                         data[file_type] = df
                                     else:
@@ -438,7 +441,20 @@ elif general_option == 'Analysis an existing dataset':
                         st.write(f"Average vote for user {selected_user}: {user_avg_vote[selected_user]:.2f}")
             else:
                 st.error("Ratings dataset not found.")
-    elif is_analysis == 'Replicate dataset':  
+        with tab6:
+            if 'rating' in data and data['rating'] is not None and 'item' in data and data['item'] is not None and 'context' in data and data['context'] is not None and 'user' in data and data['user'] is not None:
+                merged_df = pd.merge(data['rating'], data['item'], on="item_id")
+                merged_df = pd.merge(data['context'], merged_df, on="context_id")
+                merged_df = pd.merge(merged_df, data['user'], on='user_id')
+
+                corr_matrix = merged_df.corr()
+
+                fig = sns.pairplot(data=merged_df, kind="reg")
+                st.pyplot(fig)
+            else:
+                st.error("Ratings, items, contexts and users datasets not found.")
+
+    elif is_analysis == 'Replicate dataset':
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
         st.write('TODO')

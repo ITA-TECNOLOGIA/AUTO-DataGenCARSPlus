@@ -1,3 +1,4 @@
 resources/*
 *.pyc
-
+*.csv
+.vscode
