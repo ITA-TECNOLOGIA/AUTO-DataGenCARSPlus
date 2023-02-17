@@ -12,6 +12,8 @@ import config
 sys.path.append("src/main/python")
 import rs_surprise.surprise_helpers as surprise_helpers
 import rs_surprise.evaluation as evaluation
+import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating as extract_statistics_rating
+import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic as extract_statistics_uic
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -217,54 +219,12 @@ elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
     if is_analysis == 'Data visualization':  
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Correlation analysis'])
-        def replace_count_missing_values(dataframe, replace_values={}):
-            """
-            Count missing values in the dataframe.
-            """
-            for k,v in replace_values.items():
-                dataframe.replace(k, np.nan, inplace=True)
-            missing_values = dataframe.isnull().sum()
-            missing_values = pd.DataFrame(missing_values, columns=["Count"])
-            missing_values.reset_index(inplace=True)
-            missing_values.rename(columns={"index": "Attribute name"}, inplace=True)
-            st.dataframe(dataframe)
-            st.write("Missing values:")
-            st.table(missing_values)
-        def list_attributes_and_ranges(dataframe):
-            """
-            List attributes, data types, and value ranges of the dataframe.
-            """
-            st.write("Attributes, data types and value ranges:")
-            table = []
-            for column in dataframe.columns:
-                if dataframe[column].dtype in ['int64', 'float64']:
-                    table.append([column, dataframe[column].dtype, f"{dataframe[column].min()} - {dataframe[column].max()}"])
-                elif dataframe[column].dtype == 'object':
-                    try:
-                        dataframe[column] = pd.to_datetime(dataframe[column], format='%d/%m/%Y')
-                        table.append([column, dataframe[column].dtype, f"{dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}"])
-                    except ValueError:
-                        unique_values = dataframe[column].dropna().unique()
-                        unique_values_str = ', '.join([str(value) for value in unique_values])
-                        table.append([column, dataframe[column].dtype, unique_values_str])
-                else:
-                    table.append([column, dataframe[column].dtype, "unsupported data type"])
-            st.table(pd.DataFrame(table, columns=["Attribute name", "Data type", "Value ranges"]))
-        def plot_column_attributes_count(dataframe):
-            """
-            Plot the count of each attribute of a selected column.
-            """
-            column = st.selectbox("Select an attribute", dataframe.columns)
-            if dataframe[column].dtype == 'datetime64[ns]':
-                data = dataframe.groupby(pd.Grouper(key=column, freq='M')).size().reset_index(name='count')
-                data[column] = data[column].dt.strftime('%B %Y')  # Format dates to show month and year
-            else:
-                data = dataframe.groupby(column).size().reset_index(name='count') # Group the data by the selected column and count the occurrences of each attribute            
+        def plot_column_attributes_count(data, column):
             chart = alt.Chart(data).mark_bar().encode(
-                x=alt.X(column + ':O', title='Attribute values'),
-                y=alt.Y('count:Q', title='Count'),
-                tooltip=['count']
-            ).interactive()
+                    x=alt.X(column + ':O', title='Attribute values'),
+                    y=alt.Y('count:Q', title='Count'),
+                    tooltip=['count']
+                ).interactive()
             st.altair_chart(chart, use_container_width=True)
         with tab1:
             option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
@@ -335,110 +295,101 @@ elif general_option == 'Analysis an existing dataset':
                             st.error(f"An error occurred while reading the file: {str(e)}")
         with tab2:
             if 'user' in data and data['user'] is not None:
-                replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
-                list_attributes_and_ranges(data['user'])
-                plot_column_attributes_count(data['user'])
+                st.dataframe(data['user'] )
+                missing_values2 = extract_statistics_uic.replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                st.write("Missing values:")
+                st.table(missing_values2)
+                
+                st.write("Attributes, data types and value ranges:")
+                table2 = extract_statistics_uic.list_attributes_and_ranges(data['user'])
+                st.table(pd.DataFrame(table2, columns=["Attribute name", "Data type", "Value ranges"]))
+                
+                column2 = st.selectbox("Select an attribute", data['user'].columns)
+                data2 = extract_statistics_uic.column_attributes_count(data['user'], column2)
+                plot_column_attributes_count(data2, column2)
             else:
                 st.error("User dataset not found.")
         with tab3:
             if 'item' in data and data['item'] is not None:
-                replace_count_missing_values(data['item'],replace_values={"NULL":np.nan,-1:np.nan})
-                list_attributes_and_ranges(data['item'])
-                plot_column_attributes_count(data['item'])
+                st.dataframe(data['item'] )
+                missing_values3 = extract_statistics_uic.replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                st.write("Missing values:")
+                st.table(missing_values3)
+                
+                st.write("Attributes, data types and value ranges:")
+                table3 = extract_statistics_uic.list_attributes_and_ranges(data['item'])
+                st.table(pd.DataFrame(table3, columns=["Attribute name", "Data type", "Value ranges"]))
+
+                column3 = st.selectbox("Select an attribute", data['item'].columns)
+                data3 = extract_statistics_uic.column_attributes_count(data['item'], column3)
+                plot_column_attributes_count(data3, column3)
             else:
                 st.error("Item dataset not found.")
         with tab4:
             if 'context' in data and data['context'] is not None:
-                replace_count_missing_values(data['context'],replace_values={"NULL":np.nan,-1:np.nan})
-                list_attributes_and_ranges(data['context'])
-                plot_column_attributes_count(data['context'])
+                st.dataframe(data['context'] )
+                missing_values4 = extract_statistics_uic.replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                st.write("Missing values:")
+                st.table(missing_values4)
+
+                st.write("Attributes, data types and value ranges:")
+                table4 = extract_statistics_uic.list_attributes_and_ranges(data['context'])
+                st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
+                
+                column4 = st.selectbox("Select an attribute", data['context'].columns)
+                data4 = extract_statistics_uic.column_attributes_count(data['context'], column4)
+                plot_column_attributes_count(data3, column3)
             else:
                 st.error("Context dataset not found.")
         with tab5:
             if 'rating' in data and data['rating'] is not None:
-                # Replace missing values
-                for k,v in {"NULL":np.nan,-1:np.nan}.items():
-                    data['rating'].replace(k, np.nan, inplace=True)
+                data['rating'] = extract_statistics_rating.replace_missing_values(data['rating'])
+                st.session_state["rating"] = data['rating'] #Save the rating dataframe in the session state
 
                 st.dataframe(data['rating'])
 
-                # Count unique users, items, contexts and timestamps
-                unique_users = data['rating']["user_id"].nunique()
-                unique_items = data['rating']["item_id"].nunique()
-                unique_counts = {"Users": unique_users, "Items": unique_items}
-                if 'context_id' in data['rating'].columns and upload_context:
-                    unique_contexts = data['rating']["context_id"].nunique()
-                    unique_counts["Contexts"] = unique_contexts
-                if 'timestamp' in data['rating'].columns and upload_timestamp:
-                    unique_timestamps = data['rating']["timestamp"].nunique()
-                    unique_counts["Timestamps"] = unique_timestamps
-                unique_ratings = data['rating']["rating"].nunique()
-                unique_counts["Ratings"] = unique_ratings
-                unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count'])
-                unique_counts_df.reset_index(inplace=True)
-                unique_counts_df.rename(columns={"index": "Attribute name"}, inplace=True)
+                unique_counts_df = extract_statistics_rating.count_unique(data['rating'])
                 st.write("General statistics:")
                 st.table(unique_counts_df)
                 
-                list_attributes_and_ranges(data['rating'])
+                st.write("Attributes, data types and value ranges:")
+                table5 = extract_statistics_uic.list_attributes_and_ranges(data['rating'])
+                st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
 
-                st.session_state["rating"] = data['rating'] #Save the rating dataframe in the session state
-
-                font = {'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12}
-                grid = {'visible':True, 'color':'gray', 'linestyle':'-.', 'linewidth':0.5}
-
-                fig, ax = plt.subplots()
-                ax.set_title("Distribution of ratings", fontdict={'size': 16, **font})
-                ax.set_xlabel("Rating", fontdict=font)
-                ax.set_ylabel("Frequency", fontdict=font)
-                ax.grid(**grid)
+                # Plot the distribution of ratings
                 counts = np.bincount(data['rating']["rating"]) #Count the frequency of each rating
+                fig, ax = plt.subplots()
+                ax.set_title("Distribution of ratings", fontdict={'size': 16, **config.PLOTS_FONT})
+                ax.set_xlabel("Rating", fontdict=config.PLOTS_FONT)
+                ax.set_ylabel("Frequency", fontdict=config.PLOTS_FONT)
+                ax.grid(**config.PLOTS_GRID)
                 for i in range(5):
                     ax.bar(i+1, counts[i+1], color="#0099CC")
                     ax.text(i+1, counts[i+1]+1, str(counts[i+1]), ha='center')
                 st.pyplot(fig, clear_figure=True)
 
+                # Plot the distribution of the number of items voted by each user
                 user_options = data['rating'].groupby("user_id")["item_id"].nunique().index
                 selected_user = st.selectbox("Select a user:", user_options)
-                filtered_ratings_df = data['rating'][data['rating']['user_id'] == selected_user]
-                total_count = len(filtered_ratings_df["item_id"])
+                counts_items, unique_items, total_count = extract_statistics_rating.count_items_voted_by_user(data['rating'], selected_user)
                 fig, ax = plt.subplots()
-                ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count})", fontdict={'size': 16, **font})
-                ax.set_xlabel("Items", fontdict=font)
-                ax.set_ylabel("Frequency", fontdict=font)
-                ax.grid(**grid)
-                counts_items = filtered_ratings_df.groupby("item_id").size()
+                ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count})", fontdict={'size': 16, **config.PLOTS_FONT})
+                ax.set_xlabel("Items", fontdict=config.PLOTS_FONT)
+                ax.set_ylabel("Frequency", fontdict=config.PLOTS_FONT)
+                ax.grid(**config.PLOTS_GRID)
                 ax.bar(counts_items.index, counts_items.values, color="#0099CC")
-                unique_items = np.unique(filtered_ratings_df["item_id"]) #Obtain the unique values and convert them to list
                 ax.set_xticks(unique_items)
-                counts_items = filtered_ratings_df["item_id"].value_counts()
                 for item, count in counts_items.items(): #Add the count of each item to the plot
                     ax.text(item, count, str(count), ha='center', va='bottom')
                 st.pyplot(fig)
 
+                # Show the statistics of the selected user votes
                 users = data['rating']['user_id'].unique()
                 users = ["All users"] + list(users)
                 selected_user = st.selectbox("Select user", users)
-
-                # Filter the ratings dataset by user
-                if selected_user == "All users":
-                    filtered_ratings = data['rating']
-                else:
-                    filtered_ratings = data['rating'][data['rating']['user_id'] == selected_user]
-
-                # Calculate the vote standard deviation and average vote per user and for all of the users
-                if len(filtered_ratings) > 0:
-                    vote_std = filtered_ratings['rating'].std()
-                    user_avg_vote = filtered_ratings.groupby('user_id')['rating'].mean()
-                    all_users_avg_vote = filtered_ratings['rating'].mean()
-
-                    # Create a streamlit table to show the results
-                    if selected_user == "All users":
-                        st.write(f"Vote standard deviation: {vote_std:.2f}")
-                        st.write(f"Average vote for all users: {all_users_avg_vote:.2f}")
-                    else:
-                        st.write(f"Vote standard deviation: {vote_std:.2f}")
-                        st.write(f"Average vote for user {selected_user}: {user_avg_vote[selected_user]:.2f}")
+                vote_stats = extract_statistics_rating.calculate_vote_stats(data, selected_user)
+                for key, value in vote_stats.items():
+                    st.write(f"{key}: {value}")
             else:
                 st.error("Ratings dataset not found.")
         with tab6:
@@ -446,6 +397,8 @@ elif general_option == 'Analysis an existing dataset':
                 merged_df = pd.merge(data['rating'], data['item'], on="item_id")
                 merged_df = pd.merge(data['context'], merged_df, on="context_id")
                 merged_df = pd.merge(merged_df, data['user'], on='user_id')
+
+                #TODO: st.multiselect para seleccionar las columnas a mostrar
 
                 corr_matrix = merged_df.corr()
 
