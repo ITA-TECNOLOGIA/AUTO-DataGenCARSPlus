@@ -1,4 +1,4 @@
-from rs_surprise import evaluation, accuracy
+from rs_surprise import evaluation
 import unittest
 import numpy as np
 from surprise import Dataset
@@ -7,7 +7,7 @@ from surprise.model_selection.split import train_test_split
 
 """
 Test cases for the evaluation module
-Usage: python -m unittest src\main\test\datagencars\rs_surprise\test_evaluation.py
+Usage: python -m unittest src\main\test\rs_surprise\test_evaluation.py
 """
 class TestCrossValidate(unittest.TestCase):
     def test_cross_validate(self):

@@ -31,7 +31,7 @@ def count_unique(data):
     return unique_counts_df
 
 def count_items_voted_by_user(data, selected_user):
-    filtered_ratings_df = data['rating'][data['rating']['user_id'] == selected_user] #Filter the ratings dataset by user
+    filtered_ratings_df = data[data['user_id'] == selected_user] #Filter the ratings dataset by user
     total_count = len(filtered_ratings_df["item_id"])
     counts_items = filtered_ratings_df.groupby("item_id").size()
     unique_items = np.unique(filtered_ratings_df["item_id"]) #Obtain the unique values and convert them to list
@@ -42,9 +42,9 @@ def count_items_voted_by_user(data, selected_user):
 def calculate_vote_stats(data, selected_user):
     # Filter the ratings dataset by user
     if selected_user == "All users":
-        filtered_ratings = data['rating']
+        filtered_ratings = data
     else:
-        filtered_ratings = data['rating'][data['rating']['user_id'] == selected_user]
+        filtered_ratings = data[data['user_id'] == selected_user]
 
     # Calculate the vote standard deviation and average vote per user and for all of the users
     stats = {}
@@ -54,9 +54,9 @@ def calculate_vote_stats(data, selected_user):
         all_users_avg_vote = filtered_ratings['rating'].mean()
 
         stats["Vote standard deviation"] = f"{vote_std:.2f}"
-        stats["Average vote for all users"] = f"{all_users_avg_vote:.2f}"
         if selected_user != "All users":
             stats[f"Average vote for user {selected_user}"] = f"{user_avg_vote[selected_user]:.2f}"
+        else:
+            stats["Average vote for all users"] = f"{all_users_avg_vote:.2f}"
         
     return stats
-

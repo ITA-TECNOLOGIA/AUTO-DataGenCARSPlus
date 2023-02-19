@@ -1,10 +1,10 @@
 import numpy as np
-from rs_surprise import accuracy
 import unittest
+from rs_surprise import accuracy
 
 """
 Test cases for the accuracy module
-Usage: python -m unittest src\main\test\datagencars\rs_surprise\test_accuracy.py
+Usage: python -m unittest src\main\test\rs_surprise\test_accuracy.py
 """
 
 class TestRMSE(unittest.TestCase):

@@ -1,4 +1,3 @@
-# sourcery skip: use-fstring-for-concatenation
 import sys
 import streamlit as st
 import pandas as pd
@@ -7,7 +6,6 @@ import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import altair as alt
 import seaborn as sns
-# from PIL import Image
 import config
 sys.path.append("src/main/python")
 import rs_surprise.surprise_helpers as surprise_helpers
@@ -387,7 +385,7 @@ elif general_option == 'Analysis an existing dataset':
                 users = data['rating']['user_id'].unique()
                 users = ["All users"] + list(users)
                 selected_user = st.selectbox("Select user", users)
-                vote_stats = extract_statistics_rating.calculate_vote_stats(data, selected_user)
+                vote_stats = extract_statistics_rating.calculate_vote_stats(data['rating'], selected_user)
                 for key, value in vote_stats.items():
                     st.write(f"{key}: {value}")
             else:
@@ -406,7 +404,6 @@ elif general_option == 'Analysis an existing dataset':
                 st.pyplot(fig)
             else:
                 st.error("Ratings, items, contexts and users datasets not found.")
-
     elif is_analysis == 'Replicate dataset':
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
