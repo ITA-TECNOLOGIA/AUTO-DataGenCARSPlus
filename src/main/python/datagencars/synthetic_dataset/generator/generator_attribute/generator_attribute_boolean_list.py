@@ -20,7 +20,7 @@ class GeneratorAttributeBooleanList(GeneratorAttribute):
     def generate_attribute_value(self, position):
         # sourcery skip: extract-method, for-append-to-extend, list-comprehension
         '''
-        XXX
+        Generates an attribute value (boolean list) of a instance.
 
         Example of item_schema.conf:
             [attribute6]
@@ -40,20 +40,13 @@ class GeneratorAttributeBooleanList(GeneratorAttribute):
         '''
         attribute_value_list = []
         attribute_name = self.schema_access.get_attribute_name_from_pos(position)
-        if attribute_name == 'id_user_profile':
+        if attribute_name == 'user_profile_id':
             print('TODO')
         else:  
             component_attribute_list = self.schema_access.get_component_attribute_list_from_pos(position)            
             input_parameter_attribute = self.schema_access.get_input_parameter_attribute_from_pos(position)            
-            removed_attribute_value_list = np.random.choice(component_attribute_list, int(input_parameter_attribute))
+            removed_attribute_value_list = np.random.choice(component_attribute_list, int(input_parameter_attribute)).tolist()
             for component_attribute in component_attribute_list:
                 if component_attribute not in removed_attribute_value_list:
                     attribute_value_list.append(component_attribute)           
         return attribute_name, attribute_value_list
-
-# from datagencars.generator.file_access.schema_access import SchemaAccess
-# schema_access = SchemaAccess(file_path='resources/data/item_schema.conf')
-# bool_array_list_generator = BooleanListAttributeGenerator(schema_access)
-# attribute_name, attribute_value_list = bool_array_list_generator.generate_attribute_value(position=6)
-# print('attribute_name: ', attribute_name)
-# print('attribute_value_list: ', attribute_value_list)

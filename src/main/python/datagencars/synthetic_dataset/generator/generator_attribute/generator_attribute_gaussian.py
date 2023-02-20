@@ -6,12 +6,17 @@ import numpy as np
 
 
 class GeneratorAttributeGaussian(GeneratorAttribute):
+    '''
+    A generator of attribute values following a gaussian distribution: an integer or float value in a given range, a string value from an enumerated list, or a boolean value.
+
+    @author Maria del Carmen Rodriguez-Hernandez
+    '''
     
     def __init__(self, schema_access):
         super().__init__(schema_access)
 
     def generate_attribute_value(self, position):
-        # sourcery skip: extract-duplicate-method, inline-immediately-returned-variable
+        # sourcery skip: extract-duplicate-method, extract-method, inline-immediately-returned-variable
         '''
         Generates an attribute value (random by using a gaussian -normal- distribution) of a instance.
 
@@ -31,13 +36,13 @@ class GeneratorAttributeGaussian(GeneratorAttribute):
         '''
         attribute_value = None
         attribute_name = self.schema_access.get_attribute_name_from_pos(position)
-        if attribute_name == 'id_user_profile':
+        if attribute_name == 'user_profile_id':
             print('TODO')
         else:            
-            type_attribute = self.schema_access.get_type_attribute_from_pos(position)
-            minimum_value = self.schema_access.get_minimum_value_attribute_from_pos(position)
-            maximum_value = self.schema_access.get_maximum_value_attribute_from_pos(position)
+            type_attribute = self.schema_access.get_type_attribute_from_pos(position)            
             if type_attribute in ['Integer', 'Float']:
+                minimum_value = self.schema_access.get_minimum_value_attribute_from_pos(position)
+                maximum_value = self.schema_access.get_maximum_value_attribute_from_pos(position)
                 if type_attribute == 'Integer':
                     # Generating a list of int values.   
                     array_np = np.array(list(range(int(minimum_value), int(maximum_value)+1)))

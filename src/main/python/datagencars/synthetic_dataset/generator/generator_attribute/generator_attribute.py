@@ -7,5 +7,5 @@ class GeneratorAttribute(ABC):
         self.schema_access = schema_access
 
     @abstractmethod
-    def generate_attribute_value(self, position):
+    def generate_attribute_value(self, position, iunput_parameter_content=None, input_paramenter_split=None):
         pass
