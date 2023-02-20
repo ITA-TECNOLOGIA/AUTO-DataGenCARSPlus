@@ -43,3 +43,18 @@ def replace_count_missing_values(dataframe, replace_values={}):
     missing_values.reset_index(inplace=True)
     missing_values.rename(columns={"index": "Attribute name"}, inplace=True)
     return missing_values
+
+def general_statistics(data):
+    """
+    Extract general statistics from the dataset.
+    """
+    num_users = data['user_id'].nunique()
+    num_items = data['item_id'].nunique()
+    num_contexts = data['context_id'].nunique()
+    num_ratings = data[['user_id', 'item_id', 'context_id']].nunique().sum()
+    return {
+        "Number of userID": num_users,
+        "Number of itemID": num_items,
+        "Number of contextID": num_contexts,
+        "Number of ratings": num_ratings
+    }
