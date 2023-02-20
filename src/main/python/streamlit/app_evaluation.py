@@ -396,12 +396,15 @@ elif general_option == 'Analysis an existing dataset':
                 merged_df = pd.merge(data['context'], merged_df, on="context_id")
                 merged_df = pd.merge(merged_df, data['user'], on='user_id')
 
-                #TODO: st.multiselect para seleccionar las columnas a mostrar
+                selected_columns = st.multiselect("Select columns to display", merged_df.columns)
+                if selected_columns:
+                    merged_df = merged_df[selected_columns]
 
-                corr_matrix = merged_df.corr()
-
-                fig = sns.pairplot(data=merged_df, kind="reg")
-                st.pyplot(fig)
+                if st.button("Generate correlation matrix"):
+                    with st.spinner("Generating correlation matrix..."):
+                        corr_matrix = merged_df[selected_columns].corr()
+                        fig = sns.pairplot(data=merged_df[selected_columns], kind="reg")
+                        st.pyplot(fig)
             else:
                 st.error("Ratings, items, contexts and users datasets not found.")
     elif is_analysis == 'Replicate dataset':
