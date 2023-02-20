@@ -321,6 +321,12 @@ elif general_option == 'Analysis an existing dataset':
                 column3 = st.selectbox("Select an attribute", data['item'].columns)
                 data3 = extract_statistics_uic.column_attributes_count(data['item'], column3)
                 plot_column_attributes_count(data3, column3)
+
+                merged_df = pd.merge(data['rating'], data['item'], on="item_id")
+                users = merged_df['user_id'].unique()
+                selected_user = st.selectbox("Select a user:", users)
+                stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "items")
+                st.table(pd.DataFrame([stats]))
             else:
                 st.error("Item dataset not found.")
         with tab4:
@@ -337,6 +343,12 @@ elif general_option == 'Analysis an existing dataset':
                 column4 = st.selectbox("Select an attribute", data['context'].columns)
                 data4 = extract_statistics_uic.column_attributes_count(data['context'], column4)
                 plot_column_attributes_count(data3, column3)
+
+                merged_df = pd.merge(data['rating'], data['context'], on="context_id")
+                users = merged_df['user_id'].unique()
+                selected_user = st.selectbox("Select a user:", users)
+                stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
+                st.table(pd.DataFrame([stats]))
             else:
                 st.error("Context dataset not found.")
         with tab5:
@@ -367,8 +379,8 @@ elif general_option == 'Analysis an existing dataset':
                 st.pyplot(fig, clear_figure=True)
 
                 # Plot the distribution of the number of items voted by each user
-                user_options = data['rating'].groupby("user_id")["item_id"].nunique().index
-                selected_user = st.selectbox("Select a user:", user_options)
+                users = data['rating']['user_id'].unique()
+                selected_user = st.selectbox("Select a user:", users)
                 counts_items, unique_items, total_count, percent_ratings_by_user = extract_statistics_rating.count_items_voted_by_user(data['rating'], selected_user)
                 fig, ax = plt.subplots()
                 ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count}) (percentage={percent_ratings_by_user:.2f}%)", fontdict={'size': 16, **config.PLOTS_FONT})
@@ -382,7 +394,6 @@ elif general_option == 'Analysis an existing dataset':
                 st.pyplot(fig)
 
                 # Show the statistics of the selected user votes
-                users = data['rating']['user_id'].unique()
                 users = ["All users"] + list(users)
                 selected_user = st.selectbox("Select user", users)
                 vote_stats = extract_statistics_rating.calculate_vote_stats(data['rating'], selected_user)

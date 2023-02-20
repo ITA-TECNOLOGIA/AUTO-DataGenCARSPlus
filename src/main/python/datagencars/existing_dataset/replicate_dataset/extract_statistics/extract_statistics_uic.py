@@ -58,3 +58,29 @@ def general_statistics(data):
         "Number of contextID": num_contexts,
         "Number of ratings": num_ratings
     }
+
+def statistics_by_user(data, selected_user, word):
+    """
+    Computes the statistics of items per user.
+    """
+    filtered_data = data[data['user_id'] == selected_user] #Filter the ratings dataset by user
+    num_ratings = len(filtered_data)
+    num_items = filtered_data['item_id'].nunique()
+    items_per_rating = num_items / num_ratings
+    avg_items_by_user = data.groupby('user_id')['item_id'].nunique().mean()
+    var_items_by_user = data.groupby('user_id')['item_id'].nunique().var()
+    std_items_by_user = data.groupby('user_id')['item_id'].nunique().std()
+    repeated_items_by_user = num_ratings - num_items
+    non_repeated_items_by_user = num_items
+    percent_repeated_items_by_user = repeated_items_by_user / num_ratings * 100
+    percent_non_repeated_items_by_user = non_repeated_items_by_user / num_ratings * 100
+
+    return {
+        f"Average of {word} by user": avg_items_by_user,
+        f"Variance of {word} by user": var_items_by_user,
+        f"Standard deviation of {word} by user": std_items_by_user,
+        f"Number of {word} not repeated by user": non_repeated_items_by_user,
+        f"Percent of {word} not repeated by user": percent_non_repeated_items_by_user,
+        f"Number of {word} repeated by user": repeated_items_by_user,
+        f"Percent of {word} repeated by user": percent_repeated_items_by_user,
+    }
