@@ -216,7 +216,7 @@ if general_option == 'Generate a synthetic dataset':
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
     if is_analysis == 'Data visualization':  
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Correlation analysis'])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Total'])
         def plot_column_attributes_count(data, column):
             chart = alt.Chart(data).mark_bar().encode(
                     x=alt.X(column + ':O', title='Attribute values'),
@@ -369,9 +369,9 @@ elif general_option == 'Analysis an existing dataset':
                 # Plot the distribution of the number of items voted by each user
                 user_options = data['rating'].groupby("user_id")["item_id"].nunique().index
                 selected_user = st.selectbox("Select a user:", user_options)
-                counts_items, unique_items, total_count = extract_statistics_rating.count_items_voted_by_user(data['rating'], selected_user)
+                counts_items, unique_items, total_count, percent_ratings_by_user = extract_statistics_rating.count_items_voted_by_user(data['rating'], selected_user)
                 fig, ax = plt.subplots()
-                ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count})", fontdict={'size': 16, **config.PLOTS_FONT})
+                ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count}) (percentage={percent_ratings_by_user:.2f}%)", fontdict={'size': 16, **config.PLOTS_FONT})
                 ax.set_xlabel("Items", fontdict=config.PLOTS_FONT)
                 ax.set_ylabel("Frequency", fontdict=config.PLOTS_FONT)
                 ax.grid(**config.PLOTS_GRID)
@@ -396,10 +396,13 @@ elif general_option == 'Analysis an existing dataset':
                 merged_df = pd.merge(data['context'], merged_df, on="context_id")
                 merged_df = pd.merge(merged_df, data['user'], on='user_id')
 
+                stats = extract_statistics_uic.general_statistics(merged_df)
+                st.table(pd.DataFrame([stats]))
+                
+                st.header("Correlation matrix")
                 selected_columns = st.multiselect("Select columns to display", merged_df.columns)
                 if selected_columns:
                     merged_df = merged_df[selected_columns]
-
                 if st.button("Generate correlation matrix"):
                     with st.spinner("Generating correlation matrix..."):
                         corr_matrix = merged_df[selected_columns].corr()

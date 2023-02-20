@@ -36,8 +36,11 @@ def count_items_voted_by_user(data, selected_user):
     counts_items = filtered_ratings_df.groupby("item_id").size()
     unique_items = np.unique(filtered_ratings_df["item_id"]) #Obtain the unique values and convert them to list
     counts_items = filtered_ratings_df["item_id"].value_counts()
-
-    return counts_items, unique_items, total_count
+    
+    num_users = len(data["user_id"].unique())
+    percent_ratings_by_user = (total_count / num_users) * 100
+    
+    return counts_items, unique_items, total_count, percent_ratings_by_user
 
 def calculate_vote_stats(data, selected_user):
     # Filter the ratings dataset by user
