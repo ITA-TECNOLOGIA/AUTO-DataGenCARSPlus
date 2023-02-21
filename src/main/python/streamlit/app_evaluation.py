@@ -240,6 +240,16 @@ elif general_option == 'Analysis an existing dataset':
                     tooltip=['count']
                 ).interactive()
             st.altair_chart(chart, use_container_width=True)
+        def print_statistics_by_attribute(statistics):
+            st.header("Statistics by attribute")
+            for stat in statistics:
+                st.subheader(stat[0])
+                st.write('Average: ', stat[1])
+                st.write('Standard deviation: ', stat[2])
+                st.write('Frequencies:')
+                st.dataframe(stat[3])
+                st.write('Percentages:')
+                st.dataframe(stat[4])
         with tab1:
             option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
             if option == 'Multiple files':
@@ -290,7 +300,7 @@ elif general_option == 'Analysis an existing dataset':
         with tab2:
             if 'user' in data and data['user'] is not None:
                 st.dataframe(data['user'] )
-                missing_values2 = extract_statistics_uic.replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                missing_values2 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
                 st.write("Missing values:")
                 st.table(missing_values2)
                 
@@ -303,21 +313,13 @@ elif general_option == 'Analysis an existing dataset':
                 plot_column_attributes_count(data2, column2)
 
                 statistics = extract_statistics_uic.statistics_by_attribute(data['user'])
-                st.header("Statistics by attribute")
-                for stat in statistics:
-                    st.subheader(stat[0])
-                    st.write('Average: ', stat[1])
-                    st.write('Standard deviation: ', stat[2])
-                    st.write('Frequencies:')
-                    st.dataframe(stat[3])
-                    st.write('Percentages:')
-                    st.dataframe(stat[4])
+                print_statistics_by_attribute(statistics)
             else:
                 st.error("User dataset not found.")
         with tab3:
             if 'item' in data and data['item'] is not None:
                 st.dataframe(data['item'] )
-                missing_values3 = extract_statistics_uic.replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                missing_values3 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
                 st.write("Missing values:")
                 st.table(missing_values3)
                 
@@ -334,12 +336,15 @@ elif general_option == 'Analysis an existing dataset':
                 selected_user = st.selectbox("Select a user:", users, key="selected_user_tab3")
                 stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "items")
                 st.table(pd.DataFrame([stats]))
+
+                statistics = extract_statistics_uic.statistics_by_attribute(data['item'])
+                print_statistics_by_attribute(statistics)
             else:
                 st.error("Item dataset not found.")
         with tab4:
             if 'context' in data and data['context'] is not None:
                 st.dataframe(data['context'] )
-                missing_values4 = extract_statistics_uic.replace_count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                missing_values4 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
                 st.write("Missing values:")
                 st.table(missing_values4)
 
@@ -356,6 +361,9 @@ elif general_option == 'Analysis an existing dataset':
                 selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
                 stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
                 st.table(pd.DataFrame([stats]))
+
+                statistics = extract_statistics_uic.statistics_by_attribute(data['context'])
+                print_statistics_by_attribute(statistics)
             else:
                 st.error("Context dataset not found.")
         with tab5:

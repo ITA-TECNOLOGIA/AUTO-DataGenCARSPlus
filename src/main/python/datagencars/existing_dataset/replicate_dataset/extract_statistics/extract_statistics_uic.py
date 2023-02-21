@@ -14,7 +14,7 @@ def list_attributes_and_ranges(dataframe):
                 dataframe[column] = pd.to_datetime(dataframe[column], format='%d/%m/%Y')
                 table.append([column, dataframe[column].dtype, f"{dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}"])
             except ValueError:
-                unique_values = dataframe[column].dropna().unique()
+                unique_values = dataframe[column].unique() #.dropna().unique()
                 unique_values_str = ', '.join([str(value) for value in unique_values])
                 table.append([column, dataframe[column].dtype, unique_values_str])
         else:
@@ -32,7 +32,7 @@ def column_attributes_count(dataframe, column):
         data = dataframe.groupby(column).size().reset_index(name='count') # Group the data by the selected column and count the occurrences of each attribute            
     return data
 
-def replace_count_missing_values(dataframe, replace_values={}):
+def count_missing_values(dataframe, replace_values={}):
     """
     Count missing values in the dataframe.
     """
