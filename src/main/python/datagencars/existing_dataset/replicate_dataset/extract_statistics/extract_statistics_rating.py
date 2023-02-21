@@ -56,10 +56,11 @@ def calculate_vote_stats(data, selected_user):
         user_avg_vote = filtered_ratings.groupby('user_id')['rating'].mean().to_dict()
         all_users_avg_vote = filtered_ratings['rating'].mean()
 
-        stats["Vote standard deviation"] = f"{vote_std:.2f}"
         if selected_user != "All users":
             stats[f"Average vote for user {selected_user}"] = f"{user_avg_vote[selected_user]:.2f}"
+            stats[f"Vote standard deviation for user {selected_user}"] = f"{vote_std:.2f}"
         else:
             stats["Average vote for all users"] = f"{all_users_avg_vote:.2f}"
+            stats[f"Vote standard deviation for all users"] = f"{vote_std:.2f}"
         
     return stats

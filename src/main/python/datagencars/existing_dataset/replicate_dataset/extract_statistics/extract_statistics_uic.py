@@ -84,3 +84,30 @@ def statistics_by_user(data, selected_user, word):
         f"Number of {word} repeated by user": repeated_items_by_user,
         f"Percent of {word} repeated by user": percent_repeated_items_by_user,
     }
+
+def statistics_by_attribute(dataframe):
+    """
+    Calculate average and standard devuation per attribute and frequency and percentage of each attribute value. 
+    """
+    statistics = []
+    for column in dataframe.columns:
+        if dataframe[column].dtype in ['int64', 'float64']:
+            if column not in ['user_id', 'item_id', 'context_id']:
+                frequency = dataframe[column].value_counts().reset_index()
+                frequency.columns = ['Value', 'Frequency']
+
+                # # Convert from dataframe to string (e.g. Value 96 --> 4 times)
+                # frequency['index'] = frequency['index'].astype(str) + ' --> ' + frequency[column].astype(str) + ' times'
+                # # Convert from dataframe to list
+                # frequency = frequency['index'].tolist()
+                # # Convert from list to string with each of the elements of the list separated by a new line
+                # frequency = "\n".join(frequency)
+                # print(frequency)
+
+                percentage = dataframe[column].value_counts(normalize=True).reset_index()
+                percentage.columns = ['Value', 'Percentage']
+                # Show the Percentage column as 4.35% instead of 0.0435
+                percentage['Percentage'] = percentage['Percentage'].map('{:,.2%}'.format)
+
+                statistics.append([column, round(dataframe[column].mean(), 2), round(dataframe[column].std(), 2), frequency, percentage])
+    return statistics

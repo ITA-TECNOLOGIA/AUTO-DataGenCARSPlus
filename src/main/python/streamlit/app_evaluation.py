@@ -301,6 +301,17 @@ elif general_option == 'Analysis an existing dataset':
                 column2 = st.selectbox("Select an attribute", data['user'].columns)
                 data2 = extract_statistics_uic.column_attributes_count(data['user'], column2)
                 plot_column_attributes_count(data2, column2)
+
+                statistics = extract_statistics_uic.statistics_by_attribute(data['user'])
+                st.header("Statistics by attribute")
+                for stat in statistics:
+                    st.subheader(stat[0])
+                    st.write('Average: ', stat[1])
+                    st.write('Standard deviation: ', stat[2])
+                    st.write('Frequencies:')
+                    st.dataframe(stat[3])
+                    st.write('Percentages:')
+                    st.dataframe(stat[4])
             else:
                 st.error("User dataset not found.")
         with tab3:
