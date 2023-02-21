@@ -217,7 +217,23 @@ elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
     if is_analysis == 'Data visualization':  
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Total'])
-        def plot_column_attributes_count(data, column):
+        def read_uploaded_file(uploaded_file, data, file_type, separator):
+            # Read the header of the file to determine column names
+            header = uploaded_file.readline().decode("utf-8").strip()
+            column_names = header.split(separator)
+
+            # Rename columns
+            for i, col in enumerate(column_names):
+                if "user" in col.lower() and "id" in col.lower():
+                    column_names[i] = "user_id"
+                elif "item" in col.lower() and "id" in col.lower():
+                    column_names[i] = "item_id"
+                elif "context" in col.lower() and "id" in col.lower():
+                    column_names[i] = "context_id"
+
+            data[file_type] = pd.read_csv(uploaded_file, sep=separator, names=column_names)
+            return data
+        def plot_column_attributes_count(data, column):                    
             chart = alt.Chart(data).mark_bar().encode(
                     x=alt.X(column + ':O', title='Attribute values'),
                     y=alt.Y('count:Q', title='Count'),
@@ -228,7 +244,6 @@ elif general_option == 'Analysis an existing dataset':
             option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
             if option == 'Multiple files':
                 upload_context = st.checkbox("With context", value=True)
-                upload_timestamp = st.checkbox("With timestamp", value=True)
                 data = {} #Dictionary with the dataframes
                 for file_type in ["user", "item", "context", "rating"]:
                     if file_type == "context":
@@ -242,26 +257,7 @@ elif general_option == 'Analysis an existing dataset':
                                 st.error('Please provide a separator.')
                             else:
                                 try:
-                                    if file_type == "rating":
-                                        column_names = ["user_id", "item_id", "rating"]
-                                        if upload_context:
-                                            column_names.append("context_id")
-                                        if upload_timestamp:
-                                            column_names.append("timestamp")
-                                        data[file_type] = pd.read_csv(uploaded_file, sep=separator, names=column_names, header=0)
-                                    elif file_type == "user" or file_type == "item" or file_type == "context":
-                                        df = pd.read_csv(uploaded_file, sep=separator)
-                                        column_names = list(df.columns)
-                                        if file_type == "user":
-                                            column_names[0] = "user_id"
-                                        elif file_type == "item":
-                                            column_names[0] = "item_id"
-                                        elif file_type == "context":
-                                            column_names[0] = "context_id"
-                                        df.columns = column_names
-                                        data[file_type] = df
-                                    else:
-                                        data[file_type] = pd.read_csv(uploaded_file, sep=separator)
+                                    data = read_uploaded_file(uploaded_file, data, file_type, separator)
                                     st.dataframe(data[file_type].head())
                                 except Exception as e:
                                     st.error(f"An error occurred while reading the {file_type} file: {str(e)}")
@@ -324,7 +320,7 @@ elif general_option == 'Analysis an existing dataset':
 
                 merged_df = pd.merge(data['rating'], data['item'], on="item_id")
                 users = merged_df['user_id'].unique()
-                selected_user = st.selectbox("Select a user:", users)
+                selected_user = st.selectbox("Select a user:", users, key="selected_user_tab3")
                 stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "items")
                 st.table(pd.DataFrame([stats]))
             else:
@@ -346,7 +342,7 @@ elif general_option == 'Analysis an existing dataset':
 
                 merged_df = pd.merge(data['rating'], data['context'], on="context_id")
                 users = merged_df['user_id'].unique()
-                selected_user = st.selectbox("Select a user:", users)
+                selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
                 stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
                 st.table(pd.DataFrame([stats]))
             else:
@@ -367,7 +363,7 @@ elif general_option == 'Analysis an existing dataset':
                 st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
 
                 # Plot the distribution of ratings
-                counts = np.bincount(data['rating']["rating"]) #Count the frequency of each rating
+                counts = np.bincount(data['rating']['rating']) #Count the frequency of each rating
                 fig, ax = plt.subplots()
                 ax.set_title("Distribution of ratings", fontdict={'size': 16, **config.PLOTS_FONT})
                 ax.set_xlabel("Rating", fontdict=config.PLOTS_FONT)
@@ -380,7 +376,7 @@ elif general_option == 'Analysis an existing dataset':
 
                 # Plot the distribution of the number of items voted by each user
                 users = data['rating']['user_id'].unique()
-                selected_user = st.selectbox("Select a user:", users)
+                selected_user = st.selectbox("Select a user:", users, key="selected_user_tab5")
                 counts_items, unique_items, total_count, percent_ratings_by_user = extract_statistics_rating.count_items_voted_by_user(data['rating'], selected_user)
                 fig, ax = plt.subplots()
                 ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count}) (percentage={percent_ratings_by_user:.2f}%)", fontdict={'size': 16, **config.PLOTS_FONT})
