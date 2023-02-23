@@ -331,11 +331,12 @@ elif general_option == 'Analysis an existing dataset':
                 data3 = extract_statistics_uic.column_attributes_count(data['item'], column3)
                 plot_column_attributes_count(data3, column3)
 
-                merged_df = pd.merge(data['rating'], data['item'], on="item_id")
-                users = merged_df['user_id'].unique()
-                selected_user = st.selectbox("Select a user:", users, key="selected_user_tab3")
-                stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "items")
-                st.table(pd.DataFrame([stats]))
+                if 'rating' in data and data['rating'] is not None:
+                    merged_df = pd.merge(data['rating'], data['item'], on="item_id")
+                    users = merged_df['user_id'].unique()
+                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab3")
+                    stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "items")
+                    st.table(pd.DataFrame([stats]))
 
                 statistics = extract_statistics_uic.statistics_by_attribute(data['item'])
                 print_statistics_by_attribute(statistics)
@@ -356,11 +357,12 @@ elif general_option == 'Analysis an existing dataset':
                 data4 = extract_statistics_uic.column_attributes_count(data['context'], column4)
                 plot_column_attributes_count(data3, column3)
 
-                merged_df = pd.merge(data['rating'], data['context'], on="context_id")
-                users = merged_df['user_id'].unique()
-                selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
-                stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
-                st.table(pd.DataFrame([stats]))
+                if 'rating' in data and data['rating'] is not None:
+                    merged_df = pd.merge(data['rating'], data['context'], on="context_id")
+                    users = merged_df['user_id'].unique()
+                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
+                    stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
+                    st.table(pd.DataFrame([stats]))
 
                 statistics = extract_statistics_uic.statistics_by_attribute(data['context'])
                 print_statistics_by_attribute(statistics)
@@ -426,13 +428,22 @@ elif general_option == 'Analysis an existing dataset':
                 st.table(pd.DataFrame([stats]))
                 
                 st.header("Correlation matrix")
-                selected_columns = st.multiselect("Select columns to display", merged_df.columns)
-                if selected_columns:
-                    merged_df = merged_df[selected_columns]
-                if st.button("Generate correlation matrix"):
+                columns_not_id = [col for col in merged_df.columns if col not in ['user_id', 'item_id', 'context_id']]
+                data_types = []
+                for col in columns_not_id:
+                    data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype)})                    
+                st.dataframe(pd.DataFrame(data_types))
+                selected_columns = st.multiselect("Select columns to analyze", columns_not_id)
+                method = st.selectbox("Select a method", ['pearson', 'kendall', 'spearman'])
+                if st.button("Generate correlation matrix") and selected_columns:
                     with st.spinner("Generating correlation matrix..."):
-                        corr_matrix = merged_df[selected_columns].corr()
-                        fig = sns.pairplot(data=merged_df[selected_columns], kind="reg")
+                        merged_df = merged_df[selected_columns]
+                        for col in merged_df.columns:
+                            if merged_df[col].dtype == object:
+                                merged_df[col] = pd.Categorical(merged_df[col])
+                        corr_matrix = merged_df[selected_columns].corr(method=method, numeric_only=True)
+                        fig, ax = plt.subplots(figsize=(10, 10))
+                        sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
                         st.pyplot(fig)
             else:
                 st.error("Ratings, items, contexts and users datasets not found.")

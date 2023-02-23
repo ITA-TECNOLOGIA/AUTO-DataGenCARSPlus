@@ -18,7 +18,7 @@ def list_attributes_and_ranges(dataframe):
                 unique_values_str = ', '.join([str(value) for value in unique_values])
                 table.append([column, dataframe[column].dtype, unique_values_str])
         else:
-            table.append([column, dataframe[column].dtype, "unsupported data type"])
+            table.append([column, dataframe[column].dtype, "Unsupported data type"])
     return table
 
 def column_attributes_count(dataframe, column):
