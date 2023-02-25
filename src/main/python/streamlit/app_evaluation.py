@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import altair as alt
 import seaborn as sns
+import re
 import config
 sys.path.append("src/main/python")
 import rs_surprise.surprise_helpers as surprise_helpers
@@ -430,11 +431,19 @@ elif general_option == 'Analysis an existing dataset':
                 st.table(pd.DataFrame([stats]))
                 
                 st.header("Correlation matrix")
+                
+                # columns_not_id = [col for col in merged_df.columns if col not in ['user_id', 'item_id', 'context_id']]
+                # data_types = []
+                # for col in columns_not_id:
+                #     data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype)})                    
+                # st.dataframe(pd.DataFrame(data_types))
                 columns_not_id = [col for col in merged_df.columns if col not in ['user_id', 'item_id', 'context_id']]
                 data_types = []
                 for col in columns_not_id:
-                    data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype)})                    
-                st.dataframe(pd.DataFrame(data_types))
+                    data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype), "File Type": "rating" if col in data["rating"].columns else "item" if col in data["item"].columns else "context" if col in data["context"].columns else "user"})
+                df_data_types = pd.DataFrame(data_types)
+                st.dataframe(df_data_types)
+                
                 selected_columns = st.multiselect("Select columns to analyze", columns_not_id)
                 method = st.selectbox("Select a method", ['pearson', 'kendall', 'spearman'])
                 if st.button("Generate correlation matrix") and selected_columns:
