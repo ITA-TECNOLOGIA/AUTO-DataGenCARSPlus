@@ -419,10 +419,12 @@ elif general_option == 'Analysis an existing dataset':
             else:
                 st.error("Ratings dataset not found.")
         with tab6:
-            if 'rating' in data and data['rating'] is not None and 'item' in data and data['item'] is not None and 'context' in data and data['context'] is not None and 'user' in data and data['user'] is not None:
-                merged_df = pd.merge(data['rating'], data['item'], on="item_id")
-                merged_df = pd.merge(data['context'], merged_df, on="context_id")
-                merged_df = pd.merge(merged_df, data['user'], on='user_id')
+            try:
+                # Merge the dataframes
+                merged_df = data["rating"]
+                for key in ["user", "item", "context"]:
+                    if key in data:
+                        merged_df = pd.merge(merged_df, data[key], on=key+"_id", how="left")
 
                 stats = extract_statistics_uic.general_statistics(merged_df)
                 st.table(pd.DataFrame([stats]))
@@ -437,16 +439,18 @@ elif general_option == 'Analysis an existing dataset':
                 method = st.selectbox("Select a method", ['pearson', 'kendall', 'spearman'])
                 if st.button("Generate correlation matrix") and selected_columns:
                     with st.spinner("Generating correlation matrix..."):
-                        merged_df = merged_df[selected_columns]
-                        for col in merged_df.columns:
-                            if merged_df[col].dtype == object:
-                                merged_df[col] = pd.Categorical(merged_df[col])
-                        corr_matrix = merged_df[selected_columns].corr(method=method, numeric_only=True)
+                        merged_df_selected = merged_df[selected_columns].copy()
+                        # Categorize non-numeric columns using label encoding
+                        for col in merged_df_selected.select_dtypes(exclude=[np.number]):
+                            merged_df_selected[col], _ = merged_df_selected[col].factorize()
+                        
+                        corr_matrix = merged_df_selected.corr(method=method)
+                        
                         fig, ax = plt.subplots(figsize=(10, 10))
                         sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
                         st.pyplot(fig)
-            else:
-                st.error("Ratings, items, contexts and users datasets not found.")
+            except:
+                st.error("Ratings, items, contexts or users datasets not found.")
     elif is_analysis == 'Replicate dataset':
         st.write('TODO')
     elif is_analysis == 'Extend dataset':  
