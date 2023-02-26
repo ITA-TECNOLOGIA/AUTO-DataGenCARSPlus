@@ -476,7 +476,7 @@ elif general_option == 'Analysis an existing dataset':
                 return 1 if rating >= threshold else 0
             df['rating'] = df['rating'].apply(binary_rating)
             return df
-        st.title("Ratings to Binary Converter")
+        st.title("Ratings to Binary Converter Tool")
         st.write("Upload a CSV file containing ratings to convert them to binary values.")
         uploaded_file = st.file_uploader("Choose a file")
         delimiter = st.text_input("CSV delimiter", ";")
@@ -484,7 +484,7 @@ elif general_option == 'Analysis an existing dataset':
         if uploaded_file is not None:
             df_ratings = pd.read_csv(uploaded_file, delimiter=delimiter)
             df_binary = ratings_to_binary(df_ratings, threshold)
-            filename = Path(uploaded_file.name).stem + f"_binary_{threshold}.csv"
+            filename = Path(uploaded_file.name).stem + "_binary.csv"
             st.write("Converted ratings:")
             st.write(df_binary)
             st.download_button(
@@ -494,7 +494,79 @@ elif general_option == 'Analysis an existing dataset':
                 mime='text/csv'
             )
     elif is_analysis == 'Categorize dataset':
-        st.write('TODO')
+        st.title("Mapping Categorization Tool")
+        def apply_mappings(df):
+            for key, value in mappings.items():
+                df[key] = df[key].map(value)
+            return df
+
+        # Define layout
+        col1, col2, col3 = st.columns(3)
+        cols = [col1, col2, col3]
+
+        # Define the mapping of the categorical values
+        _mappings = {
+            'distance': {1: 'near by', 2: 'far away'},
+            'timeAvailable': {1: 'half day', 2: 'one day', 3: 'more than one day'},
+            'temperature': {1: 'burning', 2: 'hot', 3: 'warm', 4: 'cool', 5: 'cold', 6: 'freezing'},
+            'crowdedness': {1: 'crowded', 2: 'not crowded', 3: 'empty'},
+            'knowledgeOfSurroundings': {1: 'new to area', 2: 'returning visitor', 3: 'citizen of the area'},
+            'season': {1: 'spring', 2: 'summer', 3: 'autumn', 4: 'winter'},
+            'budget': {1: 'budget traveler', 2: 'price for quality', 3: 'high spender'},
+            'daytime': {1: 'morning', 2: 'noon', 3: 'afternoon', 4: 'evening', 5: 'night'},
+            'weather': {1: 'clear sky', 2: 'sunny', 3: 'cloudy', 4: 'rainy', 5: 'thunderstorm', 6: 'snowing'},
+            'companion': {1: 'alone', 2: 'with friends/colleagues', 3: 'with family', 4: 'with girlfriend/boyfriend', 5: 'with children'},
+            'mood': {1: 'happy', 2: 'sad', 3: 'active', 4: 'lazy'},
+            'weekday': {1: 'weekday', 2: 'weekend'},
+            'travelGoal': {1: 'visiting friends', 2: 'business', 3: 'religion', 4: 'health care', 5: 'social event', 6: 'education', 7: 'scenic/landscape', 8: 'hedonistic/fun', 9: 'activity/sport'},
+            'transport': {1: 'no transportation means', 2: 'a bicycle', 3: 'a car', 4: 'public transport'}
+        }
+        # Load the mapping to and from the session state
+        if "mappings" not in st.session_state:
+            st.session_state["mappings"] = _mappings
+        mappings = st.session_state["mappings"]
+
+        # Create inputs for each mapping
+        for i, (key, value) in enumerate(mappings.items()):
+            cols[i % 3].subheader(key)
+            cols[i % 3].write(value)
+            number = cols[i % 3].number_input(f"New value for {key}", key=f"number_{key}")
+            mapping = cols[i % 3].text_input(f"New mapping for {key}", key=f"mapping_{key}")
+            if cols[i % 3].button("Apply", key=f"apply_{key}") and number:
+                mappings[key][number] = mapping
+                st.session_state["mappings"] = mappings
+                st.experimental_rerun()
+
+        st.write("Upload a CSV file containing numerical values to convert them to categorical values.")
+        uploaded_file = st.file_uploader("Choose a file")
+        delimiter = st.text_input("CSV delimiter", '\t')
+        if uploaded_file is not None:
+            df = pd.read_csv(uploaded_file, delimiter=delimiter)
+            if st.button("Generate categorized dataframe"):
+                categorized_df = apply_mappings(df)        
+                st.header("Categorized dataset:")
+                st.write(categorized_df)
+                filename = Path(uploaded_file.name).stem + "_categorized.csv"
+                st.download_button(
+                    label="Download categorized dataset CSV",
+                    data=categorized_df.to_csv(index=False),
+                    file_name=filename,
+                    mime='text/csv'
+                )
+                
+        ##################################################################
+        # # Display the current mappings and allow the user to modify them
+        # st.header("Current Mappings")
+        # for key, value in mappings.items():
+        #     st.write(f"{key}: {value}")
+        #     new_mapping = {}
+        #     for k, v in value.items():
+        #         new_value = st.text_input(f"Enter the new value for {k} in {key}", value=v)
+        #         if new_value:
+        #             new_mapping[k] = new_value
+        #         else:
+        #             new_mapping[k] = v
+        #     mappings[key] = new_mapping            
 
 elif general_option == 'Evaluation of a dataset':
     def select_params(algorithm):
