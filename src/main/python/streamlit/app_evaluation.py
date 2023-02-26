@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import altair as alt
 import seaborn as sns
-import re
+from pathlib import Path
 import config
 sys.path.append("src/main/python")
 import rs_surprise.surprise_helpers as surprise_helpers
@@ -215,7 +215,7 @@ if general_option == 'Generate a synthetic dataset':
     st.download_button(label='Download', data=user_schema_text_area, file_name=schema_type+'_schema.conf')  
 
 elif general_option == 'Analysis an existing dataset':
-    is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile'])
+    is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Categorize dataset'])
     if is_analysis == 'Data visualization':  
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Total'])
         def read_uploaded_file(uploaded_file, data, file_type, separator):
@@ -462,13 +462,38 @@ elif general_option == 'Analysis an existing dataset':
                 st.error("Ratings, items, contexts or users datasets not found.")
     elif is_analysis == 'Replicate dataset':
         st.write('TODO')
-    elif is_analysis == 'Extend dataset':  
+    elif is_analysis == 'Extend dataset':
         st.write('TODO')
-    elif is_analysis == 'Recalculate ratings':  
+    elif is_analysis == 'Recalculate ratings':
         st.write('TODO')
-    elif is_analysis == 'Replace NULL values':  
+    elif is_analysis == 'Replace NULL values':
         st.write('TODO')
-    elif is_analysis == 'Generate user profile':  
+    elif is_analysis == 'Generate user profile':
+        st.write('TODO')
+    elif is_analysis == 'Ratings to binary':
+        def ratings_to_binary(df, threshold=3):
+            def binary_rating(rating):
+                return 1 if rating >= threshold else 0
+            df['rating'] = df['rating'].apply(binary_rating)
+            return df
+        st.title("Ratings to Binary Converter")
+        st.write("Upload a CSV file containing ratings to convert them to binary values.")
+        uploaded_file = st.file_uploader("Choose a file")
+        delimiter = st.text_input("CSV delimiter", ";")
+        threshold = st.number_input("Binary threshold", value=3)
+        if uploaded_file is not None:
+            df_ratings = pd.read_csv(uploaded_file, delimiter=delimiter)
+            df_binary = ratings_to_binary(df_ratings, threshold)
+            filename = Path(uploaded_file.name).stem + f"_binary_{threshold}.csv"
+            st.write("Converted ratings:")
+            st.write(df_binary)
+            st.download_button(
+                label="Download binary ratings CSV",
+                data=df_binary.to_csv(index=False),
+                file_name=filename,
+                mime='text/csv'
+            )
+    elif is_analysis == 'Categorize dataset':
         st.write('TODO')
 
 elif general_option == 'Evaluation of a dataset':
