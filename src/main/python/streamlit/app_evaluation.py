@@ -498,55 +498,30 @@ elif general_option == 'Analysis an existing dataset':
             )
     elif is_analysis == 'Categorize dataset':
         st.title("Mapping Categorization")
-        def apply_mappings(df):
+        def apply_mappings(df, mappings):
             for key, value in mappings.items():
                 df[key] = df[key].map(value)
             return df
-
-        # Define layout
-        col1, col2, col3 = st.columns(3)
-        cols = [col1, col2, col3]
-
-        # Define the mapping of the categorical values
-        _mappings = {
-            'distance': {1: 'near by', 2: 'far away'},
-            'timeAvailable': {1: 'half day', 2: 'one day', 3: 'more than one day'},
-            'temperature': {1: 'burning', 2: 'hot', 3: 'warm', 4: 'cool', 5: 'cold', 6: 'freezing'},
-            'crowdedness': {1: 'crowded', 2: 'not crowded', 3: 'empty'},
-            'knowledgeOfSurroundings': {1: 'new to area', 2: 'returning visitor', 3: 'citizen of the area'},
-            'season': {1: 'spring', 2: 'summer', 3: 'autumn', 4: 'winter'},
-            'budget': {1: 'budget traveler', 2: 'price for quality', 3: 'high spender'},
-            'daytime': {1: 'morning', 2: 'noon', 3: 'afternoon', 4: 'evening', 5: 'night'},
-            'weather': {1: 'clear sky', 2: 'sunny', 3: 'cloudy', 4: 'rainy', 5: 'thunderstorm', 6: 'snowing'},
-            'companion': {1: 'alone', 2: 'with friends/colleagues', 3: 'with family', 4: 'with girlfriend/boyfriend', 5: 'with children'},
-            'mood': {1: 'happy', 2: 'sad', 3: 'active', 4: 'lazy'},
-            'weekday': {1: 'weekday', 2: 'weekend'},
-            'travelGoal': {1: 'visiting friends', 2: 'business', 3: 'religion', 4: 'health care', 5: 'social event', 6: 'education', 7: 'scenic/landscape', 8: 'hedonistic/fun', 9: 'activity/sport'},
-            'transport': {1: 'no transportation means', 2: 'a bicycle', 3: 'a car', 4: 'public transport'}
-        }
-        # Load the mapping to and from the session state
-        if "mappings" not in st.session_state:
-            st.session_state["mappings"] = _mappings
-        mappings = st.session_state["mappings"]
-
-        # Create inputs for each mapping
-        for i, (key, value) in enumerate(mappings.items()):
-            cols[i % 3].subheader(key)
-            cols[i % 3].write(value)
-            number = cols[i % 3].number_input(f"New value for {key}", key=f"number_{key}")
-            mapping = cols[i % 3].text_input(f"New mapping for {key}", key=f"mapping_{key}")
-            if cols[i % 3].button("Apply", key=f"apply_{key}") and number:
-                mappings[key][number] = mapping
-                st.session_state["mappings"] = mappings
-                st.experimental_rerun()
 
         st.write("Upload a CSV file containing numerical values to convert them to categorical values.")
         uploaded_file = st.file_uploader("Choose a file")
         delimiter = st.text_input("CSV delimiter", '\t')
         if uploaded_file is not None:
             df = pd.read_csv(uploaded_file, delimiter=delimiter)
+            mappings = {}
+            for col in df.columns:
+                if 'id' not in col.lower():
+                    unique_values = df[col].unique()
+                    st.write(f"Unique values in '{col}': {', '.join(map(str, unique_values))}")
+                    col_mappings = {}
+                    for val in unique_values:
+                        mapping = st.text_input(f"Mapping for {val}", "")
+                        col_mappings[float(val)] = mapping
+                    mappings[col] = col_mappings
+            st.markdown("""---""")
+            st.write("Mappings:", mappings)
             if st.button("Generate categorized dataframe"):
-                categorized_df = apply_mappings(df)        
+                categorized_df = apply_mappings(df, mappings)
                 st.header("Categorized dataset:")
                 st.write(categorized_df)
                 st.download_button(
