@@ -476,25 +476,28 @@ elif general_option == 'Analysis an existing dataset':
                 return 1 if rating >= threshold else 0
             df['rating'] = df['rating'].apply(binary_rating)
             return df
-        st.title("Ratings to Binary Converter Tool")
+
+        st.title("Rating Binarization")
         st.write("Upload a CSV file containing ratings to convert them to binary values.")
         uploaded_file = st.file_uploader("Choose a file")
         delimiter = st.text_input("CSV delimiter", ";")
-        threshold = st.number_input("Binary threshold", value=3)
+
         if uploaded_file is not None:
             df_ratings = pd.read_csv(uploaded_file, delimiter=delimiter)
+            min_rating = df_ratings['rating'].min()
+            max_rating = df_ratings['rating'].max()
+            threshold = st.number_input(f"Binary threshold (range from {min_rating} to {max_rating})", min_value=min_rating, max_value=max_rating, value=3)
             df_binary = ratings_to_binary(df_ratings, threshold)
-            filename = Path(uploaded_file.name).stem + "_binary.csv"
             st.write("Converted ratings:")
             st.write(df_binary)
             st.download_button(
                 label="Download binary ratings CSV",
                 data=df_binary.to_csv(index=False),
-                file_name=filename,
+                file_name=Path(uploaded_file.name).stem + "_binary.csv",
                 mime='text/csv'
             )
     elif is_analysis == 'Categorize dataset':
-        st.title("Mapping Categorization Tool")
+        st.title("Mapping Categorization")
         def apply_mappings(df):
             for key, value in mappings.items():
                 df[key] = df[key].map(value)
@@ -546,28 +549,12 @@ elif general_option == 'Analysis an existing dataset':
                 categorized_df = apply_mappings(df)        
                 st.header("Categorized dataset:")
                 st.write(categorized_df)
-                filename = Path(uploaded_file.name).stem + "_categorized.csv"
                 st.download_button(
                     label="Download categorized dataset CSV",
                     data=categorized_df.to_csv(index=False),
-                    file_name=filename,
+                    file_name=Path(uploaded_file.name).stem + "_categorized.csv",
                     mime='text/csv'
                 )
-                
-        ##################################################################
-        # # Display the current mappings and allow the user to modify them
-        # st.header("Current Mappings")
-        # for key, value in mappings.items():
-        #     st.write(f"{key}: {value}")
-        #     new_mapping = {}
-        #     for k, v in value.items():
-        #         new_value = st.text_input(f"Enter the new value for {k} in {key}", value=v)
-        #         if new_value:
-        #             new_mapping[k] = new_value
-        #         else:
-        #             new_mapping[k] = v
-        #     mappings[key] = new_mapping            
-
 elif general_option == 'Evaluation of a dataset':
     def select_params(algorithm):
         if algorithm == "SVD":
