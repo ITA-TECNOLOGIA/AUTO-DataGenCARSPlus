@@ -465,13 +465,15 @@ elif general_option == 'Analysis an existing dataset':
     elif is_analysis == 'Generate user profile':
         st.write('TODO')
     elif is_analysis == 'Ratings to binary':
+        st.title("Rating Binarization")
+        with st.expander(label='Help information'):
+            st.write('This tool allows you to convert ratings to binary values. For example, if you have a dataset with ratings from 1 to 5, you can convert them to 0 and 1, where 0 represents a negative rating and 1 a positive one.')
+            st.write('The tool will convert the ratings to binary values using a threshold. For example, if you set the threshold to 3, all ratings equal or greater than 3 will be converted to 1, and all ratings less than 3 will be converted to 0.')
         def ratings_to_binary(df, threshold=3):
             def binary_rating(rating):
                 return 1 if rating >= threshold else 0
             df['rating'] = df['rating'].apply(binary_rating)
             return df
-
-        st.title("Rating Binarization")
         st.write("Upload a CSV file containing ratings to convert them to binary values.")
         uploaded_file = st.file_uploader("Choose a file")
         delimiter = st.text_input("CSV delimiter", ";")
@@ -494,6 +496,14 @@ elif general_option == 'Analysis an existing dataset':
         option = st.radio(options=['From numerical to categorical', 'From categorical to numerical'], label='Select an option')
         if option == 'From numerical to categorical':
             st.title("Category Encoding")
+            with st.expander(label='Help information'):
+                st.write("This tool allows you to convert numerical values to categorical values. For example, you can convert the numerical values of a rating scale to the corresponding categories of the scale (e.g. 1-2 -> Bad, 3-4 -> Average, 5 -> Good).")
+                st.write("To use this tool, you need to upload a CSV file containing the numerical values to convert. Then, you need to specify the mapping for each numerical value. For example, if you want to convert the numerical values 1, 2, 3, 4 and 5 to the categories Bad, Average, Good, Very good and Excellent, respectively, you need to specify the following mappings:")
+                st.write("1 -> Bad")
+                st.write("2 -> Average")
+                st.write("3 -> Good")
+                st.write("4 -> Very good")
+                st.write("5 -> Excellent")
             def apply_mappings(df, mappings):
                 for key, value in mappings.items():
                     df[key] = df[key].map(value)
@@ -527,6 +537,10 @@ elif general_option == 'Analysis an existing dataset':
                     )
         else:
             st.title("Label Encoding")
+            with st.expander(label='Help information'):
+                st.write("Label encoding is a process of transforming categorical values into numerical values.")
+                st.write("For example, you can convert the categorical values of a rating scale to the corresponding numerical values of the scale (e.g. Bad -> 1, Average -> 2, Good -> 3, Very good -> 4, Excellent -> 5).")
+                st.write("To use this tool, you need to upload a CSV file containing the categorical values to convert. Then, you need to select the categorical columns to convert.")
             def apply_label_encoder(df, columns):
                 encoder = LabelEncoder()
                 for col in columns:
