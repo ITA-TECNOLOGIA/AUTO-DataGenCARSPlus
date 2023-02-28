@@ -4,6 +4,8 @@ import pandas as pd
 def replace_missing_values(df):
     """
     Replace missing values "NULL" and -1 with NaN
+    :param df: The ratings dataset
+    :return: The ratings dataset with missing values replaced
     """
     for k,v in {"NULL":np.nan,-1:np.nan}.items():
         df.replace(k, np.nan, inplace=True)
@@ -12,6 +14,8 @@ def replace_missing_values(df):
 def count_unique(data):
     """
     Count unique users, items, contexts and timestamps
+    :param data: The ratings dataset
+    :return: The number of unique users, items, contexts and timestamps
     """
     unique_users = data["user_id"].nunique()
     unique_items = data["item_id"].nunique()
@@ -31,6 +35,12 @@ def count_unique(data):
     return unique_counts_df
 
 def count_items_voted_by_user(data, selected_user):
+    """
+    Count the number of items voted by a user
+    :param data: The ratings dataset
+    :param selected_user: The selected user
+    :return: The number of items voted by the user
+    """
     filtered_ratings_df = data[data['user_id'] == selected_user] #Filter the ratings dataset by user
     total_count = len(filtered_ratings_df["item_id"])
     counts_items = filtered_ratings_df.groupby("item_id").size()
@@ -43,6 +53,12 @@ def count_items_voted_by_user(data, selected_user):
     return counts_items, unique_items, total_count, percent_ratings_by_user
 
 def calculate_vote_stats(data, selected_user):
+    """
+    Calculate the vote standard deviation and average vote per user and for all of the users
+    :param data: The ratings dataset
+    :param selected_user: The selected user
+    :return: The calculated statistics
+    """
     # Filter the ratings dataset by user
     if selected_user == "All users":
         filtered_ratings = data

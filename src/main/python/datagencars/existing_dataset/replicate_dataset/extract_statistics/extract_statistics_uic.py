@@ -4,6 +4,8 @@ import numpy as np
 def list_attributes_and_ranges(dataframe):
     """
     List attributes, data types, and value ranges of the dataframe.
+    :param dataframe: The dataframe to be analyzed
+    :return: A list of attributes, data types, and value ranges
     """
     table = []
     for column in dataframe.columns:
@@ -24,6 +26,9 @@ def list_attributes_and_ranges(dataframe):
 def column_attributes_count(dataframe, column):
     """
     Count each attribute of a selected column.
+    :param dataframe: The dataframe to be analyzed
+    :param column: The selected column
+    :return: A dataframe with the attribute and the number of occurrences
     """
     if dataframe[column].dtype == 'datetime64[ns]':
         data = dataframe.groupby(pd.Grouper(key=column, freq='M')).size().reset_index(name='count')
@@ -35,6 +40,9 @@ def column_attributes_count(dataframe, column):
 def count_missing_values(dataframe, replace_values={}):
     """
     Count missing values in the dataframe.
+    :param dataframe: The dataframe to be analyzed
+    :param replace_values: A dictionary with the values to be replaced by NaN
+    :return: A dataframe with the number of missing values per attribute
     """
     for k,v in replace_values.items():
         dataframe.replace(k, np.nan, inplace=True)
@@ -47,6 +55,8 @@ def count_missing_values(dataframe, replace_values={}):
 def general_statistics(data):
     """
     Extract general statistics from the dataset.
+    :param data: The dataset to be analyzed
+    :return: A dictionary with the number of users, items, contexts, and ratings
     """
     num_users = data['user_id'].nunique()
     num_items = data['item_id'].nunique()
@@ -62,6 +72,10 @@ def general_statistics(data):
 def statistics_by_user(data, selected_user, word):
     """
     Computes the statistics of items per user.
+    :param data: The dataset to be analyzed
+    :param selected_user: The selected user
+    :param word: The word to be used in the statistics
+    :return: A dictionary with the statistics of items per user
     """
     filtered_data = data[data['user_id'] == selected_user] #Filter the ratings dataset by user
     num_ratings = len(filtered_data)
@@ -87,7 +101,9 @@ def statistics_by_user(data, selected_user, word):
 
 def statistics_by_attribute(dataframe):
     """
-    Calculate average and standard devuation per attribute and frequency and percentage of each attribute value. 
+    Calculate average and standard devuation per attribute and frequency and percentage of each attribute value.
+    :param dataframe: The dataframe to be analyzed
+    :return: A list with the statistics of each attribute
     """
     statistics = []
     for column in dataframe.columns:
