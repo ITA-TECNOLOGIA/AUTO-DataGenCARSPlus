@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import altair as alt
 import seaborn as sns
+from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
 import config
 sys.path.append("src/main/python")
@@ -215,7 +216,7 @@ if general_option == 'Generate a synthetic dataset':
     st.download_button(label='Download', data=user_schema_text_area, file_name=schema_type+'_schema.conf')  
 
 elif general_option == 'Analysis an existing dataset':
-    is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Categorize dataset'])
+    is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
     if is_analysis == 'Data visualization':  
         tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Total'])
         def read_uploaded_file(uploaded_file, data, file_type, separator):
@@ -431,19 +432,12 @@ elif general_option == 'Analysis an existing dataset':
                 st.table(pd.DataFrame([stats]))
                 
                 st.header("Correlation matrix")
-                
-                # columns_not_id = [col for col in merged_df.columns if col not in ['user_id', 'item_id', 'context_id']]
-                # data_types = []
-                # for col in columns_not_id:
-                #     data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype)})                    
-                # st.dataframe(pd.DataFrame(data_types))
                 columns_not_id = [col for col in merged_df.columns if col not in ['user_id', 'item_id', 'context_id']]
                 data_types = []
                 for col in columns_not_id:
                     data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype), "File Type": "rating" if col in data["rating"].columns else "item" if col in data["item"].columns else "context" if col in data["context"].columns else "user"})
                 df_data_types = pd.DataFrame(data_types)
                 st.dataframe(df_data_types)
-                
                 selected_columns = st.multiselect("Select columns to analyze", columns_not_id)
                 method = st.selectbox("Select a method", ['pearson', 'kendall', 'spearman'])
                 if st.button("Generate correlation matrix") and selected_columns:
@@ -496,40 +490,70 @@ elif general_option == 'Analysis an existing dataset':
                 file_name=Path(uploaded_file.name).stem + "_binary.csv",
                 mime='text/csv'
             )
-    elif is_analysis == 'Categorize dataset':
-        st.title("Mapping Categorization")
-        def apply_mappings(df, mappings):
-            for key, value in mappings.items():
-                df[key] = df[key].map(value)
-            return df
-
-        st.write("Upload a CSV file containing numerical values to convert them to categorical values.")
-        uploaded_file = st.file_uploader("Choose a file")
-        delimiter = st.text_input("CSV delimiter", '\t')
-        if uploaded_file is not None:
-            df = pd.read_csv(uploaded_file, delimiter=delimiter)
-            mappings = {}
-            for col in df.columns:
-                if 'id' not in col.lower():
-                    unique_values = df[col].unique()
-                    st.write(f"Unique values in '{col}': {', '.join(map(str, unique_values))}")
-                    col_mappings = {}
-                    for val in unique_values:
-                        mapping = st.text_input(f"Mapping for {val}", "")
-                        col_mappings[float(val)] = mapping
-                    mappings[col] = col_mappings
-            st.markdown("""---""")
-            st.write("Mappings:", mappings)
-            if st.button("Generate categorized dataframe"):
-                categorized_df = apply_mappings(df, mappings)
-                st.header("Categorized dataset:")
-                st.write(categorized_df)
-                st.download_button(
-                    label="Download categorized dataset CSV",
-                    data=categorized_df.to_csv(index=False),
-                    file_name=Path(uploaded_file.name).stem + "_categorized.csv",
-                    mime='text/csv'
-                )
+    elif is_analysis == 'Mapping categorization':
+        option = st.radio(options=['From numerical to categorical', 'From categorical to numerical'], label='Select an option')
+        if option == 'From numerical to categorical':
+            st.title("Category Encoding")
+            def apply_mappings(df, mappings):
+                for key, value in mappings.items():
+                    df[key] = df[key].map(value)
+                return df
+            st.write("Upload a CSV file containing numerical values to convert them to categorical values.")
+            uploaded_file = st.file_uploader("Choose a file")
+            delimiter = st.text_input("CSV delimiter", '\t')
+            if uploaded_file is not None:
+                df = pd.read_csv(uploaded_file, delimiter=delimiter)
+                mappings = {}
+                for col in df.columns:
+                    if 'id' not in col.lower():
+                        unique_values = df[col].unique()
+                        st.write(f"Unique values in '{col}': {', '.join(map(str, unique_values))}")
+                        col_mappings = {}
+                        for val in unique_values:
+                            mapping = st.text_input(f"Mapping for {val}", "")
+                            col_mappings[float(val)] = mapping
+                        mappings[col] = col_mappings
+                st.markdown("""---""")
+                st.write("Mappings:", mappings)
+                if st.button("Generate categorized dataframe"):
+                    categorized_df = apply_mappings(df, mappings)
+                    st.header("Categorized dataset:")
+                    st.write(categorized_df)
+                    st.download_button(
+                        label="Download categorized dataset CSV",
+                        data=categorized_df.to_csv(index=False),
+                        file_name=Path(uploaded_file.name).stem + "_categorized.csv",
+                        mime='text/csv'
+                    )
+        else:
+            st.title("Label Encoding")
+            def apply_label_encoder(df, columns):
+                encoder = LabelEncoder()
+                for col in columns:
+                    if col in df.columns:
+                        df[col] = encoder.fit_transform(df[col])
+                return df
+            st.write("Upload a CSV file containing categorical values to convert them to numerical values.")
+            uploaded_file = st.file_uploader("Choose a file")
+            delimiter = st.text_input("CSV delimiter", '\t')
+            if uploaded_file is not None:
+                df = pd.read_csv(uploaded_file, delimiter=delimiter)
+                categorical_cols = [col for col in df.select_dtypes(exclude=[np.number]) if 'id' not in col.lower()]
+                if categorical_cols:
+                    selected_cols = st.multiselect("Select categorical columns to label encode:", categorical_cols)
+                    if selected_cols:
+                        if st.button("Encode categorical columns"):
+                            encoded_df = apply_label_encoder(df, selected_cols)
+                            st.header("Encoded dataset:")
+                            st.write(encoded_df)
+                            st.download_button(
+                                label="Download encoded dataset CSV",
+                                data=encoded_df.to_csv(index=False),
+                                file_name=Path(uploaded_file.name).stem + "_encoded.csv",
+                                mime='text/csv'
+                            )
+                else:
+                    st.write("No categorical columns found.")
 elif general_option == 'Evaluation of a dataset':
     def select_params(algorithm):
         if algorithm == "SVD":
