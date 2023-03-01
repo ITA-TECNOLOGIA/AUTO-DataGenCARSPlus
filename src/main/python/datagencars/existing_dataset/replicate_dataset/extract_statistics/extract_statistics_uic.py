@@ -77,10 +77,31 @@ def statistics_by_user(data, selected_user, word):
     :param word: The word to be used in the statistics
     :return: A dictionary with the statistics of items per user
     """
+    # Protect against ZeroDivisionError: division by zero
+    if len(data) == 0:
+        return {
+            f"Average of {word} by user": 0,
+            f"Variance of {word} by user": 0,
+            f"Standard deviation of {word} by user": 0,
+            f"Number of {word} not repeated by user": 0,
+            f"Percent of {word} not repeated by user": 0,
+            f"Number of {word} repeated by user": 0,
+            f"Percent of {word} repeated by user": 0,
+        }
     filtered_data = data[data['user_id'] == selected_user] #Filter the ratings dataset by user
     num_ratings = len(filtered_data)
+    # Protect against ZeroDivisionError: division by zero
+    if num_ratings == 0:
+        return {
+            f"Average of {word} by user": 0,
+            f"Variance of {word} by user": 0,
+            f"Standard deviation of {word} by user": 0,
+            f"Number of {word} not repeated by user": 0,
+            f"Percent of {word} not repeated by user": 0,
+            f"Number of {word} repeated by user": 0,
+            f"Percent of {word} repeated by user": 0,
+        }
     num_items = filtered_data['item_id'].nunique()
-    items_per_rating = num_items / num_ratings
     avg_items_by_user = data.groupby('user_id')['item_id'].nunique().mean()
     var_items_by_user = data.groupby('user_id')['item_id'].nunique().var()
     std_items_by_user = data.groupby('user_id')['item_id'].nunique().std()
@@ -111,19 +132,8 @@ def statistics_by_attribute(dataframe):
             if column not in ['user_id', 'item_id', 'context_id']:
                 frequency = dataframe[column].value_counts().reset_index()
                 frequency.columns = ['Value', 'Frequency']
-
-                # # Convert from dataframe to string (e.g. Value 96 --> 4 times)
-                # frequency['index'] = frequency['index'].astype(str) + ' --> ' + frequency[column].astype(str) + ' times'
-                # # Convert from dataframe to list
-                # frequency = frequency['index'].tolist()
-                # # Convert from list to string with each of the elements of the list separated by a new line
-                # frequency = "\n".join(frequency)
-                # print(frequency)
-
                 percentage = dataframe[column].value_counts(normalize=True).reset_index()
                 percentage.columns = ['Value', 'Percentage']
-                # Show the Percentage column as 4.35% instead of 0.0435
-                percentage['Percentage'] = percentage['Percentage'].map('{:,.2%}'.format)
-
+                percentage['Percentage'] = percentage['Percentage'].map('{:,.2%}'.format) #Show the Percentage column as 4.35% instead of 0.0435
                 statistics.append([column, round(dataframe[column].mean(), 2), round(dataframe[column].std(), 2), frequency, percentage])
     return statistics
