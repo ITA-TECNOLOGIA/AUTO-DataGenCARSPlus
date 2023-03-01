@@ -216,9 +216,13 @@ if general_option == 'Generate a synthetic dataset':
     st.download_button(label='Download', data=user_schema_text_area, file_name=schema_type+'_schema.conf')  
 
 elif general_option == 'Analysis an existing dataset':
+    # TODO: CONTEXT
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
-    if is_analysis == 'Data visualization':  
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Total'])
+    if is_analysis == 'Data visualization':
+        if is_context := st.sidebar.checkbox('With context', value=True):
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Total'])
+        else:
+            tab1, tab2, tab3, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Ratings', 'Total'])
         def read_uploaded_file(uploaded_file, data, file_type, separator):
             # Read the header of the file to determine column names
             header = uploaded_file.readline().decode("utf-8").strip()
@@ -255,11 +259,10 @@ elif general_option == 'Analysis an existing dataset':
         with tab1:
             option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
             if option == 'Multiple files':
-                upload_context = st.checkbox("With context", value=True)
                 data = {} #Dictionary with the dataframes
                 for file_type in ["user", "item", "context", "rating"]:
                     if file_type == "context":
-                        if not upload_context:
+                        if not is_context:
                             continue
                     with st.expander(f"Upload your {file_type}.csv file"):
                         uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
@@ -344,32 +347,33 @@ elif general_option == 'Analysis an existing dataset':
                 print_statistics_by_attribute(statistics)
             else:
                 st.error("Item dataset not found.")
-        with tab4:
-            if 'context' in data and data['context'] is not None:
-                st.dataframe(data['context'] )
-                missing_values4 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
-                st.write("Missing values:")
-                st.table(missing_values4)
+        if is_context:
+            with tab4:
+                if 'context' in data and data['context'] is not None:
+                    st.dataframe(data['context'] )
+                    missing_values4 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                    st.write("Missing values:")
+                    st.table(missing_values4)
 
-                st.write("Attributes, data types and value ranges:")
-                table4 = extract_statistics_uic.list_attributes_and_ranges(data['context'])
-                st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
-                
-                column4 = st.selectbox("Select an attribute", data['context'].columns)
-                data4 = extract_statistics_uic.column_attributes_count(data['context'], column4)
-                plot_column_attributes_count(data3, column3)
+                    st.write("Attributes, data types and value ranges:")
+                    table4 = extract_statistics_uic.list_attributes_and_ranges(data['context'])
+                    st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
+                    
+                    column4 = st.selectbox("Select an attribute", data['context'].columns)
+                    data4 = extract_statistics_uic.column_attributes_count(data['context'], column4)
+                    plot_column_attributes_count(data3, column3)
 
-                if 'rating' in data and data['rating'] is not None:
-                    merged_df = pd.merge(data['rating'], data['context'], on="context_id")
-                    users = merged_df['user_id'].unique()
-                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
-                    stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
-                    st.table(pd.DataFrame([stats]))
+                    if 'rating' in data and data['rating'] is not None:
+                        merged_df = pd.merge(data['rating'], data['context'], on="context_id")
+                        users = merged_df['user_id'].unique()
+                        selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
+                        stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
+                        st.table(pd.DataFrame([stats]))
 
-                statistics = extract_statistics_uic.statistics_by_attribute(data['context'])
-                print_statistics_by_attribute(statistics)
-            else:
-                st.error("Context dataset not found.")
+                    statistics = extract_statistics_uic.statistics_by_attribute(data['context'])
+                    print_statistics_by_attribute(statistics)
+                else:
+                    st.error("Context dataset not found.")
         with tab5:
             if 'rating' in data and data['rating'] is not None:
                 data['rating'] = extract_statistics_rating.replace_missing_values(data['rating'])
