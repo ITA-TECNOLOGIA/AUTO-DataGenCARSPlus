@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import altair as alt
 import seaborn as sns
-from sklearn.preprocessing import LabelEncoder
 from pathlib import Path
 import config
 sys.path.append("src/main/python")
@@ -14,6 +13,8 @@ import rs_surprise.surprise_helpers as surprise_helpers
 import rs_surprise.evaluation as evaluation
 import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating as extract_statistics_rating
 import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic as extract_statistics_uic
+import datagencars.existing_dataset.label_encoding as label_encoding
+import datagencars.existing_dataset.mapping_categorization as mapping_categorization
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -502,35 +503,37 @@ elif general_option == 'Analysis an existing dataset':
             st.title("Category Encoding")
             with st.expander(label='Help information'):
                 st.write("This tool allows you to convert numerical values to categorical values. For example, you can convert the numerical values of a rating scale to the corresponding categories of the scale (e.g. 1-2 -> Bad, 3-4 -> Average, 5 -> Good).")
-                st.write("To use this tool, you need to upload a CSV file containing the numerical values to convert. Then, you need to specify the mapping for each numerical value. For example, if you want to convert the numerical values 1, 2, 3, 4 and 5 to the categories Bad, Average, Good, Very good and Excellent, respectively, you need to specify the following mappings:")
-                st.write("1 -> Bad")
-                st.write("2 -> Average")
-                st.write("3 -> Good")
-                st.write("4 -> Very good")
-                st.write("5 -> Excellent")
-            def apply_mappings(df, mappings):
-                for key, value in mappings.items():
-                    df[key] = df[key].map(value)
-                return df
+                st.write("To use this tool, you need to upload a CSV file containing the numerical values to convert. Then, you need to specify the mapping for each numerical value. For example, you could to specify the following mappings: numerical values 1, 2, 3, 4 and 5 to categories Bad, Average, Good, Very good and Excellent, respectively.")
+                st.write("Objects and datetime values are ignored.")
             st.write("Upload a CSV file containing numerical values to convert them to categorical values.")
             uploaded_file = st.file_uploader("Choose a file")
             delimiter = st.text_input("CSV delimiter", '\t')
             if uploaded_file is not None:
                 df = pd.read_csv(uploaded_file, delimiter=delimiter)
+                include_nan = st.checkbox("Include NaN values")
+                date_formats = ["%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y/%m/%d", "%m-%d-%Y", "%Y%m%d"]
+                time_formats = ["%H:%M:%S", "%H:%M"]
                 mappings = {}
                 for col in df.columns:
-                    if 'id' not in col.lower():
-                        unique_values = df[col].unique()
-                        st.write(f"Unique values in '{col}': {', '.join(map(str, unique_values))}")
+                    if 'id' not in col.lower() and not pd.api.types.is_datetime64_dtype(df[col]) and not pd.api.types.is_object_dtype(df[col]): # Ignore ID, object and datetime columns
+                        unique_values = sorted(df[col].unique())
+                        st.write(f"Unique values in {col}: {', '.join(map(str, unique_values))}")
                         col_mappings = {}
                         for val in unique_values:
-                            mapping = st.text_input(f"Mapping for {val}", "")
-                            col_mappings[float(val)] = mapping
+                            if not include_nan and pd.isna(val):
+                                col_mappings[val] = np.nan
+                                continue
+                            else:
+                                mapping = st.text_input(f"Mapping for {val}", "", key=f"{col}_{val}")
+                                if mapping:
+                                    col_mappings[val] = mapping
+                                else:
+                                    col_mappings[val] = val
                         mappings[col] = col_mappings
                 st.markdown("""---""")
                 st.write("Mappings:", mappings)
                 if st.button("Generate categorized dataframe"):
-                    categorized_df = apply_mappings(df, mappings)
+                    categorized_df = mapping_categorization.apply_mappings(df, mappings)
                     st.header("Categorized dataset:")
                     st.write(categorized_df)
                     st.download_button(
@@ -545,12 +548,6 @@ elif general_option == 'Analysis an existing dataset':
                 st.write("Label encoding is a process of transforming categorical values into numerical values.")
                 st.write("For example, you can convert the categorical values of a rating scale to the corresponding numerical values of the scale (e.g. Bad -> 1, Average -> 2, Good -> 3, Very good -> 4, Excellent -> 5).")
                 st.write("To use this tool, you need to upload a CSV file containing the categorical values to convert. Then, you need to select the categorical columns to convert.")
-            def apply_label_encoder(df, columns):
-                encoder = LabelEncoder()
-                for col in columns:
-                    if col in df.columns:
-                        df[col] = encoder.fit_transform(df[col])
-                return df
             st.write("Upload a CSV file containing categorical values to convert them to numerical values.")
             uploaded_file = st.file_uploader("Choose a file")
             delimiter = st.text_input("CSV delimiter", '\t')
@@ -561,7 +558,7 @@ elif general_option == 'Analysis an existing dataset':
                     selected_cols = st.multiselect("Select categorical columns to label encode:", categorical_cols)
                     if selected_cols:
                         if st.button("Encode categorical columns"):
-                            encoded_df = apply_label_encoder(df, selected_cols)
+                            encoded_df = label_encoding.apply_label_encoder(df, selected_cols)
                             st.header("Encoded dataset:")
                             st.write(encoded_df)
                             st.download_button(
