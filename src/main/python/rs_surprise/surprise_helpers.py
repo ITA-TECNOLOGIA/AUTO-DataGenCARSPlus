@@ -70,6 +70,13 @@ def convert_to_surprise_dataset(df):
     """
     Converts a pandas dataframe to a surprise dataset
     """
-    df = df.drop("timestamp", axis=1) #¡IMPORTANTE!
-    reader = Reader(rating_scale=(1, 5))
+    if "timestamp" in df.columns:
+        df = df.drop("timestamp", axis=1)
+    elif "context_id" in df.columns:
+        df = df.drop("context_id", axis=1)
+    try:
+        reader = Reader(rating_scale=(df["rating"].min(), df["rating"].max()))
+    except:
+        reader = Reader(rating_scale=(1, 5))
+    print(df.columns)
     return Dataset.load_from_df(df, reader)
