@@ -15,6 +15,7 @@ import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract
 import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic as extract_statistics_uic
 import datagencars.existing_dataset.label_encoding as label_encoding
 import datagencars.existing_dataset.mapping_categorization as mapping_categorization
+import datagencars.existing_dataset.replicate_dataset.binary_ratings as binary_ratings
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -658,6 +659,8 @@ elif general_option == 'Evaluation of a dataset':
                             row["Recall"] = value[i]
                         elif key == "test_precision":
                             row["Precision"] = value[i]
+                        elif key == "test_auc_roc":
+                            row["AUC-ROC"] = value[i]
                         else:
                             row[key.replace("test_", "").upper()] = value[i]
                         
@@ -737,7 +740,10 @@ elif general_option == 'Evaluation of a dataset':
         st.error("No rating dataset loaded")
 
     st.sidebar.header("Metrics selection")
-    metrics = st.sidebar.multiselect("Select one or more cross validation metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
+    if binary_ratings.is_binary_rating(rating):
+        metrics = st.sidebar.multiselect("Select one or more cross validation binary metrics", ["Precision", "Recall", "AUC_ROC"], default="Precision")
+    else:
+        metrics = st.sidebar.multiselect("Select one or more cross validation non-binary metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
 
     if st.sidebar.button("Evaluate"):
         results_df = evaluate_algo(algo_list, strategy_instance, metrics, data)

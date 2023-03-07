@@ -17,12 +17,13 @@ Available accuracy metrics:
     f1score
     map
     ndcg
+    aucroc
 """
 
 from collections import defaultdict
 import math
 import numpy as np
-
+from sklearn.metrics import roc_auc_score
 
 def rmse(predictions, verbose=True):
     """Compute RMSE (Root Mean Squared Error).
@@ -328,3 +329,20 @@ def ndcg(predictions, verbose=True):
     if verbose:
         print(f"NDCG: {ndcg:1.4f}")
     return ndcg
+
+def auc_roc(predictions, verbose=True):
+    """
+    Compute AUC-ROC (Area Under the Receiver Operating Characteristic curve).
+    """
+    if not predictions:
+        raise ValueError("Prediction list is empty.")
+    
+    y_true = [true_r for (_, _, true_r, _, _) in predictions]
+    y_pred = [est for (_, _, true_r, est, _) in predictions]
+    
+    auc_roc = roc_auc_score(y_true, y_pred)
+    
+    if verbose:
+        print(f"AUC-ROC: {auc_roc:1.4f}")
+    
+    return auc_roc
