@@ -19,6 +19,9 @@ from surprise import (
 def create_algorithm(algo_name, params=None):
     """
     Creates an algorithm from its name and parameters
+    :param algo_name: the name of the algorithm
+    :param params: the parameters of the algorithm
+    :return: the algorithm
     """
     if algo_name == "SVD":
         return SVD(**params)
@@ -46,6 +49,9 @@ def create_algorithm(algo_name, params=None):
 def create_split_strategy(strategy, params):
     """
     Creates a split strategy for cross-validation
+    :param strategy: the name of the strategy
+    :param params: the parameters of the strategy
+    :return: the split strategy
     """
     if strategy == "KFold":
         return ms.KFold(n_splits=params["n_splits"], shuffle=params["shuffle"])
@@ -69,14 +75,12 @@ def create_split_strategy(strategy, params):
 def convert_to_surprise_dataset(df):
     """
     Converts a pandas dataframe to a surprise dataset
+    :param df: the dataframe to convert
+    :return: the surprise dataset
     """
     if "timestamp" in df.columns:
         df = df.drop("timestamp", axis=1)
     elif "context_id" in df.columns:
-        df = df.drop("context_id", axis=1)
-    try:
-        reader = Reader(rating_scale=(df["rating"].min(), df["rating"].max()))
-    except:
-        reader = Reader(rating_scale=(1, 5))
-    print(df.columns)
+        df = df.drop("context_id", axis=1)    
+    reader = Reader(rating_scale=(df["rating"].min(), df["rating"].max()))
     return Dataset.load_from_df(df, reader)
