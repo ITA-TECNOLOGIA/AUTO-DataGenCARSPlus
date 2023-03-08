@@ -290,7 +290,7 @@ elif general_option == 'Analysis an existing dataset':
                         try:
                             df = pd.read_csv(data_file, sep=separator)
                             st.dataframe(df.head())
-                            def create_dataframe(label, df, new_df_name):
+                            def create_dataframe(label, df):
                                 if columns := st.multiselect(label=label, options=df.columns):
                                     # Create a new dataframe with the selected columns
                                     new_df = df[columns]
@@ -398,9 +398,11 @@ elif general_option == 'Analysis an existing dataset':
                 ax.set_xlabel("Rating", fontdict=config.PLOTS_FONT)
                 ax.set_ylabel("Frequency", fontdict=config.PLOTS_FONT)
                 ax.grid(**config.PLOTS_GRID)
-                for i in range(5):
-                    ax.bar(i+1, counts[i+1], color="#0099CC")
-                    ax.text(i+1, counts[i+1]+1, str(counts[i+1]), ha='center')
+                ax.set_xticks(range(len(counts)))
+                for i in range(len(counts)):
+                    if counts[i] > 0:
+                        ax.bar(i, counts[i], color="#0099CC")
+                        ax.text(i, counts[i], str(counts[i]), ha='center')
                 st.pyplot(fig, clear_figure=True)
 
                 # Plot the distribution of the number of items voted by each user
@@ -741,7 +743,7 @@ elif general_option == 'Evaluation of a dataset':
 
     st.sidebar.header("Metrics selection")
     if binary_ratings.is_binary_rating(rating):
-        metrics = st.sidebar.multiselect("Select one or more cross validation binary metrics", ["Precision", "Recall", "AUC_ROC"], default="Precision")
+        metrics = st.sidebar.multiselect("Select one or more cross validation binary metrics", ["Precision", "Recall", "F1_Score", "AUC_ROC"], default="Precision")
     else:
         metrics = st.sidebar.multiselect("Select one or more cross validation non-binary metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
 
