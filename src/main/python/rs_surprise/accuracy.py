@@ -202,24 +202,52 @@ def init_user_est_true(predictions):
     return user_est_true
 
 def init_n_rel_and_rec_k(user_ratings):
-    k=10
-    threshold=3.5
+    """
+    Count the number of relevant and recommended items at k for a given user
 
-    # Sort user ratings by estimated value
-    user_ratings.sort(key=lambda x: x[0], reverse=True)
+    Parameters:
+    ----------
+    user_ratings : list
+        List of (item_id, rating) tuples for a given user
 
-    # Number of relevant items
-    n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
+    Returns:
+    -------
+    n_rel : int
+        Number of relevant items in the user_ratings
+    n_rec_k : int
+        Number of recommended items in the user_ratings up to the k-th position
+    n_rel_and_rec_k : int
+        Number of relevant and recommended items in the user_ratings up to the k-th position
+    """
+    
+    ratings = [rating for _, rating in user_ratings]
+    if all(0 <= rating <= 1 for rating in ratings):
+        binary = True
+    else:
+        binary = False
 
-    # Number of recommended items in top k
-    n_rec_k = sum((est >= threshold) for (est, _) in user_ratings[:k])
+    k=10 #The maximum number of recommendations. Default is 10.
+    user_ratings.sort(key=lambda x: x[0], reverse=True) # Sort user ratings by estimated value
+    if not binary:
+        threshold=3.5 # The threshold for a rating to be considered relevant. Default is 3.5.
+        # Number of relevant items
+        n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
 
-    # Number of relevant and recommended items in top k
-    n_rel_and_rec_k = sum(
-        ((true_r >= threshold) and (est >= threshold))
-        for (est, true_r) in user_ratings[:k]
-    )
+        # Number of recommended items in top k
+        n_rec_k = sum((est >= threshold) for (est, _) in user_ratings[:k])
 
+        # Number of relevant and recommended items in top k
+        n_rel_and_rec_k = sum(
+            ((true_r >= threshold) and (est >= threshold))
+            for (est, true_r) in user_ratings[:k]
+        )
+    else:
+        n_rel = sum((rating > 0) for (_, rating) in user_ratings)
+
+        n_rec_k = min(k, len(user_ratings))
+
+        n_rel_and_rec_k = sum((rating > 0) for (_, rating) in user_ratings[:k])
+    
     return n_rel, n_rec_k, n_rel_and_rec_k
 
 def precision(predictions, verbose=True):
