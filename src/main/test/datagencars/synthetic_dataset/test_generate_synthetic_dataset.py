@@ -9,7 +9,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
 
     def setUp(self):             
         # generation_config.conf
-        generation_config_file_path = 'resources/data_schema_2d/generation_config.conf'
+        generation_config_file_path = 'resources/data_schema/generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()          
         # Item generator:        
@@ -100,6 +100,29 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
 
         with_context = True
         rating_file = self.__generator.generate_rating_file(user_df, user_profile_df, item_df, item_schema, with_context, context_df, context_schema)
+        logging.info(f'rating_file: {rating_file}')
+        self.assertEqual(rating_file.shape[0], 2000)
+
+    def test_generate_rating_file(self):
+        '''        
+        Generates the rating file.        
+        '''
+        # user_df:
+        user_path = 'resources/data_schema/user.csv'
+        user_df = pd.read_csv(user_path, encoding='utf-8', index_col=False)
+        # user_profile_df:
+        user_profile_path = 'resources/data_schema/user_profile_2d.csv'
+        user_profile_df = pd.read_csv(user_profile_path, encoding='utf-8', index_col=False)
+        # item_df:
+        item_path = 'resources/data_schema/item.csv'
+        item_df = pd.read_csv(item_path, encoding='utf-8', index_col=False)
+        # item_schema:
+        item_schema_file_path = 'resources/data_schema/item_schema.conf'
+        with open(item_schema_file_path, 'r') as item_schema_file:
+            item_schema = item_schema_file.read()
+        
+        with_context = False
+        rating_file = self.__generator.generate_rating_file(user_df, user_profile_df, item_df, item_schema, with_context)        
         logging.info(f'rating_file: {rating_file}')
         self.assertEqual(rating_file.shape[0], 2000)
 

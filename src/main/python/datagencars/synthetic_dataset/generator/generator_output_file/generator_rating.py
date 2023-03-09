@@ -41,10 +41,12 @@ class GeneratorRatingFile:
         self.item_df = item_df
         # Item schema: item_schema.conf
         self.item_schema_access = AccessSchema(file_str=item_schema)
-        # Context file (optional): context.csv
-        self.context_df = context_df
-        # Context schema: context_schema.conf
-        self.context_schema_access = AccessSchema(file_str=context_schema)
+        # Context:
+        if context_df and context_schema:
+            # Context file (optional): context.csv
+            self.context_df = context_df
+            # Context schema: context_schema.conf
+            self.context_schema_access = AccessSchema(file_str=context_schema)
 
     def generate_file(self, with_context=False):
         # sourcery skip: assign-if-exp, extract-duplicate-method, hoist-statement-from-loop, low-code-quality, merge-list-append
@@ -94,8 +96,8 @@ class GeneratorRatingFile:
 
             # Generating user_id:
             user_id = user_id_list[user_index-1]
-            row_rating_list.append(user_id)            
-
+            row_rating_list.append(user_id)   
+         
             # Determining the initial timestamp for the current user:
             initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]     
             # Check if the initial_timestamp is near to minimum year.
@@ -115,7 +117,7 @@ class GeneratorRatingFile:
                     row_rating_list.append(context_id)
 
                 # Generating a rating for a specified user profile:                   
-                user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id, 'user_profile_id'].iloc[0]
+                user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id, 'user_profile_id'].iloc[0]                
                 if with_context:
                     rating = self.get_rating(user_profile_id, item_id, context_id)
                 else:
@@ -175,7 +177,7 @@ class GeneratorRatingFile:
         rating_df.sort_values(by=['user_id', 'timestamp'], ascending=True, na_position='first', inplace=True)
         rating_df.reset_index(drop=True, inplace=True)          
         return rating_df
-    
+
     def get_rating(self, user_profile_id, item_id, context_id=None):
         '''
         Determinig a rating value given weight and attribute rating vectors.
@@ -199,13 +201,13 @@ class GeneratorRatingFile:
         minimum_value_rating = self.access_generation_config.get_minimum_value_rating()
         maximum_value_rating = self.access_generation_config.get_maximum_value_rating() 
         # Getting the attribute rating vector.
-        attribute_rating_vector = self.get_attribute_rating_vector(weight_vector, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating)
+        attribute_rating_vector = self.get_attribute_rating_vector(weight_vector, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list)
 
         if len(weight_vector) != len(attribute_rating_vector):
             raise ValueError('The vectors have not the same size.')
         
         rating = 0
-        sum_weight = 0
+        sum_weight = 0 # self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == user_profile_id, 'other'].iloc[0]        
         for idx, weight_importance in enumerate(weight_vector):
             # Getting importance and weight values:
             weight_importance_list = str(weight_importance).split('|')
@@ -249,7 +251,7 @@ class GeneratorRatingFile:
                     possible_value_list.append(self.context_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
         return attribute_value_list, possible_value_list
     
-    def get_attribute_rating_vector(self, weight_vector, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating):
+    def get_attribute_rating_vector(self, weight_vector, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list):
         '''
         Get the attribute rating vector determined by using the user profile.
         :param weight_vector: The weight vector specified in the user profile.
@@ -270,7 +272,10 @@ class GeneratorRatingFile:
 
             # If the attribute is relevant for the user:
             attribute_rating = 0
-            if importance_rank:
+            if (importance_rank is None and user_profile_attribute_list[idx] == 'other'):
+                # Rating with noise (randomly):
+                attribute_rating = random.randint(minimum_value_rating, maximum_value_rating)
+            elif importance_rank:
                 # Determining position_array: the position of "attribute_value" in "possible_value_list". For example, for: possible_value_list = ['free', '$', '$$', '$$$', '$$$$'] and attribute_value = '$', the position_array = 1
                 if isinstance(attribute_value_list[idx], list):                                
                     # Calculating attribute_rating of "y" for two points (x,y) in the line:
@@ -283,7 +288,7 @@ class GeneratorRatingFile:
                 else:
                     # Calculating attribute_rating of "y" for one point (x,y) in the line:                              
                     position_array = attribute_possible_value_list[idx].index(attribute_value_list[idx])
-                    attribute_rating = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)                    
+                    attribute_rating = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
             else:
                 # If the attribute is not relevant for the user (weight=0 without label (+) or (-)):                            
                 attribute_rating = 0
@@ -291,6 +296,7 @@ class GeneratorRatingFile:
         return attribute_rating_vector
         
     def get_attribute_rating(self, position_array, minimum_value_rating, maximum_value_rating, possible_value_list, importance_rank):
+        # sourcery skip: move-assign, none-compare
         '''
         Get the rating of attribute, when the importance of the attribute is given.
         :param position_array: The position of the attribute value in the list of attribute value possibles.
@@ -308,12 +314,11 @@ class GeneratorRatingFile:
         # Determining max_score_normalized: the maximum value of rating
         max_score_normalized = maximum_value_rating
         # Determining max_score_input: the number of possible values for the current attribute
-        max_score_input = len(possible_value_list)
-        
+        max_score_input = len(possible_value_list)        
         # Checking the importance ranking of the current attribute:
-        if importance_rank == '(+)':
+        if importance_rank == '(+)':            
             rating_attribute = self.compute_y(min_score_input, min_score_normalized, max_score_input, max_score_normalized, input_score)
-        elif importance_rank == '(-)': 
+        elif importance_rank == '(-)':            
             rating_attribute = self.compute_y(max_score_input, min_score_normalized, min_score_input, max_score_normalized, input_score)
         return rating_attribute
 
