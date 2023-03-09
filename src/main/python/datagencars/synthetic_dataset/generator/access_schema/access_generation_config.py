@@ -96,6 +96,18 @@ class AccessGenerationConfig(AccessData):
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
         return percentage_rating_variation
+    
+    def get_k_rating_past(self):
+        '''
+        Gets the k ratings to consider from a user's past to modify a specific rating.
+        :return: The k ratings to consider from a user's past.
+        '''
+        k_rating_past = None
+        try:
+            k_rating_past = self.file_parser.getint(section='rating', option='k_rating_past')
+        except (NoOptionError, NoSectionError) as e: 
+            logging.error(e)
+        return k_rating_past
 
     def is_gaussian_distribution(self):
         '''
@@ -109,6 +121,30 @@ class AccessGenerationConfig(AccessData):
             logging.error(e)
         return is_gaussian_distribution
     
+    def get_minimum_year_timestamp(self):
+        '''
+        Gets the minimum year to generate the timestamp in the rating file.
+        :return: The minimum year to generate the timestamp.
+        '''
+        minimum_value_rating = None
+        try:
+            minimum_value_rating = self.file_parser.getint(section='rating', option='minimum_year_timestamp')
+        except (NoOptionError, NoSectionError) as e: 
+            logging.error(e)
+        return minimum_value_rating
+    
+    def get_maximum_year_timestamp(self):
+        '''
+        Gets the maximum year to generate the timestamp in the rating file.
+        :return: The maximum year to generate the timestamp.
+        '''
+        maximum_value_rating = None
+        try:
+            maximum_value_rating = self.file_parser.getint(section='rating', option='maximum_year_timestamp')
+        except (NoOptionError, NoSectionError) as e: 
+            logging.error(e)
+        return maximum_value_rating
+
     def get_probability_percentage_profile_from_pos(self, position):
         '''
         Gets the percentage to generate by item profile.

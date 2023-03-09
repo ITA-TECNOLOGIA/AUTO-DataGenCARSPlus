@@ -78,6 +78,15 @@ class TestAccessGenerationConfig(unittest.TestCase):
         logging.info(f'percentage_rating_variation: {percentage_rating_variation}')                
         self.assertEqual(percentage_rating_variation, 25)
 
+    def test_get_k_rating_past(self):
+        '''
+        [rating]
+        k_rating_past=10
+        '''
+        k_rating_past = self.__access.get_k_rating_past()
+        logging.info(f'k_rating_past: {k_rating_past}')                
+        self.assertEqual(k_rating_past, 10)
+
     def test_is_gaussian_distribution(self):
         '''
         [rating]
@@ -86,6 +95,24 @@ class TestAccessGenerationConfig(unittest.TestCase):
         gaussian_distribution = self.__access.is_gaussian_distribution()
         logging.info(f'gaussian_distribution: {gaussian_distribution}')                
         self.assertEqual(bool(gaussian_distribution), False)
+
+    def test_get_minimum_year_timestamp(self):
+        '''
+        [rating]
+        minimum_year_timestamp=1980
+        '''
+        minimum_year_timestamp = self.__access.get_minimum_year_timestamp()
+        logging.info(f'minimum_year_timestamp: {minimum_year_timestamp}')                
+        self.assertEqual(minimum_year_timestamp, 1980)
+
+    def test_get_maximum_year_timestamp(self):
+        '''
+        [rating]
+        maximum_year_timestamp=2022
+        '''
+        maximum_year_timestamp = self.__access.get_maximum_year_timestamp()
+        logging.info(f'maximum_year_timestamp: {maximum_year_timestamp}')                
+        self.assertEqual(maximum_year_timestamp, 2022)
 
     def test_get_probability_percentage_profile_from_pos(self):
         '''

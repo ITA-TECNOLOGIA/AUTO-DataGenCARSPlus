@@ -1,5 +1,5 @@
-import unittest
 import logging
+import unittest
 
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_address import GeneratorAttributeAddress
@@ -15,7 +15,7 @@ class TestGeneratorAttributeAddress(unittest.TestCase):
         self.__generator = GeneratorAttributeAddress(schema_access)
     
     def tearDown(self):
-        del self.__access
+        del self.__generator
     
     def test_generate_attribute_value(self):
         '''
@@ -34,14 +34,14 @@ class TestGeneratorAttributeAddress(unittest.TestCase):
         type_subattribute_4_attribute_2=String
         type_subattribute_5_attribute_2=String
         generator_type_attribute_2=AddressAttributeGenerator
-        input_parameter_attribute_2=address_restaurant.csv
-        '''
-        attribute_name, attribute_value = self.__generator.generate_attribute_value(position=2)
-        logging.info(f'address_attribute_name: {attribute_name}')   
-        logging.info(f'address_attribute_value: {attribute_value}')   
-        print(f'address_attribute_name: {attribute_name}')  
-        print(f'address_attribute_value: {attribute_value}')         
-        self.assertEqual(attribute_name, 'address')            
+        input_parameter_attribute_2=[['Via Alto Adige - Südtiroler Straße', '60', '39100', '11.35465', '11.364649'], ['Via Cassa di Risparmio - Sparkassenstraße', '12', '39100', '11.344651', '11.364649'], ['Via Museo - Museumstraße', '19', '39100', '11.34651', '11.364649'], ['Viale Druso - Drususallee', '50', '39100', '11.33465', '11.354649'], ['Via Andreas Hofer - Andreas-Hofer-Straße', '8', '39100', '11.354651', '11.374649'], ['Via dei Conciapelli - Gerbergasse', '25', '39100', '11.354651', '11.374649'], ['Via Portici - Laubengasse', '51', '39100', '11.344651', '11.364649'], ['Via Andreas Hofer - Andreas-Hofer-Straße', '30', '39100', '11.354651', '11.374649'], ['Via Cavour - Cavourstraße', '8', '39100', '11.354651', '11.37465'], ['Piazza Dogana - Zollstangenplatz', '3', '39100', '11.354651', '11.374649'], ['Piazza delle Erbe - Obstmarkt', '17', '39100', '11.344651', '11.364649']]
+        '''        
+        attribute_position=2        
+        attribute_name, attribute_value = self.__generator.generate_attribute_value(position=attribute_position)
+        logging.info(f'address_attribute_name: {attribute_name}')
+        logging.info(f'address_attribute_value: {attribute_value}')
+        self.assertEqual(attribute_name, 'address')        
+        self.assertEqual(len(attribute_value), 5)            
    
 
 if __name__ == '__main__':

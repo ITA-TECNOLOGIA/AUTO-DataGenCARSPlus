@@ -1,5 +1,6 @@
 import unittest
 import logging
+import ast
 
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 
@@ -151,6 +152,54 @@ class TestAccessItemSchema(unittest.TestCase):
         logging.info(f'possible_values: {possible_values}')          
         self.assertListEqual(possible_values, ['free', '$', '$$', '$$$', '$$$$'])
 
+    def test_get_possible_values_attribute_list_from_name_str(self):
+        '''
+        name_attribute_14=price
+        type_attribute_14=String
+        number_posible_values_attribute_14=5
+        posible_value_1_attribute_14=free
+        posible_value_2_attribute_14=$
+        posible_value_3_attribute_14=$$
+        posible_value_4_attribute_14=$$$
+        posible_value_5_attribute_14=$$$$
+        '''
+        possible_values = self.__access.get_possible_values_attribute_list_from_name(attribute_name='price')
+        logging.info(f'possible_values: {possible_values}')          
+        self.assertListEqual(possible_values, ['free', '$', '$$', '$$$', '$$$$'])        
+    
+    def test_get_possible_values_attribute_list_from_name_list(self):
+        '''
+        [attribute8]
+        name_attribute_8=type_of_food
+        type_attribute_8=List
+        number_maximum_component_attribute_8=4
+        type_component_attribute_8=Boolean
+        component_1_attribute_8=chinese
+        component_2_attribute_8=italian
+        component_3_attribute_8=vegetarian
+        component_4_attribute_8=international
+        '''
+        possible_values = self.__access.get_possible_values_attribute_list_from_name(attribute_name='type_of_food')
+        logging.info(f'possible_values: {possible_values}')          
+        self.assertListEqual(possible_values, ['chinese', 'italian', 'vegetarian', 'international']) 
+
+    def test_get_possible_values_attribute_list_from_name_bool(self):
+        '''
+        name_attribute_12=parking
+        type_attribute_12=Boolean
+        '''
+        possible_values = self.__access.get_possible_values_attribute_list_from_name(attribute_name='parking')
+        logging.info(f'possible_values: {possible_values}') 
+        self.assertListEqual(possible_values, [False, True])
+
+    def test_get_possible_values_attribute_list_from_name_other(self):
+        '''
+        It is an attribute of the user's profile, but not of the user.
+        '''
+        possible_values = self.__access.get_possible_values_attribute_list_from_name(attribute_name='other')
+        logging.info(f'possible_values: {possible_values}') 
+        self.assertListEqual(possible_values, [])
+
     def test_get_input_parameter_attribute_from_pos(self):
         '''
         [attribute1]
@@ -158,7 +207,7 @@ class TestAccessItemSchema(unittest.TestCase):
         '''
         input_parameter = self.__access.get_input_parameter_attribute_from_pos(position=1)
         logging.info(f'input_parameter: {input_parameter}')          
-        self.assertEqual(input_parameter, 'name_restaurant.csv')
+        self.assertListEqual(ast.literal_eval(input_parameter), ['Umami Burger', 'Restaurant Aoi', 'Drago Centro', 'Restaurant Alley', 'Daily Grill', 'Pete', 'Clifton Cafeteria', 'Lili Ya', 'Wurstkuche', 'San Sui Tei', 'Hope Street', 'Jack in the Box', 'Denny', 'First and Hope Restaurant', 'Catch 21 Seafood', 'Chop Suey Cafe Lounge', 'Wokano', 'Blue Cow', 'Sushi Toshi', 'Traxx', 'Puertos Del Pacifico', 'Taco House', 'Olvera Street', 'Little Joe', 'Les Noces de Figaro', 'Mr Ramen', 'Daikokuya', 'Izakaya Fuga', 'The Blue Cube', 'Purgatory Pizza', 'Suehiro Cafe', 'Cafe Pinot', 'Pitfire Pizza', 'Kazu Nori', 'Bottega Louie', 'Food Court', 'Subway', 'Nickel Diner', 'Cole', 'Blossom', 'Wurstkuche', 'McDonalds', 'Phillipe French Dip Deli', 'First Cup Cafe', 'Sugarfish Downtown', 'The Parish', 'Ocho Mexican Grill', 'Badmaash', 'West 7th Street', 'Korean BBQ House'])
 
     def test_get_minimum_value_attribute_from_pos(self):
         '''
@@ -315,7 +364,66 @@ class TestAccessItemSchema(unittest.TestCase):
         '''
         important_weight = self.__access.get_important_weight_attribute_from_pos(position=8)
         logging.info(f'important_weight: {important_weight}')          
-        self.assertEqual(bool(important_weight), True)        
+        self.assertEqual(bool(important_weight), True)    
+
+    def test_get_important_attribute_name_list(self):
+        '''
+        [attribute8]
+        name_attribute_8=type_of_food        
+        important_weight_attribute_8=True
+
+        [attribute9]
+        name_attribute_9=card       
+        important_weight_attribute_9=True
+
+        [attribute10]
+        name_attribute_10=outside       
+        important_weight_attribute_10=True
+
+        [attribute11]
+        name_attribute_11=bar        
+        important_weight_attribute_11=True
+
+        [attribute12]
+        name_attribute_12=parking        
+        important_weight_attribute_12=True
+
+        [attribute13]
+        name_attribute_13=reservation       
+        important_weight_attribute_13=True
+
+        [attribute14]
+        name_attribute_14=price       
+        important_weight_attribute_14=True
+
+        [attribute15]
+        name_attribute_15=quality_food       
+        important_weight_attribute_15=True
+
+        [attribute16]
+        name_attribute_16=quality_service       
+        important_weight_attribute_16=True
+
+        [attribute17]
+        name_attribute_17=quality_price        
+        important_weight_attribute_17=True
+
+        [attribute18]
+        name_attribute_18=global_rating        
+        important_weight_attribute_18=True      
+        '''
+        important_attribute_name_list = self.__access.get_important_attribute_name_list()        
+        logging.info(f'important_attribute_name_list: {important_attribute_name_list}')          
+        self.assertListEqual(important_attribute_name_list, ['type_of_food', 'card', 'outside', 'bar', 'parking', 'reservation', 'price', 'quality_food', 'quality_service', 'quality_price', 'global_rating'])      
+    
+    def test_get_unique_value_attribute_from_pos(self):
+        '''
+        [attribute1]
+        unique_value_attribute_1=True    
+        '''
+        unique_value = self.__access.get_unique_value_attribute_from_pos(position=1)
+        logging.info(f'unique_value: {unique_value}')          
+        self.assertEqual(bool(unique_value), True)       
 
 
 if __name__ == '__main__':
