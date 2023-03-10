@@ -201,6 +201,27 @@ def init_user_est_true(predictions):
 
     return user_est_true
 
+def is_binary(user_ratings):
+    """
+    Check if the user ratings are binary or not
+
+    Parameters:
+    ----------
+    user_ratings : list
+        List of (item_id, rating) tuples for a given user
+
+    Returns:
+    -------
+    binary : bool
+        True if the user ratings are binary, False otherwise
+    """
+    ratings = [rating for _, rating in user_ratings]
+    if all(0 <= rating <= 1 for rating in ratings):
+        binary = True
+    else:
+        binary = False
+    return binary
+
 def init_n_rel_and_rec_k(user_ratings):
     """
     Count the number of relevant and recommended items at k for a given user
@@ -220,11 +241,7 @@ def init_n_rel_and_rec_k(user_ratings):
         Number of relevant and recommended items in the user_ratings up to the k-th position
     """
     
-    ratings = [rating for _, rating in user_ratings]
-    if all(0 <= rating <= 1 for rating in ratings):
-        binary = True
-    else:
-        binary = False
+    binary = is_binary(user_ratings)
 
     k=10 #The maximum number of recommendations. Default is 10.
     user_ratings.sort(key=lambda x: x[0], reverse=True) # Sort user ratings by estimated value
@@ -364,12 +381,17 @@ def auc_roc(predictions, verbose=True):
     """
     if not predictions:
         raise ValueError("Prediction list is empty.")
-    
+
     y_true = [true_r for (_, _, true_r, _, _) in predictions]
-    y_pred = [est for (_, _, true_r, est, _) in predictions]
-    
-    auc_roc = roc_auc_score(y_true, y_pred)
-    
+    y_pred = [est for (_, _, _, est, _) in predictions]
+
+    # binary = is_binary(predictions)
+    # if binary:
+    #     multi_class = "raise"
+    # else:
+    #     multi_class = "ovr"
+    auc_roc = roc_auc_score(y_true, y_pred, multi_class="raise") #multi_class
+
     if verbose:
         print(f"AUC-ROC: {auc_roc:1.4f}")
     
