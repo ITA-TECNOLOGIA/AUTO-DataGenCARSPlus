@@ -1,5 +1,7 @@
 import logging
 from configparser import NoOptionError, NoSectionError
+import pandas as pd
+import numpy as np
 
 from datagencars.synthetic_dataset.generator.access_schema.access_data import AccessData
 
@@ -122,7 +124,7 @@ class AccessSchema(AccessData):
     def get_possible_values_attribute_list_from_pos(self, position):        
         # sourcery skip: for-append-to-extend
         '''
-        Gets a list of possible values of an attribute.
+        Gets a list of possible values of an attribute, by using the attribute position.
         :param position: The position of an attribute.
         :return: A list of possible values of an attribute.
         '''
@@ -135,6 +137,36 @@ class AccessSchema(AccessData):
         except (NoOptionError, NoSectionError) as e:            
             logging.error(e)
         return possible_values_attribute_list
+    
+    def get_possible_values_attribute_list_from_name(self, attribute_name):
+        '''
+        Gets a list of possible values of an attribute, by using the attribute name.
+        :param name: The name of an attribute.
+        :return: A list of possible values of an attribute.
+        '''
+        possible_values_attribute_list = []
+        try:
+            if attribute_name != 'other':
+                attribute_position = self.get_position_from_attribute_name(attribute_name)
+                attribute_type = self.get_type_attribute_from_pos(position=attribute_position)
+                if attribute_type == 'String':
+                    possible_values_attribute_list = self.get_possible_values_attribute_list_from_pos(position=attribute_position)
+                elif attribute_type == 'Boolean':
+                    possible_values_attribute_list = [False, True]
+                elif attribute_type == 'Integer':
+                    minimum_value = self.get_minimum_value_attribute_from_pos(position=attribute_position)
+                    maximum_value = self.get_maximum_value_attribute_from_pos(position=attribute_position)
+                    possible_values_attribute_list = list(range(int(minimum_value), int(maximum_value)+1))
+                elif attribute_type == 'Float':
+                    minimum_value = self.get_minimum_value_attribute_from_pos(position=attribute_position)
+                    maximum_value = self.get_maximum_value_attribute_from_pos(position=attribute_position)
+                    possible_values_attribute_list_aux = np.arange(float(minimum_value), float(maximum_value)+0.1, 0.1).tolist()
+                    possible_values_attribute_list = np.round(possible_values_attribute_list_aux, 2).tolist()
+                elif attribute_type == 'List':
+                    possible_values_attribute_list = self.get_component_attribute_list_from_pos(position=attribute_position)                  
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return possible_values_attribute_list    
     
     def get_input_parameter_attribute_from_pos(self, position):
         '''
@@ -333,3 +365,31 @@ class AccessSchema(AccessData):
             logging.error(e)
         return important_weight_attribute
     
+    def get_important_attribute_name_list(self):  # sourcery skip: for-append-to-extend
+        '''
+        Gets a attribute name list with important weight=True.        
+        :return: A list of attribute names (relevant to the user).
+        '''
+        important_attribute_name_list = []
+        number_attributes = self.get_number_attributes()
+        try:
+            if number_attributes:         
+                for position in range(1, number_attributes+1):                    
+                    if self.get_important_weight_attribute_from_pos(position):
+                        important_attribute_name_list.append(str(self.get_attribute_name_from_pos(position)))
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return important_attribute_name_list
+    
+    def get_unique_value_attribute_from_pos(self, position):
+        '''
+        Gets True if the attribute to be generated will have a unique value and False if the attribute to be generated will have a random value.
+        :param position: The position of an attribute.        
+        :return: Boolean value indicating if the attribute to be generated will have a unique or random value.
+        '''
+        unique_value_attribute = None
+        try:
+            unique_value_attribute = self.file_parser.getboolean(section=f'attribute{str(position)}', option=f'unique_value_attribute_{str(position)}')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return unique_value_attribute

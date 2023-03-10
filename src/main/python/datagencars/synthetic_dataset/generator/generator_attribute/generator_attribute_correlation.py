@@ -6,6 +6,11 @@ from datagencars.synthetic_dataset.generator.generator_attribute.generator_attri
 
 
 class GeneratorAttributeCorrelation(GeneratorAttribute):
+    '''
+    A generator of correlated attribute values: an integer or float value in a given range, a string value from an enumerated list, or a boolean value.
+
+    @author Maria del Carmen Rodriguez-Hernandez
+    '''
 
     def __init__(self, schema_access, item_profile_access, generation_access):
         super().__init__(schema_access)
@@ -36,7 +41,7 @@ class GeneratorAttributeCorrelation(GeneratorAttribute):
         '''
         attribute_value = None
         attribute_name = self.schema_access.get_attribute_name_from_pos(position_attribute)
-        if attribute_name == 'id_user_profile':
+        if attribute_name == 'user_profile_id':
             print('TODO')
         else:
             name_profile = self.item_profile_access.get_name_profile_from_pos(position_item_profile)
@@ -146,12 +151,3 @@ class GeneratorAttributeCorrelation(GeneratorAttribute):
             elif name_profile == 'bad':
                 attribute_value = random.choice(item_profile_dict['bad'])
         return attribute_value
-
-# from datagencars.generator.file_access.schema_access import SchemaAccess
-# item_schema_access = SchemaAccess(file_path='resources/data/item_schema.conf')
-# item_profile_access = ItemProfileAccess(file_path='resources/data/item_profile.conf')
-# generation_access = GenerationAccess(file_path='resources/data/generation_config.conf')
-# correlation_attribute_generator = CorrelationAttributeGenerator(schema_access=item_schema_access, item_profile_access=item_profile_access, generation_access=generation_access)
-# attribute_name, attribute_value = correlation_attribute_generator.generate_attribute_value(position_attribute=16, position_item_profile=3, with_noise=True) # position=18, position=16
-# print('attribute_name: ', attribute_name)
-# print('attribute_value: ', attribute_value)

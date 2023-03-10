@@ -117,6 +117,27 @@ class TestAccessItemSchema(unittest.TestCase):
         logging.info(f'possible_values: {possible_values}')          
         self.assertListEqual(possible_values, ['walking', 'bicycle', 'car', 'public'])
 
+    def test_get_possible_values_attribute_list_from_name_str(self):
+        '''
+        [attribute1]
+        name_attribute_1=transport_way
+        posible_value_1_attribute_1=walking
+        posible_value_2_attribute_1=bicycle
+        posible_value_3_attribute_1=car
+        posible_value_4_attribute_1=public
+        '''
+        possible_values = self.__access.get_possible_values_attribute_list_from_name(attribute_name='transport_way')
+        logging.info(f'possible_values: {possible_values}')          
+        self.assertListEqual(possible_values, ['walking', 'bicycle', 'car', 'public'])
+
+    def test_get_possible_values_attribute_list_from_name_other(self):
+        '''
+        It is an attribute of the user's profile, but not of the user.
+        '''
+        possible_values = self.__access.get_possible_values_attribute_list_from_name(attribute_name='other')
+        logging.info(f'possible_values: {possible_values}') 
+        self.assertListEqual(possible_values, [])
+
     def test_get_number_important_weight_attribute(self):
         '''
         [attribute1]
@@ -152,6 +173,40 @@ class TestAccessItemSchema(unittest.TestCase):
         important_weight = self.__access.get_important_weight_attribute_from_pos(position=1)
         logging.info(f'important_weight: {important_weight}')          
         self.assertEqual(bool(important_weight), True)  
+
+    def test_get_important_attribute_name_list(self):
+        '''
+        [attribute1]
+        name_attribute_1=transport_way
+        important_weight_attribute_1=True
+
+        [attribute2]
+        name_attribute_2=mobility        
+        important_weight_attribute_2=True
+
+        [attribute3]
+        name_attribute_3=weekday        
+        important_weight_attribute_3=True
+
+        [attribute4]
+        name_attribute_4=mood        
+        important_weight_attribute_4=True
+
+        [attribute5]
+        name_attribute_5=companion        
+        important_weight_attribute_5=True
+
+        [attribute6]
+        name_attribute_6=time_of_day        
+        important_weight_attribute_6=True
+
+        [attribute7]
+        name_attribute_7=distance        
+        important_weight_attribute_7=True
+        '''
+        important_attribute_name_list = self.__access.get_important_attribute_name_list()          
+        logging.info(f'important_attribute_name_list: {important_attribute_name_list}')          
+        self.assertListEqual(important_attribute_name_list, ['transport_way', 'mobility', 'weekday', 'mood', 'companion', 'time_of_day', 'distance'])      
 
 
 if __name__ == '__main__':

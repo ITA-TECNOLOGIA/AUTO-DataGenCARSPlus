@@ -1,6 +1,7 @@
+import io
 import logging
 import random
-import re
+import ast
 
 import pandas as pd
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute import GeneratorAttribute
@@ -17,10 +18,11 @@ class GeneratorAttributeURL(GeneratorAttribute):
     def __init__(self, schema_access):
         super().__init__(schema_access)
 
-    def generate_attribute_value(self, position, import_file_path=None):
-        # sourcery skip: extract-method, inline-immediately-returned-variable
+    def generate_attribute_value(self, position):
+        # sourcery skip: extract-method, inline-immediately-returned-variable, use-named-expression
         '''
         Generates an attribute value (URL) of a instance.
+
         Example of item_schema.conf:
             [attribute1]
             name_attribute_1=web_name
@@ -31,30 +33,24 @@ class GeneratorAttributeURL(GeneratorAttribute):
             type_subattribute_1_attribute_1=String
             type_subattribute_2_attribute_1=String
             generator_type_attribute_1=NameURLAttributeGenerator
-            input_parameter_attribute_1=name_restaurant.csv
+            input_parameter_attribute_1=['Umami Burger', 'Restaurant Aoi', 'Drago Centro', 'Restaurant Alley', 'Daily Grill', 'Pete', 'Clifton Cafeteria', 'Lili Ya', 'Wurstkuche', 'San Sui Tei', 'Hope Street', 'Jack in the Box', 'Denny', 'First and Hope Restaurant', 'Catch 21 Seafood', 'Chop Suey Cafe Lounge', 'Wokano', 'Blue Cow', 'Sushi Toshi', 'Traxx', 'Puertos Del Pacifico', 'Taco House', 'Olvera Street', 'Little Joe', 'Les Noces de Figaro', 'Mr Ramen', 'Daikokuya', 'Izakaya Fuga', 'The Blue Cube', 'Purgatory Pizza', 'Suehiro Cafe', 'Cafe Pinot', 'Pitfire Pizza', 'Kazu Nori', 'Bottega Louie', 'Food Court', 'Subway', 'Nickel Diner', 'Cole', 'Blossom', 'Wurstkuche', 'McDonalds', 'Phillipe French Dip Deli', 'First Cup Cafe', 'Sugarfish Downtown', 'The Parish', 'Ocho Mexican Grill', 'Badmaash', 'West 7th Street', 'Korean BBQ House']
             unique_value_attribute_1=true
-
-        Example of name_restaurant.csv:
-            place
-            Umami Burger
-            Restaurant Aoi
-            ...
-
         :param position: The position of an attribute.
         :return: The attribute value (URL).        
         '''
         attribute_value = None
         attribute_name = self.schema_access.get_attribute_name_from_pos(position)
-        if attribute_name == 'id_user_profile':
+        if attribute_name == 'user_profile_id':
             print('TODO')
-        else:        
-            # Loading file "name_restaurant.csv":
-            schema_file_path = self.schema_access.file_path
-            input_parameter_attribute = self.schema_access.get_input_parameter_attribute_from_pos(position)
-            input_parameter_file_path = re.sub(r'([a-z]*)_schema.conf', input_parameter_attribute, schema_file_path)
-            input_parameter_df = pd.read_csv(input_parameter_file_path, encoding='utf-8', index_col=False)
-            input_parameter_list = input_parameter_df['place'].unique().tolist()
-            place = str(random.choice(input_parameter_list))
+        else:
+            input_parameter_list = ast.literal_eval(self.schema_access.get_input_parameter_attribute_from_pos(position))
+            if_unique_value = self.schema_access.get_unique_value_attribute_from_pos(position)
+            if if_unique_value:
+                # True: If the attribute to be generated will have a unique value.
+                place = input_parameter_list[0]
+            else:
+                # False: If the attribute to be generated will have a random value.
+                place = str(random.choice(input_parameter_list))                        
             # Preprocessing the place value:
             place = place.lower()
             place = place.replace(' ', '_')
@@ -62,11 +58,3 @@ class GeneratorAttributeURL(GeneratorAttribute):
             # Generating URL:
             attribute_value = f"http://www.{place}.com"
         return attribute_name, attribute_value
-
-
-# from datagencars.generator.file_access.schema_access import SchemaAccess
-# schema_access = SchemaAccess(file_path='resources/data/item_schema.conf')
-# url_generator = URLAttributeGenerator(schema_access)
-# attribute_name, attribute_value_list = url_generator.generate_attribute_value(position=1)
-# print('attribute_name: ', attribute_name)
-# print('attribute_value_list: ', attribute_value_list)

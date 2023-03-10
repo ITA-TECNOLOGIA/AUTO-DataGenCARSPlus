@@ -1,8 +1,6 @@
 import logging
 
-from datagencars.synthetic_dataset.generator.generator_instance.generator_instance_correlation import GenerationInstanceCorrelation
-from datagencars.synthetic_dataset.generator.generator_instance.generator_instance_gaussian import GeneratorInstanceGaussian
-from datagencars.synthetic_dataset.generator.generator_instance.generator_instance_random import GeneratorInstanceRandom
+from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
 
 
@@ -13,37 +11,29 @@ class GeneratorItemFile(GeneratorFile):
     The following files are required: generation_config.conf, item_schema.conf and item_profile.conf.  
     '''
 
-    def __init__(self, generation_file_path, item_schema_file_path, item_profile_file_path):
-        super().__init__(generation_file_path, item_schema_file_path, item_profile_file_path)           
+    def __init__(self, generation_config, item_schema, item_profile):
+        super().__init__(generation_config, item_schema, item_profile)           
 
     def generate_file(self, with_correlation):
         '''
-        Generates the item file.
-        :param with_correlation: True if the generation of attribute values by instance is correlated with an item profile, and False otherwise.
+        Generates the item file.        
         :return: A dataframe with item information.         
         '''
         instance_generator = None
-        if self.generation_access.is_gaussian_distribution():
-            # Gaussian distribution:
-            instance_generator = GeneratorInstanceGaussian(generation_access=self.generation_access, schema_access=self.schema_access)
-        elif with_correlation:
-            # Random with correlation:
-            instance_generator = GenerationInstanceCorrelation(generation_access=self.generation_access, schema_access=self.schema_access, item_profile_access=self.item_profile_access)
-        else:
-            # Random without correlation:
-            instance_generator = GeneratorInstanceRandom(generation_access=self.generation_access, schema_access=self.schema_access)
-
         # Number of items to be generated.
-        number_item = self.generation_access.get_number_item()
+        number_item = self.access_generation_config.get_number_item()
+        print(f'Total of items to generate: {number_item}')
+        print('Generating instances by item.')        
         if with_correlation:
-            # With correlation (Random):
+            # Random with correlation:
+            instance_generator = GeneratorInstance(generation_access=self.access_generation_config, schema_access=self.schema_access, item_profile_access=self.item_profile_access)
             number_profile = self.item_profile_access.get_number_profiles()
             for position_item_profile in range(1, number_profile+1):
                 # Determining the number of instances to generate by item profile:
-                probability_percentage_profile = self.generation_access.get_probability_percentage_profile_from_pos(position=position_item_profile)
+                probability_percentage_profile = self.access_generation_config.get_probability_percentage_profile_from_pos(position=position_item_profile)
                 number_item_by_profile = (probability_percentage_profile*number_item)/100
                 # Determining the number of noise in the instances to generate by item profile:
-                noise_percentage_profile = self.generation_access.get_noise_percentage_profile_from_pos(position=position_item_profile)
+                noise_percentage_profile = self.access_generation_config.get_noise_percentage_profile_from_pos(position=position_item_profile)
                 number_noise_by_profile = int((noise_percentage_profile*number_item_by_profile)/100)
                 for _ in range(number_noise_by_profile):
                     attribute_list = instance_generator.generate_instance(position_item_profile=position_item_profile, with_noise=True)
@@ -53,19 +43,12 @@ class GeneratorItemFile(GeneratorFile):
                     self.file_df.loc[len(self.file_df.index)] = attribute_list                         
         else:
             # Without correlation (Random or Gaussian distribution):
+            instance_generator = GeneratorInstance(schema_access=self.schema_access)
             for _ in range(number_item):            
                 attribute_list = instance_generator.generate_instance()
-            self.file_df.loc[len(self.file_df.index)] = attribute_list
+                self.file_df.loc[len(self.file_df.index)] = attribute_list            
 
         # Adding item_id column:
-        item_id_list = list(range(1, number_item+1))
+        item_id_list = list(range(1, number_item+1))        
         self.file_df.insert(loc=0, column='item_id', value=item_id_list)
         return self.file_df.copy()
-
-
-# generation_file_path = 'resources/data/generation_config.conf'
-# item_schema_file_path = 'resources/data/item_schema.conf'
-# item_profile_file_path = 'resources/data/item_profile.conf'
-# item_file_generator = ItemFileGenerator(generation_file_path, item_schema_file_path, item_profile_file_path)
-# item_file_df = item_file_generator.generate_file(with_correlation=True)
-# print(item_file_df)

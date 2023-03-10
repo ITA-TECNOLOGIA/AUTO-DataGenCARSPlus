@@ -1,5 +1,6 @@
+import ast
 import logging
-import re
+import random
 
 import pandas as pd
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute import GeneratorAttribute
@@ -37,39 +38,17 @@ class GeneratorAttributeAddress(GeneratorAttribute):
             type_subattribute_4_attribute_2=String
             type_subattribute_5_attribute_2=String
             generator_type_attribute_2=AddressAttributeGenerator
-            input_parameter_attribute_2=address_restaurant.csv
-
-        Example of item_address.csv:
-            street;number;zp;latitude;longitude
-            Via Alto Adige - Südtiroler Straße;60;39100;11.35465;11.364649
-            Via Cassa di Risparmio - Sparkassenstraße;12;39100;11.344651;11.364649
-            ...
+            input_parameter_attribute_2=[['Via Alto Adige - Südtiroler Straße', '60', '39100', '11.35465', '11.364649'], ['Via Cassa di Risparmio - Sparkassenstraße', '12', '39100', '11.344651', '11.364649'], ['Via Museo - Museumstraße', '19', '39100', '11.34651', '11.364649'], ['Viale Druso - Drususallee', '50', '39100', '11.33465', '11.354649'], ['Via Andreas Hofer - Andreas-Hofer-Straße', '8', '39100', '11.354651', '11.374649'], ['Via dei Conciapelli - Gerbergasse', '25', '39100', '11.354651', '11.374649'], ['Via Portici - Laubengasse', '51', '39100', '11.344651', '11.364649'], ['Via Andreas Hofer - Andreas-Hofer-Straße', '30', '39100', '11.354651', '11.374649'], ['Via Cavour - Cavourstraße', '8', '39100', '11.354651', '11.37465'], ['Piazza Dogana - Zollstangenplatz', '3', '39100', '11.354651', '11.374649'], ['Piazza delle Erbe - Obstmarkt', '17', '39100', '11.344651', '11.364649']]
         :param position: The position of an attribute.
         :return: The attribute value (address). 
         '''
         attribute_value = []
-        attribute_name = self.schema_access.get_attribute_name_from_pos(position)
-        if attribute_name == 'id_user_profile':
+        attribute_name = self.schema_access.get_attribute_name_from_pos(position)       
+        if attribute_name == 'user_profile_id':
             print('TODO')
-        else:  
-            # Loading file "name_restaurant.csv":
-            schema_file_path = self.schema_access.file_path
-            input_parameter_attribute = self.schema_access.get_input_parameter_attribute_from_pos(position)
-            input_parameter_file_path = re.sub(r'([a-z]*)_schema.conf', input_parameter_attribute, schema_file_path)
-            input_parameter_df = pd.read_csv(input_parameter_file_path, encoding='utf-8', index_col=False, sep=';')              
-            row_random = input_parameter_df.sample()
-            # print(row_random)
-
+        else:
             # Gets sub-attribute names and values:
             name_subattribute_list = self.schema_access.get_name_subattribute_list_from_pos(position)
-            for name_subattribute in name_subattribute_list:
-                if name_subattribute in row_random:
-                    attribute_value.append(str(row_random[name_subattribute].iloc[0]))
+            address_input_list = ast.literal_eval(self.schema_access.get_input_parameter_attribute_from_pos(position))
+            attribute_value = random.choice(address_input_list)      
         return attribute_name, attribute_value
-
-# from datagencars.generator.file_access.schema_access import SchemaAccess
-# schema_access = SchemaAccess(file_path='resources/data/item_schema.conf')
-# address_attribute_generator = AddressAttributeGenerator(schema_access)
-# attribute_name, attribute_value_list = address_attribute_generator.generate_attribute_value(position=2)
-# print('attribute_name: ', attribute_name)
-# print('attribute_value_list: ', attribute_value_list)

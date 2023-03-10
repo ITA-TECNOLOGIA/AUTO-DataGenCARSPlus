@@ -15,28 +15,19 @@ class GeneratorAttributeFixed(GeneratorAttribute):
 
     def generate_attribute_value(self, position):
         '''
-        XXX
+        Generates an attribute value (fixed) of a instance.
 
         Example of item_schema.conf:
             [attribute1]
             name_attribute_1=province
             type_attribute_1=String
             generator_type_attribute_1=FixedAttributeGenerator
-            input_parameter_attribute_1=California
-        
+            input_parameter_attribute_1=California        
         '''
         attribute_value = None
         attribute_name = self.schema_access.get_attribute_name_from_pos(position)
-        if attribute_name == 'id_user_profile':
+        if attribute_name == 'user_profile_id':
             print('TODO')
         else:   
             attribute_value = self.schema_access.get_input_parameter_attribute_from_pos(position)
         return attribute_name, attribute_value
-
-
-# from datagencars.generator.file_access.schema_access import SchemaAccess
-# schema_access = SchemaAccess(file_path='resources/data/item_schema.conf')
-# fixed_attribute_generator = FixedAttributeGenerator(schema_access)
-# attribute_name, attribute_value_list = fixed_attribute_generator.generate_attribute_value(position=3)
-# print('attribute_name: ', attribute_name)
-# print('attribute_value_list: ', attribute_value_list)
