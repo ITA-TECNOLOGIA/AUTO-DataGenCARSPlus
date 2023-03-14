@@ -2,3 +2,4 @@ resources/*
 *.pyc
 *.csv
 .vscode
+app_tmp.py
