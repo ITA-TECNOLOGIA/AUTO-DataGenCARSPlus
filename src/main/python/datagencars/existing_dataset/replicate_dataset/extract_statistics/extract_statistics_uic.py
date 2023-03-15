@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import streamlit as st
 
 def list_attributes_and_ranges(dataframe):
     """
@@ -13,12 +14,34 @@ def list_attributes_and_ranges(dataframe):
             table.append([column, dataframe[column].dtype, f"{dataframe[column].min()} - {dataframe[column].max()}"])
         elif dataframe[column].dtype == 'object':
             try:
-                dataframe[column] = pd.to_datetime(dataframe[column], format='%d/%m/%Y')
-                table.append([column, dataframe[column].dtype, f"{dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}"])
-            except ValueError:
-                unique_values = dataframe[column].unique() #.dropna().unique()
+                dtype = dataframe[column].dtype
+                datetime_obj = None
+                date_formats = ["%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y/%m/%d", "%m-%d-%Y", "%Y%m%d", "%d-%m-%Y"]
+                time_formats = ["%H:%M:%S", "%H:%M"]
+                for date_format in date_formats:
+                    try:
+                        datetime_obj = pd.to_datetime(dataframe[column], format=date_format)
+                        break
+                    except ValueError:
+                        for time_format in time_formats:
+                            format_str = f"{date_format} {time_format}"
+                            try:
+                                datetime_obj = pd.to_datetime(dataframe[column], format=format_str)
+                                break
+                            except ValueError:
+                                pass
+                        pass
+                    if datetime_obj is not None:
+                        break
+                if datetime_obj is None:
+                    raise ValueError("Unsupported datetime format")
+                table.append([column, dtype, f"{datetime_obj.min().strftime('%Y-%m-%d')} - {datetime_obj.max().strftime('%Y-%m-%d')}"])
+            except ValueError as e:
+                unique_values = dataframe[column].unique()
                 unique_values_str = ', '.join([str(value) for value in unique_values])
                 table.append([column, dataframe[column].dtype, unique_values_str])
+        elif dataframe[column].dtype == 'datetime64[ns]':
+            table.append([column, dataframe[column].dtype, f"{dataframe[column].min().strftime('%Y-%m-%d')} - {dataframe[column].max().strftime('%Y-%m-%d')}"])
         else:
             table.append([column, dataframe[column].dtype, "Unsupported data type"])
     return table
