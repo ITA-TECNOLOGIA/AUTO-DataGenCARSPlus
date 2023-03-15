@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import unittest
-from datagencars.existing_dataset.replicate_dataset.extract_statistics import extract_statistics_uic
+from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC as extract_statistics_uic
 
 """
 Usage: python -m unittest src\main\test\datagencars\existing_dataset\replicate_dataset\extract_statistics\test_extract_statistics_uic.py

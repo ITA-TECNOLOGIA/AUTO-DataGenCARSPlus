@@ -16,8 +16,8 @@ from datagencars.synthetic_dataset.generator.access_schema.access_schema import 
 sys.path.append("src/main/python")
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
 import datagencars.evaluation.rs_surprise.evaluation as evaluation
-import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating as extract_statistics_rating
-import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic as extract_statistics_uic
+from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating as extract_statistics_rating
+from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC as extract_statistics_uic
 import datagencars.existing_dataset.label_encoding as label_encoding
 import datagencars.existing_dataset.mapping_categorization as mapping_categorization
 import datagencars.existing_dataset.binary_ratings as binary_ratings
