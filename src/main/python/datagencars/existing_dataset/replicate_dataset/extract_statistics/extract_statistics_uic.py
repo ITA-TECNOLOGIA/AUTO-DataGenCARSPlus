@@ -12,6 +12,8 @@ class ExtractStatisticsUIC:
         for column in dataframe.columns:
             if dataframe[column].dtype in ['int64', 'float64']:
                 table.append([column, dataframe[column].dtype, f"{dataframe[column].min()} - {dataframe[column].max()}"])
+            elif dataframe[column].dtype == 'bool':
+                table.append([column, dataframe[column].dtype, "True, False"])
             elif dataframe[column].dtype == 'object':
                 try:
                     dtype = dataframe[column].dtype
