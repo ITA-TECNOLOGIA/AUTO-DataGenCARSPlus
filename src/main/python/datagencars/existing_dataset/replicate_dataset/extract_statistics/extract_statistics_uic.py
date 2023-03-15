@@ -85,15 +85,20 @@ class ExtractStatisticsUIC:
         """
         num_users = data['user_id'].nunique()
         num_items = data['item_id'].nunique()
-        num_contexts = data['context_id'].nunique()
-        num_ratings = data[['user_id', 'item_id', 'context_id']].nunique().sum()
-        return {
-            "Number of userID": num_users,
-            "Number of itemID": num_items,
-            "Number of contextID": num_contexts,
-            "Number of ratings": num_ratings
-        }
-
+        if 'context_id' in data.columns:
+            return {
+                "Number of userID": num_users,
+                "Number of itemID": num_items,
+                "Number of contextID": data['context_id'].nunique(),
+                "Number of ratings": data[['user_id', 'item_id', 'context_id']].nunique().sum()
+            }
+        else:
+            return {
+                "Number of userID": num_users,
+                "Number of itemID": num_items,
+                "Number of ratings": data[['user_id', 'item_id']].nunique().sum()
+            }
+    
     def statistics_by_user(data, selected_user, word):
         """
         Computes the statistics of items per user.
