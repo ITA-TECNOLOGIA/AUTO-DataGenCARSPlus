@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import unittest
-from datagencars.existing_dataset.replicate_dataset.extract_statistics import extract_statistics_rating
+from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating as extract_statistics_rating
 
 """
 Usage: python -m unittest src\main\test\datagencars\existing_dataset\replicate_dataset\extract_statistics\test_extract_statistics_rating.py
