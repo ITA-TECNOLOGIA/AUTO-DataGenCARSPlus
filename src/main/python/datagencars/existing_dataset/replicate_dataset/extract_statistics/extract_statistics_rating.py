@@ -24,11 +24,11 @@ class ExtractStatisticsRating:
         if 'context_id' in data.columns:
             unique_contexts = data["context_id"].nunique()
             unique_counts["Contexts"] = unique_contexts
+        unique_ratings = data["rating"].nunique()
+        unique_counts["Ratings"] = unique_ratings
         if 'timestamp' in data.columns:
             unique_timestamps = data["timestamp"].nunique()
             unique_counts["Timestamps"] = unique_timestamps
-        unique_ratings = data["rating"].nunique()
-        unique_counts["Ratings"] = unique_ratings
         unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count'])
         unique_counts_df.reset_index(inplace=True)
         unique_counts_df.rename(columns={"index": "Attribute name"}, inplace=True)
