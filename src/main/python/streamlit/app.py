@@ -20,7 +20,7 @@ import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract
 import datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic as extract_statistics_uic
 import datagencars.existing_dataset.label_encoding as label_encoding
 import datagencars.existing_dataset.mapping_categorization as mapping_categorization
-import datagencars.existing_dataset.replicate_dataset.binary_ratings as binary_ratings
+import datagencars.existing_dataset.binary_ratings as binary_ratings
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',

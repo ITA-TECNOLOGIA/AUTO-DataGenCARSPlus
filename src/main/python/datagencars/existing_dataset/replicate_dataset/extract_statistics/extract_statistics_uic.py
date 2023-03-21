@@ -37,13 +37,15 @@ def column_attributes_count(dataframe, column):
         data = dataframe.groupby(column).size().reset_index(name='count') # Group the data by the selected column and count the occurrences of each attribute            
     return data
 
-def count_missing_values(dataframe, replace_values={}):
+def count_missing_values(dataframe, replace_values=None):
     """
     Count missing values in the dataframe.
     :param dataframe: The dataframe to be analyzed
     :param replace_values: A dictionary with the values to be replaced by NaN
     :return: A dataframe with the number of missing values per attribute
     """
+    if replace_values is None:
+        replace_values = {}
     for k,v in replace_values.items():
         dataframe.replace(k, np.nan, inplace=True)
     missing_values = dataframe.isnull().sum()
@@ -120,7 +122,7 @@ def statistics_by_user(data, selected_user, word):
         f"Percent of {word} repeated by user": percent_repeated_items_by_user,
     }
 
-def statistics_by_attribute(dataframe):
+def statistics_by_attribute(dataframe):  # sourcery skip: merge-nested-ifs
     """
     Calculate average and standard devuation per attribute and frequency and percentage of each attribute value.
     :param dataframe: The dataframe to be analyzed

@@ -7,7 +7,7 @@ def replace_missing_values(df):
     :param df: The ratings dataset
     :return: The ratings dataset with missing values replaced
     """
-    for k,v in {"NULL":np.nan,-1:np.nan}.items():
+    for k in {"NULL":np.nan,-1:np.nan}:
         df.replace(k, np.nan, inplace=True)
     return df
 
