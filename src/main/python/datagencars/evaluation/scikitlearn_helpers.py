@@ -21,6 +21,7 @@ from sklearn.model_selection import (
     RepeatedKFold,
     train_test_split,
 )
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 sys.path.append("src/main/python/streamlit")
 import config
@@ -44,6 +45,8 @@ def create_algorithm(algo_name, params=None):
         return KMeans(**params)
     elif algo_name == "DBSCAN":
         return DBSCAN(**params)
+    elif algo_name == "HistGradientBoostingClassifier":
+        return HistGradientBoostingClassifier(**params)
     else:
         raise ValueError("Invalid algorithm name")
     
@@ -94,25 +97,20 @@ def preprocess_missing_values(df, strategy='mean'):
     imputed_data = imputer.fit_transform(df)
     return pd.DataFrame(imputed_data, columns=df.columns)
 
-def evaluate(item_df, context_df, rating_df, algo_list, strategy_instance, metrics, user_id=None):
+def evaluate(merged_df, algo_list, strategy_instance, metrics, user_id=None):
     """
     Evaluates a list of algorithms using a given split strategy
-    :param item_df: the item dataframe
-    :param context_df: the context dataframe
-    :param rating_df: the rating dataframe
+    :param merged_df: the dataframe to use
     :param algo_list: the list of algorithms to evaluate
     :param strategy_instance: the split strategy to use
     :param metrics: the metrics to use
     :param user_id: the target user id
     :return: a dataframe with the results
     """
-    try:
-        merged_df = rating_df.merge(item_df, on='item_id').merge(context_df, on='context_id')
-    except KeyError as e:
-        return f"The rating, user, item and context datasets don´t have '_id' columns in common. {e}"
     categorical_columns = get_categorical_cols(merged_df)
     dummies_df = pd.get_dummies(merged_df, columns=categorical_columns)
-    data = preprocess_missing_values(dummies_df, strategy='mean')
+    data = dummies_df
+    # data = preprocess_missing_values(dummies_df, strategy='mean')
     # Filter the data for the target user if a target_user_id is provided
     if user_id is not None:
         data = data[data['user_id'] == user_id]
