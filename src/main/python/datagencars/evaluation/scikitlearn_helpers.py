@@ -1,4 +1,4 @@
-import time
+import sys
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
@@ -22,6 +22,8 @@ from sklearn.model_selection import (
     train_test_split,
 )
 from sklearn.impute import SimpleImputer
+sys.path.append("src/main/python/streamlit")
+import config
 
 def create_algorithm(algo_name, params=None):
     """
@@ -154,8 +156,13 @@ def evaluate(item_df, context_df, rating_df, algo_list, strategy_instance, metri
             results.append(fold_results)
 
     results_df = pd.DataFrame(results)
-    # Reorder columns
-    column_order = ["Fold", "Algorithm", "Precision", "Recall", "F1 score", "ROC-AUC", "Time (train)", "Time (test)"]
+
+    available_columns = results_df.columns.tolist()
+    column_order = ['Fold', 'Algorithm']
+    for metric in config.SCIKIT_LEARN_METRICS:
+        if metric in available_columns:
+            column_order.append(metric)
+    column_order.extend(['Time (train)', 'Time (test)'])
     results_df = results_df[column_order]
 
     return results_df
