@@ -11,6 +11,8 @@ import altair as alt
 import seaborn as sns
 from pathlib import Path
 import console
+import zipfile
+from io import BytesIO
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 sys.path.append("src/main/python")
@@ -543,8 +545,6 @@ if general_option == 'Generate a synthetic dataset':
         col_run, col_stop = st.columns(2)        
         with col_run:
             button_run = st.button(label='Run', key='button_run')
-            spinner = st.spinner(text = 'Generating data')
-
         with col_stop:
             button_stop = st.button(label='Stop', key='button_stop')
         
@@ -552,37 +552,40 @@ if general_option == 'Generate a synthetic dataset':
         output = st.empty()    
         with console.st_log(output.code):
             if button_run:
+                    df_zip = []
                     if context:
                         steps = 4
                     else: 
                         steps = 3
-                    current_step = 1
+                    current_step = 0
                     print('Starting execution')
                     # Check if all the files required for the synthetic data generation exist.                    
                     # Checking the existence of the file: "user_schema.conf"  
-                    progress_text = f'Generating data .....step {current_step} from {steps}'
+                    progress_text = f'Generating data .....step {current_step + 1} from {steps}'
                     my_bar = st.progress(0, text=progress_text)
                     if user_schema_value:
                         st.write('user.csv')
                         print('Generating user.csv')           
                         user_file_df = generator.generate_user_file(user_schema=user_schema_value)                           
                         st.dataframe(user_file_df)
+                        df_zip.append([user_file_df, 'user'])
                         st.download_button(label='Download user.csv', data=user_file_df.to_csv(index=False).encode('utf-8'), file_name='user.csv', key='user_button')                  
                     else:
                         st.warning('The user schema file (user_schema.conf) is required.')
                     current_step = current_step + 1
                     # Checking the existence of the file: "item_schema.conf"            
-                    my_bar.progress(int(100/steps), f'Generating data Step {current_step} from {steps}: ')
+                    my_bar.progress(int(100/steps)*current_step, f'Generating data Step {current_step + 1} from {steps}: ')
                     if item_schema_value:
                         st.write('item.csv')
                         print('Generating item.csv')                    
                         item_file_df = generator.generate_item_file(item_schema=item_schema_value, item_profile=item_profile_value, with_correlation=with_correlation_checkbox)
-                        st.dataframe(item_file_df)                    
+                        st.dataframe(item_file_df)   
+                        df_zip.append([item_file_df, 'item'])
                         st.download_button(label='Download item.csv', data=item_file_df.to_csv(index=False).encode('utf-8'), file_name='item.csv', key='item_button')         
+                        current_step = current_step + 1
                     else:
                         st.warning('The item schema file (item_schema.conf) is required.')
-                    current_step = current_step + 1
-                    my_bar.progress(int(100/steps*2), f'Generating data Step {current_step} from {steps}: ')
+                    my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
                     if context:
                         # Checking the existence of the file: "context_schema.conf"                             
                         if context_schema_value:
@@ -590,12 +593,13 @@ if general_option == 'Generate a synthetic dataset':
                             print('Generating context.csv')                        
                             context_file_df = generator.generate_context_file(context_schema=context_schema_value)
                             st.dataframe(context_file_df)
+                            df_zip.append([context_file_df, 'context'])
                             st.download_button(label='Download context.csv', data=context_file_df.to_csv(index=False).encode('utf-8'), file_name='context.csv', key='context_button')         
+                            current_step = current_step + 1
                         else:
-                            st.warning('The context schema file (context_schema.conf) is required.')
-                        current_step = current_step + 1                
+                            st.warning('The context schema file (context_schema.conf) is required.')               
                     # Checking the existence of the file: "generation_config.conf" 
-                    my_bar.progress(int(100/steps*3), f'Generating data Step {current_step} from {steps}: ')
+                    my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
                     if config_file_text_area:
                         st.write('rating.csv')
                         print('Generating rating.csv')           
@@ -604,11 +608,25 @@ if general_option == 'Generate a synthetic dataset':
                         else:
                             rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value)
                         st.dataframe(rating_file_df)
+                        df_zip.append([rating_file_df, 'rating'])
                         st.download_button(label='Download rating.csv', data=rating_file_df.to_csv(index=False).encode('utf-8'), file_name='rating.csv', key='rating_button') 
                     else:
                         st.warning('The configuration file (generation_config.conf) is required.')
                     print('Synthetic data generation has finished.')   
                     my_bar.progress(100, 'Synthetic data generation has finished.')
+                    csv_buffers = []
+                    for i, df in enumerate(df_zip):
+                        csv_buffer = BytesIO()
+                        df[0].to_csv(csv_buffer, index=False)
+                        csv_buffer.seek(0)
+                        csv_buffers.append(csv_buffer)
+                    zip_buffer = BytesIO()
+                    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                        for i, csv_buffer in enumerate(csv_buffers):
+                            zip_file.writestr(f'{df_zip[i][1]}.csv', csv_buffer.getvalue())
+
+                    zip_buffer.seek(0)
+                    st.download_button(label='Download all CSV files as ZIP', data=zip_buffer.getvalue(), file_name='synthetic_dataset.zip', mime='application/zip', key='all_files_button') 
 
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
