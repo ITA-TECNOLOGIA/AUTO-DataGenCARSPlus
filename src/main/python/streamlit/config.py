@@ -8,4 +8,4 @@ PLOTS_FONT = {'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 
 PLOTS_GRID = {'visible':True, 'color':'gray', 'linestyle':'-.', 'linewidth':0.5}
 
 # Metrics:
-SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC']
+SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', "MAE", "MSE", "RMSE"]

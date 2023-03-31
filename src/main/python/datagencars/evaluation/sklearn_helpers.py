@@ -12,6 +12,8 @@ from sklearn.metrics import (
     recall_score,
     f1_score,
     roc_auc_score,
+    mean_absolute_error,
+    mean_squared_error
 )
 from sklearn.model_selection import (
     cross_validate,
@@ -97,23 +99,22 @@ def preprocess_missing_values(df, strategy='mean'):
     imputed_data = imputer.fit_transform(df)
     return pd.DataFrame(imputed_data, columns=df.columns)
 
-def evaluate(merged_df, algo_list, strategy_instance, metrics, user_id=None):
+def evaluate(merged_df, algo_list, strategy_instance, metrics, user_ids):
     """
     Evaluates a list of algorithms using a given split strategy
     :param merged_df: the dataframe to use
     :param algo_list: the list of algorithms to evaluate
     :param strategy_instance: the split strategy to use
     :param metrics: the metrics to use
-    :param user_id: the target user id
+    :param user_ids: the target user IDs
     :return: a dataframe with the results
     """
     categorical_columns = get_categorical_cols(merged_df)
     dummies_df = pd.get_dummies(merged_df, columns=categorical_columns)
     data = dummies_df
-    # data = preprocess_missing_values(dummies_df, strategy='mean')
-    # Filter the data for the target user if a target_user_id is provided
-    if user_id is not None:
-        data = data[data['user_id'] == user_id]
+    data = preprocess_missing_values(dummies_df, strategy='mean')
+    if user_ids is None:
+        user_ids = merged_df['user_id'].unique()
 
     # Prepare the input for the evaluation
     X = data.drop(columns=["user_id", "item_id", "rating"])
@@ -130,33 +131,54 @@ def evaluate(merged_df, algo_list, strategy_instance, metrics, user_id=None):
             scoring["f1"] = make_scorer(f1_score, average='weighted')
         elif metric == "ROC-AUC":
             scoring["roc_auc"] = make_scorer(roc_auc_score, needs_proba=True, average='weighted', multi_class='ovr')
+        elif metric == "MAE":
+            scoring["mae"] = make_scorer(mean_absolute_error)
+        elif metric == "MSE":
+            scoring["mse"] = make_scorer(mean_squared_error)
+        elif metric == "RMSE":
+            scoring["rmse"] = make_scorer(mean_squared_error, squared=False)
 
     results = []
-    for algorithm in algo_list:
-        algo_name = type(algorithm).__name__
-        cv_results = cross_validate(algorithm, X, y, cv=strategy_instance, scoring=scoring, return_estimator=True)
-        n_splits = strategy_instance.get_n_splits()
-        for fold_idx in range(n_splits):
-            fold_results = {"Fold": fold_idx + 1, "Algorithm": algo_name}
-            for metric, score in cv_results.items():
-                if metric.startswith("test_precision"):
-                    fold_results["Precision"] = score[fold_idx]
-                elif metric.startswith("test_recall"):
-                    fold_results["Recall"] = score[fold_idx]
-                elif metric.startswith("test_f1"):
-                    fold_results["F1 score"] = score[fold_idx]
-                elif metric.startswith("test_roc_auc"):
-                    fold_results["ROC-AUC"] = score[fold_idx]
-                elif metric.startswith("fit_time"):
-                    fold_results["Time (train)"] = score[fold_idx]
-                elif metric.startswith("score_time"):
-                    fold_results["Time (test)"] = score[fold_idx]
-            results.append(fold_results)
+    for user_id in user_ids:
+        user_data = data[data['user_id'] == user_id]
+        for algorithm in algo_list:
+            algo_name = type(algorithm).__name__
+            cv_results = cross_validate(algorithm, X, y, cv=strategy_instance, scoring=scoring, return_estimator=True)
+            n_splits = strategy_instance.get_n_splits()
+            for fold_idx in range(n_splits):
+                fold_results = {"User": user_id, "Fold": fold_idx + 1, "Algorithm": algo_name}
+                for metric, score in cv_results.items():
+                    if metric.startswith("test_precision"):
+                        fold_results["Precision"] = score[fold_idx]
+                    elif metric.startswith("test_recall"):
+                        fold_results["Recall"] = score[fold_idx]
+                    elif metric.startswith("test_f1"):
+                        fold_results["F1 score"] = score[fold_idx]
+                    elif metric.startswith("test_roc_auc"):
+                        fold_results["ROC-AUC"] = score[fold_idx]
+                    elif metric.startswith("test_mae"):
+                        fold_results["MAE"] = score[fold_idx]
+                    elif metric.startswith("test_mse"):
+                        fold_results["MSE"] = score[fold_idx]
+                    elif metric.startswith("test_rmse"):
+                        fold_results["RMSE"] = score[fold_idx]
+                    elif metric.startswith("fit_time"):
+                        fold_results["Time (train)"] = score[fold_idx]
+                    elif metric.startswith("score_time"):
+                        fold_results["Time (test)"] = score[fold_idx]
+                    
+                    elif metric.startswith("test_fcp"):
+                        fold_results["FCP"] = score[fold_idx]
+                    elif metric.startswith("test_map"):
+                        fold_results["MAP"] = score[fold_idx]
+                    elif metric.startswith("test_ndcg"):
+                        fold_results["NDCG"] = score[fold_idx]
+                results.append(fold_results)
 
     results_df = pd.DataFrame(results)
 
     available_columns = results_df.columns.tolist()
-    column_order = ['Fold', 'Algorithm']
+    column_order = ['User', 'Fold', 'Algorithm']
     for metric in config.SCIKIT_LEARN_METRICS:
         if metric in available_columns:
             column_order.append(metric)
