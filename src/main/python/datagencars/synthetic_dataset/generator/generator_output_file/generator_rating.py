@@ -43,7 +43,9 @@ class GeneratorRatingFile:
         # Item schema: item_schema.conf
         self.item_schema_access = AccessSchema(file_str=item_schema)
         # Context:
-        if context_df and context_schema:
+        if context_df is None: 
+            context_df = pd.DataFrame()
+        if not context_df.empty and context_schema:
             # Context file (optional): context.csv
             self.context_df = context_df
             # Context schema: context_schema.conf
