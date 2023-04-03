@@ -555,29 +555,32 @@ if general_option == 'Generate a synthetic dataset':
         
         generator = GenerateSyntheticDataset(generation_config=generation_config_value)
         output = st.empty()    
+
         with console.st_log(output.code):
             if button_run:
-                    df_zip = []
-                    if context:
-                        steps = 4
-                    else: 
-                        steps = 3
-                    current_step = 0
-                    print('Starting execution')
-                    # Check if all the files required for the synthetic data generation exist.                    
-                    # Checking the existence of the file: "user_schema.conf"  
-                    progress_text = f'Generating data .....step {current_step + 1} from {steps}'
-                    my_bar = st.progress(0, text=progress_text)
-                    if user_schema_value:
-                        st.write('user.csv')
-                        print('Generating user.csv')           
-                        user_file_df = generator.generate_user_file(user_schema=user_schema_value)                           
-                        st.dataframe(user_file_df)
-                        link_user = f'<a href="data:file/csv;base64,{base64.b64encode(user_file_df.to_csv(index=False).encode()).decode()}" download="user.csv">Download user CSV</a>'
-                        st.markdown(link_user, unsafe_allow_html=True)              
-                    else:
-                        st.warning('The user schema file (user_schema.conf) is required.')
-                    current_step = current_step + 1
+                if context:
+                    steps = 4
+                else: 
+                    steps = 3
+                current_step = 0
+                print('Starting execution')
+                # Check if all the files required for the synthetic data generation exist.                    
+                # Checking the existence of the file: "user_schema.conf"  
+                progress_text = f'Generating data .....step {current_step + 1} from {steps}'
+                my_bar = st.progress(0, text=progress_text)
+                if user_schema_value:
+                    st.write('user.csv')
+                    print('Generating user.csv')           
+                    user_file_df = generator.generate_user_file(user_schema=user_schema_value)                           
+                    st.dataframe(user_file_df)
+                    link_user = f'<a href="data:file/csv;base64,{base64.b64encode(user_file_df.to_csv(index=False).encode()).decode()}" download="user.csv">Download user CSV</a>'
+                    st.markdown(link_user, unsafe_allow_html=True)              
+                else:
+                    st.warning('The user schema file (user_schema.conf) is required.')
+                current_step = current_step + 1
+                if button_stop:
+                    st.experimental_rerun()
+                else:
                     # Checking the existence of the file: "item_schema.conf"            
                     my_bar.progress(int(100/steps)*current_step, f'Generating data Step {current_step + 1} from {steps}: ')
                     if item_schema_value:
@@ -591,35 +594,40 @@ if general_option == 'Generate a synthetic dataset':
                     else:
                         st.warning('The item schema file (item_schema.conf) is required.')
                     my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
-                    if context:
-                        # Checking the existence of the file: "context_schema.conf"                             
-                        if context_schema_value:
-                            st.write('context.csv')
-                            print('Generating context.csv')                        
-                            context_file_df = generator.generate_context_file(context_schema=context_schema_value)
-                            st.dataframe(context_file_df)
-                            link_context = f'<a href="data:file/csv;base64,{base64.b64encode(context_file_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download context CSV</a>'
-                            st.markdown(link_context, unsafe_allow_html=True)
-                            current_step = current_step + 1
-                        else:
-                            st.warning('The context schema file (context_schema.conf) is required.')               
-                    # Checking the existence of the file: "generation_config.conf" 
-                    my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
-                    if config_file_text_area:
-                        st.write('rating.csv')
-                        print('Generating rating.csv')           
-                        if with_context:
-                            rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value, with_context=with_context, context_df=context_file_df, context_schema=context_schema_value)        
-                        else:
-                            rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value)
-                        st.dataframe(rating_file_df)
-                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
-                        st.markdown(link_rating, unsafe_allow_html=True)
+                    if button_stop:
+                        st.experimental_rerun()
                     else:
-                        st.warning('The configuration file (generation_config.conf) is required.')
-                    print('Synthetic data generation has finished.')   
-                    my_bar.progress(100, 'Synthetic data generation has finished.')
-               
+                        if context:
+                            # Checking the existence of the file: "context_schema.conf"                             
+                            if context_schema_value:
+                                st.write('context.csv')
+                                print('Generating context.csv')                        
+                                context_file_df = generator.generate_context_file(context_schema=context_schema_value)
+                                st.dataframe(context_file_df)
+                                link_context = f'<a href="data:file/csv;base64,{base64.b64encode(context_file_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download context CSV</a>'
+                                st.markdown(link_context, unsafe_allow_html=True)
+                                current_step = current_step + 1
+                            else:
+                                st.warning('The context schema file (context_schema.conf) is required.')               
+                        # Checking the existence of the file: "generation_config.conf" 
+                        my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
+                        if button_stop:
+                            st.experimental_rerun()
+                        else:
+                            if config_file_text_area:
+                                st.write('rating.csv')
+                                print('Generating rating.csv')           
+                                if with_context:
+                                    rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value, with_context=with_context, context_df=context_file_df, context_schema=context_schema_value)        
+                                else:
+                                    rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value)
+                                st.dataframe(rating_file_df)
+                                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
+                                st.markdown(link_rating, unsafe_allow_html=True)
+                            else:
+                                st.warning('The configuration file (generation_config.conf) is required.')
+                            print('Synthetic data generation has finished.')   
+                            my_bar.progress(100, 'Synthetic data generation has finished.')                     
 
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
