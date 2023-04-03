@@ -1,22 +1,27 @@
 import numpy as np
 import pandas as pd
 
+
 class ExtractStatisticsRating:
-    def replace_missing_values(df):
+
+    def __init__(self):
+        pass
+    
+    def replace_missing_values(self, df):
         """
-        Replace missing values "NULL" and -1 with NaN
-        :param df: The ratings dataset
-        :return: The ratings dataset with missing values replaced
+        Replace missing values "NULL" and -1 with NaN.
+        :param df: The ratings dataset.
+        :return: The ratings dataset with missing values replaced.
         """
-        for k,v in {"NULL":np.nan,-1:np.nan}.items():
+        for k in {"NULL":np.nan,-1:np.nan}:
             df.replace(k, np.nan, inplace=True)
         return df
 
-    def count_unique(data):
+    def count_unique(self, data):
         """
-        Count unique users, items, contexts and timestamps
-        :param data: The ratings dataset
-        :return: The number of unique users, items, contexts and timestamps
+        Count unique users, items, contexts and timestamps.
+        :param data: The ratings dataset.
+        :return: The number of unique users, items, contexts and timestamps.
         """
         unique_users = data["user_id"].nunique()
         unique_items = data["item_id"].nunique()
@@ -32,15 +37,14 @@ class ExtractStatisticsRating:
         unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count'])
         unique_counts_df.reset_index(inplace=True)
         unique_counts_df.rename(columns={"index": "Attribute name"}, inplace=True)
-
         return unique_counts_df
 
-    def count_items_voted_by_user(data, selected_user):
+    def count_items_voted_by_user(self, data, selected_user):
         """
-        Count the number of items voted by a user
-        :param data: The ratings dataset
-        :param selected_user: The selected user
-        :return: The number of items voted by the user
+        Count the number of items voted by a user.
+        :param data: The ratings dataset.
+        :param selected_user: The selected user.
+        :return: The number of items voted by the user.
         """
         filtered_ratings_df = data[data['user_id'] == selected_user] #Filter the ratings dataset by user
         total_count = len(filtered_ratings_df["item_id"])
@@ -49,16 +53,15 @@ class ExtractStatisticsRating:
         counts_items = filtered_ratings_df["item_id"].value_counts()
         
         num_users = len(data["user_id"].unique())
-        percent_ratings_by_user = (total_count / num_users) * 100
-        
+        percent_ratings_by_user = (total_count / num_users) * 100        
         return counts_items, unique_items, total_count, percent_ratings_by_user
 
-    def calculate_vote_stats(data, selected_user):
+    def calculate_vote_stats(self, data, selected_user):
         """
-        Calculate the vote standard deviation and average vote per user and for all of the users
-        :param data: The ratings dataset
-        :param selected_user: The selected user
-        :return: The calculated statistics
+        Calculate the vote standard deviation and average vote per user and for all of the users.
+        :param data: The ratings dataset.
+        :param selected_user: The selected user.
+        :return: The calculated statistics.
         """
         # Filter the ratings dataset by user
         if selected_user == "All users":
@@ -78,6 +81,5 @@ class ExtractStatisticsRating:
                 stats[f"Vote standard deviation for user {selected_user}"] = f"{vote_std:.2f}"
             else:
                 stats["Average vote for all users"] = f"{all_users_avg_vote:.2f}"
-                stats[f"Vote standard deviation for all users"] = f"{vote_std:.2f}"
-            
+                stats["Vote standard deviation for all users"] = f"{vote_std:.2f}"
         return stats
