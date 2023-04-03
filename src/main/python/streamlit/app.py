@@ -13,6 +13,7 @@ from pathlib import Path
 import console
 import zipfile
 from io import BytesIO
+import base64
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 sys.path.append("src/main/python")
@@ -226,7 +227,8 @@ if general_option == 'Generate a synthetic dataset':
                 schema_text_area = sch_text_area.text_area(label='Current file:', value=value, height=500, key=schema_type+'_schema_text_area')
             else:
                 schema_text_area = sch_text_area.text_area(label='Current file:', value=value, height=500, disabled=True, key=schema_type+'_schema_text_area')
-        st.download_button(label='Download', data=schema_text_area, file_name=schema_type+'_schema.conf')
+        link_schema_file = f'<a href="data:text/plain;base64,{base64.b64encode(schema_text_area.encode()).decode()}" download="{schema_type}_schema.conf">Download</a>'
+        st.markdown(link_schema_file, unsafe_allow_html=True) 
         return schema_text_area
 
     context = None
@@ -313,7 +315,8 @@ if general_option == 'Generate a synthetic dataset':
                 config_file_text_area = st.text_area(label='Current file:', value=generation_config_value, height=500)
             else:               
                 config_file_text_area = st.text_area(label='Current file:', value=generation_config_value, height=500, disabled=True)    
-        st.download_button(label='Download', data=config_file_text_area, file_name='generation_config.conf')  
+        link_generation_config = f'<a href="data:text/plain;base64,{base64.b64encode(config_file_text_area.encode()).decode()}" download="generation_config.conf">Download</a>'
+        st.markdown(link_generation_config, unsafe_allow_html=True) 
                                
     # USER SETTINGS:
     with tab_user:        
@@ -401,8 +404,9 @@ if general_option == 'Generate a synthetic dataset':
                 item_profile_text_area = iprof_text_area.text_area(label='Current file:', value=item_profile_value, height=500, key='item_profile_text_area')
             else:
                 item_profile_text_area = iprof_text_area.text_area(label='Current file:', value=item_profile_value, height=500, disabled=True, key='item_profile_text_area')
-        st.download_button(label='Download', data=item_profile_text_area, file_name='item_profile.conf')
-      
+        link_item_profile = f'<a href="data:text/plain;base64,{base64.b64encode(item_profile_text_area.encode()).decode()}" download="item_profile.conf">Download</a>'
+        st.markdown(link_item_profile, unsafe_allow_html=True)  
+        
     # CONTEXT SETTINGS:
     if context:
         with tab_context:
@@ -538,7 +542,8 @@ if general_option == 'Generate a synthetic dataset':
             st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[0-1]```.""")
             st.dataframe(user_profile_df)
             # Downloading user_profile.csv:
-            st.download_button(label='Download', data=user_profile_df.to_csv(index=False).encode('utf-8'), file_name='user_profile.csv')
+            link_user_profile = f'<a href="data:file/csv;base64,{base64.b64encode(user_profile_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
+            st.markdown(link_user_profile, unsafe_allow_html=True)  
 
     # RUN:
     with tab_run:                   
@@ -568,8 +573,8 @@ if general_option == 'Generate a synthetic dataset':
                         print('Generating user.csv')           
                         user_file_df = generator.generate_user_file(user_schema=user_schema_value)                           
                         st.dataframe(user_file_df)
-                        df_zip.append([user_file_df, 'user'])
-                        st.download_button(label='Download user.csv', data=user_file_df.to_csv(index=False).encode('utf-8'), file_name='user.csv', key='user_button')                  
+                        link_user = f'<a href="data:file/csv;base64,{base64.b64encode(user_file_df.to_csv(index=False).encode()).decode()}" download="user.csv">Download user CSV</a>'
+                        st.markdown(link_user, unsafe_allow_html=True)              
                     else:
                         st.warning('The user schema file (user_schema.conf) is required.')
                     current_step = current_step + 1
@@ -580,8 +585,8 @@ if general_option == 'Generate a synthetic dataset':
                         print('Generating item.csv')                    
                         item_file_df = generator.generate_item_file(item_schema=item_schema_value, item_profile=item_profile_value, with_correlation=with_correlation_checkbox)
                         st.dataframe(item_file_df)   
-                        df_zip.append([item_file_df, 'item'])
-                        st.download_button(label='Download item.csv', data=item_file_df.to_csv(index=False).encode('utf-8'), file_name='item.csv', key='item_button')         
+                        link_item = f'<a href="data:file/csv;base64,{base64.b64encode(item_file_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download item CSV</a>'
+                        st.markdown(link_item, unsafe_allow_html=True)
                         current_step = current_step + 1
                     else:
                         st.warning('The item schema file (item_schema.conf) is required.')
@@ -593,8 +598,8 @@ if general_option == 'Generate a synthetic dataset':
                             print('Generating context.csv')                        
                             context_file_df = generator.generate_context_file(context_schema=context_schema_value)
                             st.dataframe(context_file_df)
-                            df_zip.append([context_file_df, 'context'])
-                            st.download_button(label='Download context.csv', data=context_file_df.to_csv(index=False).encode('utf-8'), file_name='context.csv', key='context_button')         
+                            link_context = f'<a href="data:file/csv;base64,{base64.b64encode(context_file_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download context CSV</a>'
+                            st.markdown(link_context, unsafe_allow_html=True)
                             current_step = current_step + 1
                         else:
                             st.warning('The context schema file (context_schema.conf) is required.')               
@@ -608,25 +613,13 @@ if general_option == 'Generate a synthetic dataset':
                         else:
                             rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value)
                         st.dataframe(rating_file_df)
-                        df_zip.append([rating_file_df, 'rating'])
-                        st.download_button(label='Download rating.csv', data=rating_file_df.to_csv(index=False).encode('utf-8'), file_name='rating.csv', key='rating_button') 
+                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
+                        st.markdown(link_rating, unsafe_allow_html=True)
                     else:
                         st.warning('The configuration file (generation_config.conf) is required.')
                     print('Synthetic data generation has finished.')   
                     my_bar.progress(100, 'Synthetic data generation has finished.')
-                    csv_buffers = []
-                    for i, df in enumerate(df_zip):
-                        csv_buffer = BytesIO()
-                        df[0].to_csv(csv_buffer, index=False)
-                        csv_buffer.seek(0)
-                        csv_buffers.append(csv_buffer)
-                    zip_buffer = BytesIO()
-                    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                        for i, csv_buffer in enumerate(csv_buffers):
-                            zip_file.writestr(f'{df_zip[i][1]}.csv', csv_buffer.getvalue())
-
-                    zip_buffer.seek(0)
-                    st.download_button(label='Download all CSV files as ZIP', data=zip_buffer.getvalue(), file_name='synthetic_dataset.zip', mime='application/zip', key='all_files_button') 
+               
 
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
