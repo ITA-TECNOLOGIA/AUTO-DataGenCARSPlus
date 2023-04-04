@@ -240,13 +240,16 @@ def init_n_rel_and_rec_k(user_ratings):
     n_rel_and_rec_k : int
         Number of relevant and recommended items in the user_ratings up to the k-th position
     """
-    
     binary = is_binary(user_ratings)
 
     k=10 #The maximum number of recommendations. Default is 10.
     user_ratings.sort(key=lambda x: x[0], reverse=True) # Sort user ratings by estimated value
     if not binary:
-        threshold=3.5 # The threshold for a rating to be considered relevant. Default is 3.5.
+        # The threshold for a rating to be considered relevant.
+        min_rating = min(true_r for (_, true_r) in user_ratings)
+        max_rating = max(true_r for (_, true_r) in user_ratings)
+        threshold = (max_rating - min_rating) / 2 + min_rating
+
         # Number of relevant items
         n_rel = sum((true_r >= threshold) for (_, true_r) in user_ratings)
 

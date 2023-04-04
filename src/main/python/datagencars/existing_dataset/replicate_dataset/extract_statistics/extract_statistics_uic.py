@@ -12,6 +12,8 @@ class ExtractStatisticsUIC:
         for column in dataframe.columns:
             if dataframe[column].dtype in ['int64', 'float64']:
                 table.append([column, dataframe[column].dtype, f"{dataframe[column].min()} - {dataframe[column].max()}"])
+            elif dataframe[column].dtype == 'bool':
+                table.append([column, dataframe[column].dtype, "True, False"])
             elif dataframe[column].dtype == 'object':
                 try:
                     dtype = dataframe[column].dtype
@@ -83,15 +85,20 @@ class ExtractStatisticsUIC:
         """
         num_users = data['user_id'].nunique()
         num_items = data['item_id'].nunique()
-        num_contexts = data['context_id'].nunique()
-        num_ratings = data[['user_id', 'item_id', 'context_id']].nunique().sum()
-        return {
-            "Number of userID": num_users,
-            "Number of itemID": num_items,
-            "Number of contextID": num_contexts,
-            "Number of ratings": num_ratings
-        }
-
+        if 'context_id' in data.columns:
+            return {
+                "Number of userID": num_users,
+                "Number of itemID": num_items,
+                "Number of contextID": data['context_id'].nunique(),
+                "Number of ratings": data[['user_id', 'item_id', 'context_id']].nunique().sum()
+            }
+        else:
+            return {
+                "Number of userID": num_users,
+                "Number of itemID": num_items,
+                "Number of ratings": data[['user_id', 'item_id']].nunique().sum()
+            }
+    
     def statistics_by_user(data, selected_user, word):
         """
         Computes the statistics of items per user.

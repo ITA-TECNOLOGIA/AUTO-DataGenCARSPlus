@@ -11,13 +11,12 @@ import altair as alt
 import seaborn as sns
 from pathlib import Path
 import console
-import zipfile
-from io import BytesIO
 import base64
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 sys.path.append("src/main/python")
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
+import datagencars.evaluation.sklearn_helpers as sklearn_helpers
 import datagencars.evaluation.rs_surprise.evaluation as evaluation
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating as extract_statistics_rating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC as extract_statistics_uic
@@ -620,7 +619,6 @@ if general_option == 'Generate a synthetic dataset':
                     print('Synthetic data generation has finished.')   
                     my_bar.progress(100, 'Synthetic data generation has finished.')
                
-
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
     if is_analysis == 'Data visualization':
@@ -643,6 +641,7 @@ elif general_option == 'Analysis an existing dataset':
                     column_names[i] = "context_id"
 
             data[file_type] = pd.read_csv(uploaded_file, sep=separator, names=column_names)
+            st.session_state[file_type] = data[file_type]
             return data
 
         def plot_column_attributes_count(data, column, sort):
@@ -695,8 +694,8 @@ elif general_option == 'Analysis an existing dataset':
                                     data[file_type] = None
             elif option == 'Single file':
                 data = {} #Dictionary with the dataframes
-                data_file = st.file_uploader("Select Data_STS.csv file", type="csv")
-                separator = st.text_input("Enter the separator for your Data_STS.csv file (default is '	')", "	")
+                data_file = st.file_uploader("Select the single file", type="csv")
+                separator = st.text_input("Enter the separator for your single file (default is '	')", "	")
                 if data_file is not None:
                     if not separator:
                         st.error('Please provide a separator.')
@@ -705,153 +704,179 @@ elif general_option == 'Analysis an existing dataset':
                             df = pd.read_csv(data_file, sep=separator)
                             st.dataframe(df.head())
                             def create_dataframe(label, df):
-                                if columns := st.multiselect(label=label, options=df.columns):
+                                if columns := st.multiselect(label=f"Select the columns for the {label} dataframe:", options=df.columns):
                                     # Create a new dataframe with the selected columns
                                     new_df = df[columns]
                                     st.dataframe(new_df.head())
+                                    st.session_state[label] = new_df #Save the label dataframe in the session state
+                                    st.download_button(
+                                        label=f"Download {label} dataset CSV",
+                                        data=new_df.to_csv(index=False),
+                                        file_name=f"{label}.csv",
+                                        mime='text/csv'
+                                    )
                                     return new_df
-                                else:
-                                    st.error('Please select at least one column')
-                            data = {'user': create_dataframe('Select the columns for the user dataframe:', df, 'user_df'),
-                                    'item': create_dataframe('Select the columns for the item dataframe:', df, 'item_df'),
-                                    'context': create_dataframe('Select the columns for the context dataframe:', df, 'context_df'),
-                                    'rating': create_dataframe('Select the columns for the rating dataframe:', df, 'rating_df')}
+                            data = {'user': create_dataframe('user', df),
+                                    'item': create_dataframe('item', df),
+                                    'rating': create_dataframe('rating', df)}
+                            if is_context:
+                                data['context'] = create_dataframe('context', df)
                         except Exception as e:
                             st.error(f"An error occurred while reading the file: {str(e)}")
         with tab2:
             if 'user' in data and data['user'] is not None:
-                st.dataframe(data['user'] )
-                missing_values2 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
-                st.write("Missing values:")
-                st.table(missing_values2)
-                
-                st.write("Attributes, data types and value ranges:")
-                table2 = extract_statistics_uic.list_attributes_and_ranges(data['user'])
-                st.table(pd.DataFrame(table2, columns=["Attribute name", "Data type", "Value ranges"]))
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    column2 = st.selectbox("Select an attribute", data['user'].columns)
-                with col2:
-                    sort2 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort2')
-                data2 = extract_statistics_uic.column_attributes_count(data['user'], column2)
-                plot_column_attributes_count(data2, column2, sort2)
+                try:
+                    st.dataframe(data['user'] )
+                    missing_values2 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                    st.write("Missing values:")
+                    st.table(missing_values2)
+                    
+                    st.write("Attributes, data types and value ranges:")
+                    table2 = extract_statistics_uic.list_attributes_and_ranges(data['user'])
+                    st.table(pd.DataFrame(table2, columns=["Attribute name", "Data type", "Value ranges"]))
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        column2 = st.selectbox("Select an attribute", data['user'].columns)
+                    with col2:
+                        sort2 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort2')
+                    data2 = extract_statistics_uic.column_attributes_count(data['user'], column2)
+                    plot_column_attributes_count(data2, column2, sort2)
 
-                statistics = extract_statistics_uic.statistics_by_attribute(data['user'])
-                print_statistics_by_attribute(statistics)
+                    statistics = extract_statistics_uic.statistics_by_attribute(data['user'])
+                    print_statistics_by_attribute(statistics)
+                except Exception as e:
+                    st.error(f"Make sure the user dataset is in the right format. {e}")
             else:
                 st.error("User dataset not found.")
         with tab3:
             if 'item' in data and data['item'] is not None:
-                st.dataframe(data['item'] )
-                missing_values3 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
-                st.write("Missing values:")
-                st.table(missing_values3)
-                
-                st.write("Attributes, data types and value ranges:")
-                table3 = extract_statistics_uic.list_attributes_and_ranges(data['item'])
-                st.table(pd.DataFrame(table3, columns=["Attribute name", "Data type", "Value ranges"]))
+                try:
+                    st.dataframe(data['item'] )
+                    missing_values3 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                    st.write("Missing values:")
+                    st.table(missing_values3)
+                    
+                    st.write("Attributes, data types and value ranges:")
+                    table3 = extract_statistics_uic.list_attributes_and_ranges(data['item'])
+                    st.table(pd.DataFrame(table3, columns=["Attribute name", "Data type", "Value ranges"]))
 
-                col1, col2 = st.columns(2)
-                with col1:
-                    column3 = st.selectbox("Select an attribute", data['item'].columns)
-                with col2:
-                    sort3 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort3')
-                data3 = extract_statistics_uic.column_attributes_count(data['item'], column3)
-                plot_column_attributes_count(data3, column3, sort3)
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        column3 = st.selectbox("Select an attribute", data['item'].columns)
+                    with col2:
+                        sort3 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort3')
+                    data3 = extract_statistics_uic.column_attributes_count(data['item'], column3)
+                    plot_column_attributes_count(data3, column3, sort3)
 
-                if 'rating' in data and data['rating'] is not None:
-                    merged_df = pd.merge(data['rating'], data['item'], on="item_id")
-                    users = merged_df['user_id'].unique()
-                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab3")
-                    stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "items")
-                    st.table(pd.DataFrame([stats]))
+                    if 'rating' in data and data['rating'] is not None:
+                        merged_df = pd.merge(data['rating'], data['item'], on="item_id")
+                        users = merged_df['user_id'].unique()
+                        selected_user = st.selectbox("Select a user:", users, key="selected_user_tab3")
+                        stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "items")
+                        st.table(pd.DataFrame([stats]))
 
-                statistics = extract_statistics_uic.statistics_by_attribute(data['item'])
-                print_statistics_by_attribute(statistics)
+                    statistics = extract_statistics_uic.statistics_by_attribute(data['item'])
+                    print_statistics_by_attribute(statistics)
+                except Exception as e:
+                    st.error(f"Make sure the item dataset is in the right format. {e}")
             else:
                 st.error("Item dataset not found.")
         if is_context:
             with tab4:
                 if 'context' in data and data['context'] is not None:
-                    st.dataframe(data['context'] )
-                    missing_values4 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
-                    st.write("Missing values:")
-                    st.table(missing_values4)
+                    try:
+                        st.dataframe(data['context'] )
+                        missing_values4 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
+                        st.write("Missing values:")
+                        st.table(missing_values4)
 
-                    st.write("Attributes, data types and value ranges:")
-                    table4 = extract_statistics_uic.list_attributes_and_ranges(data['context'])
-                    st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
-                    
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        column4 = st.selectbox("Select an attribute", data['context'].columns)
-                    with col2:
-                        sort4 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort4')
-                    data4 = extract_statistics_uic.column_attributes_count(data['context'], column4)
-                    plot_column_attributes_count(data4, column4, sort4)
+                        st.write("Attributes, data types and value ranges:")
+                        table4 = extract_statistics_uic.list_attributes_and_ranges(data['context'])
+                        st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            column4 = st.selectbox("Select an attribute", data['context'].columns)
+                        with col2:
+                            sort4 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort4')
+                        data4 = extract_statistics_uic.column_attributes_count(data['context'], column4)
+                        plot_column_attributes_count(data4, column4, sort4)
 
-                    if 'rating' in data and data['rating'] is not None:
-                        merged_df = pd.merge(data['rating'], data['context'], on="context_id")
-                        users = merged_df['user_id'].unique()
-                        selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
-                        stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
-                        st.table(pd.DataFrame([stats]))
+                        if 'rating' in data and data['rating'] is not None:
+                            merged_df = pd.merge(data['rating'], data['context'], on="context_id")
+                            users = merged_df['user_id'].unique()
+                            selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
+                            stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
+                            st.table(pd.DataFrame([stats]))
 
-                    statistics = extract_statistics_uic.statistics_by_attribute(data['context'])
-                    print_statistics_by_attribute(statistics)
+                        statistics = extract_statistics_uic.statistics_by_attribute(data['context'])
+                        print_statistics_by_attribute(statistics)
+                    except Exception as e:
+                        st.error(f"Make sure the context dataset is in the right format. {e}")
                 else:
                     st.error("Context dataset not found.")
         with tab5:
             if 'rating' in data and data['rating'] is not None:
-                data['rating'] = extract_statistics_rating.replace_missing_values(data['rating'])
-                st.session_state["rating"] = data['rating'] #Save the rating dataframe in the session state
+                try:
+                    data['rating'] = extract_statistics_rating.replace_missing_values(data['rating'])
 
-                st.dataframe(data['rating'])
+                    st.dataframe(data['rating'])
 
-                unique_counts_df = extract_statistics_rating.count_unique(data['rating'])
-                st.write("General statistics:")
-                st.table(unique_counts_df)
-                
-                st.write("Attributes, data types and value ranges:")
-                table5 = extract_statistics_uic.list_attributes_and_ranges(data['rating'])
-                st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
+                    if 'user' in data and data['user'] is not None and 'item' in data and data['item'] is not None:
+                        unique_counts_df = extract_statistics_rating.count_unique(data)
+                        st.write("General statistics:")
+                        st.table(unique_counts_df)
+                    else:
+                        st.error("User, item and/or context datasets are required to show general statistics.")
+                    
+                    st.write("Attributes, data types and value ranges:")
+                    table5 = extract_statistics_uic.list_attributes_and_ranges(data['rating'])
+                    st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
 
-                # Plot the distribution of ratings
-                counts = np.bincount(data['rating']['rating']) #Count the frequency of each rating
-                fig, ax = plt.subplots()
-                ax.set_title("Distribution of ratings", fontdict={'size': 16, **config.PLOTS_FONT})
-                ax.set_xlabel("Rating", fontdict=config.PLOTS_FONT)
-                ax.set_ylabel("Frequency", fontdict=config.PLOTS_FONT)
-                ax.grid(**config.PLOTS_GRID)
-                ax.set_xticks(range(len(counts)))
-                for i in range(len(counts)):
-                    if counts[i] > 0:
-                        ax.bar(i, counts[i], color="#0099CC")
-                        ax.text(i, counts[i], str(counts[i]), ha='center')
-                st.pyplot(fig, clear_figure=True)
+                    # Plot the distribution of ratings
+                    counts = np.bincount(data['rating']['rating'])[np.nonzero(np.bincount(data['rating']['rating']))] #Count the frequency of each rating
+                    df5 = pd.DataFrame({'Rating': np.arange(1, len(counts) + 1), 'Frequency': counts})
+                    chart5 = alt.Chart(df5).mark_bar(color='#0099CC').encode(
+                        x=alt.X('Rating:O', axis=alt.Axis(title='Rating')),
+                        y=alt.Y('Frequency:Q', axis=alt.Axis(title='Frequency')),
+                        tooltip=['Rating', 'Frequency']
+                    ).properties(
+                        title={
+                            'text': 'Distribution of ratings',
+                            'fontSize': 16,
+                        }
+                    )
+                    st.altair_chart(chart5, use_container_width=True)
 
-                # Plot the distribution of the number of items voted by each user
-                users = data['rating']['user_id'].unique()
-                selected_user = st.selectbox("Select a user:", users, key="selected_user_tab5")
-                counts_items, unique_items, total_count, percent_ratings_by_user = extract_statistics_rating.count_items_voted_by_user(data['rating'], selected_user)
-                fig, ax = plt.subplots()
-                ax.set_title(f"Number of items voted by user {str(selected_user)} (total={total_count}) (percentage={percent_ratings_by_user:.2f}%)", fontdict={'size': 16, **config.PLOTS_FONT})
-                ax.set_xlabel("Items", fontdict=config.PLOTS_FONT)
-                ax.set_ylabel("Frequency", fontdict=config.PLOTS_FONT)
-                ax.grid(**config.PLOTS_GRID)
-                ax.bar(counts_items.index, counts_items.values, color="#0099CC")
-                ax.set_xticks(unique_items)
-                for item, count in counts_items.items(): #Add the count of each item to the plot
-                    ax.text(item, count, str(count), ha='center', va='bottom')
-                st.pyplot(fig)
+                    # Plot the distribution of the number of items voted by each user
+                    users = data['rating']['user_id'].unique()
+                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab5")
+                    counts_items, unique_items, total_count, percent_ratings_by_user = extract_statistics_rating.count_items_voted_by_user(data['rating'], selected_user)
+                    df = pd.DataFrame({'Items': counts_items.index, 'Frequency': counts_items.values})
+                    counts_items = pd.Series(counts_items, name='count').reset_index()
+                    counts_items = counts_items.rename(columns={'index': 'item'})
+                    chart = alt.Chart(counts_items).mark_bar(color="#0099CC").encode(
+                        x=alt.X('item:O', axis=alt.Axis(labelExpr='datum.value', title='Items')),
+                        y=alt.Y('count:Q', axis=alt.Axis(title='Frequency')),
+                        tooltip=['item', 'count']
+                    ).properties(
+                        title={
+                        "text": [f"Number of items voted by user {str(selected_user)} (total={total_count}) (percentage={percent_ratings_by_user:.2f}%)"],
+                        "fontSize": 16,
+                        }
+                    )
+                    st.altair_chart(chart, use_container_width=True)
 
-                # Show the statistics of the selected user votes
-                users = ["All users"] + list(users)
-                selected_user = st.selectbox("Select user", users)
-                vote_stats = extract_statistics_rating.calculate_vote_stats(data['rating'], selected_user)
-                for key, value in vote_stats.items():
-                    st.write(f"{key}: {value}")
+
+                    # Show the statistics of the selected user votes
+                    users = ["All users"] + list(users)
+                    selected_user = st.selectbox("Select user", users)
+                    vote_stats = extract_statistics_rating.calculate_vote_stats(data['rating'], selected_user)
+                    for key, value in vote_stats.items():
+                        st.write(f"{key}: {value}")
+                except Exception as e:
+                    st.error(f"Make sure the rating dataset is in the right format. {e}")
             else:
                 st.error("Ratings dataset not found.")
         with tab6:
@@ -866,10 +891,14 @@ elif general_option == 'Analysis an existing dataset':
                 st.table(pd.DataFrame([stats]))
                 
                 st.header("Correlation matrix")
-                columns_not_id = [col for col in merged_df.columns if col not in ['user_id', 'item_id', 'context_id']]
+                columns_id = merged_df.filter(regex='_id$').columns.tolist()
+                columns_not_id = [col for col in merged_df.columns if col not in columns_id]
                 data_types = []
                 for col in columns_not_id:
-                    data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype), "File Type": "rating" if col in data["rating"].columns else "item" if col in data["item"].columns else "context" if col in data["context"].columns else "user"})
+                    for file_type in ['context', 'item', 'rating', 'user']:
+                        if file_type in data and data[file_type] is not None and col in data[file_type].columns:
+                            data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype), "File Type": file_type})
+                            break
                 df_data_types = pd.DataFrame(data_types)
                 st.dataframe(df_data_types)
                 selected_columns = st.multiselect("Select columns to analyze", columns_not_id)
@@ -886,8 +915,8 @@ elif general_option == 'Analysis an existing dataset':
                         fig, ax = plt.subplots(figsize=(10, 10))
                         sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
                         st.pyplot(fig)
-            except:
-                st.error("Ratings, items, contexts or users datasets not found.")
+            except Exception as e:
+                st.error(f"User, item, rating or context datasets not found or in the wrong format. {e}")
     elif is_analysis == 'Replicate dataset':
         st.write('TODO')
     elif is_analysis == 'Extend dataset':
@@ -940,8 +969,6 @@ elif general_option == 'Analysis an existing dataset':
             if uploaded_file is not None:
                 df = pd.read_csv(uploaded_file, delimiter=delimiter)
                 include_nan = st.checkbox("Include NaN values")
-                date_formats = ["%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y/%m/%d", "%m-%d-%Y", "%Y%m%d"]
-                time_formats = ["%H:%M:%S", "%H:%M"]
                 mappings = {}
                 for col in df.columns:
                     if 'id' not in col.lower() and not pd.api.types.is_datetime64_dtype(df[col]) and not pd.api.types.is_object_dtype(df[col]): # Ignore ID, object and datetime columns
@@ -1005,43 +1032,102 @@ elif general_option == 'Evaluation of a dataset':
                     "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svd'),
                     "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.00, value=0.005, step=0.0001, key='lr_all_svd'),
                     "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.00, value=0.02, key='reg_all_svd')}
-        elif algorithm == "KNNBasic":
+        if algorithm == "KNNBasic":
             return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbasic'),
                     "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnbasic'),
                                     "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnbasic')}}
-        elif algorithm == "BaselineOnly":
+        if algorithm == "BaselineOnly":
             return {"bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_baselineonly'),
                                     "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_i_baselineonly'),
                                     "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_u_baselineonly')}}
-        elif algorithm == "CoClustering":
+        if algorithm == "CoClustering":
             return {"n_cltr_u": st.sidebar.number_input("Number of clusters for users", min_value=1, max_value=1000, value=5),
                     "n_cltr_i": st.sidebar.number_input("Number of clusters for items", min_value=1, max_value=1000, value=5)}
-        elif algorithm == "KNNBaseline":
+        if algorithm == "KNNBaseline":
             return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbaseline'),
                     "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnbaseline'),
                                     "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnbaseline')},
                     "bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_knnbaseline'),
                                     "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_i_knnbaseline'),
                                     "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_u_knnbaseline')}}
-        elif algorithm == "KNNWithMeans":
+        if algorithm == "KNNWithMeans":
             return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithmeans'),
                     "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnwithmeans'),
                                     "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnwithmeans')}}
-        elif algorithm == "NMF":
+        if algorithm == "NMF":
             return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_nmf'),
                     "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_nmf'),
                     "reg_pu": st.sidebar.number_input("Regularization term for user factors", min_value=0.0001, max_value=1.0, value=0.02),
                     "reg_qi": st.sidebar.number_input("Regularization term for item factors", min_value=0.0001, max_value=1.0, value=0.02)}
-        elif algorithm == "NormalPredictor":
+        if algorithm == "NormalPredictor":
             return {}
-        elif algorithm == "SlopeOne":
+        if algorithm == "SlopeOne":
             return {}
-        elif algorithm == "SVDpp":
+        if algorithm == "SVDpp":
             return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_svdpp'),
                     "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svdpp'),
                     "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005, key='lr_all_svdpp'),
                     "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_all_svdpp')}
 
+    def select_params_contextual(algorithm):
+        if algorithm == "KNeighborsClassifier":
+            return {"n_neighbors": st.sidebar.number_input("Number of neighbors", min_value=1, max_value=1000, value=5, key='n_neighbors_kneighborsclassifier'),
+                    "weights": st.sidebar.selectbox("Weights", ["uniform", "distance"], key='weights_kneighborsclassifier'),
+                    "algorithm": st.sidebar.selectbox("Algorithm", ["auto", "ball_tree", "kd_tree", "brute"], key='algorithm_kneighborsclassifier'),
+                    "leaf_size": st.sidebar.number_input("Leaf size", min_value=1, max_value=1000, value=30, key='leaf_size_kneighborsclassifier'),
+                    "p": st.sidebar.number_input("P", min_value=1, max_value=1000, value=2, key='p_kneighborsclassifier'),
+                    "metric": st.sidebar.selectbox("Metric", ["minkowski", "euclidean", "manhattan", "chebyshev", "seuclidean", "mahalanobis", "wminkowski", "haversine"], key='metric_kneighborsclassifier'),
+                    "n_jobs": st.sidebar.number_input("Number of jobs", min_value=1, max_value=1000, value=1, key='n_jobs_kneighborsclassifier')}
+        elif algorithm == "SVC":
+            return {"C": st.sidebar.number_input("C", min_value=0.0001, max_value=1000.0, value=1.0, key='C_svc'),
+                    "kernel": st.sidebar.selectbox("Kernel", ["linear", "poly", "rbf", "sigmoid", "precomputed"], key='kernel_svc'),
+                    "degree": st.sidebar.number_input("Degree", min_value=1, max_value=1000, value=3, key='degree_svc'),
+                    "gamma": st.sidebar.selectbox("Gamma", ["scale", "auto"], key='gamma_svc'),
+                    "coef0": st.sidebar.number_input("Coef0", min_value=0.0, max_value=1000.0, value=0.0, key='coef0_svc'),
+                    "shrinking": st.sidebar.checkbox("Shrinking?", key='shrinking_svc'),
+                    "probability": st.sidebar.checkbox("Probability?", key='probability_svc'),
+                    "tol": st.sidebar.number_input("Tol", min_value=0.0001, max_value=1000.0, value=0.001, key='tol_svc'),
+                    "cache_size": st.sidebar.number_input("Cache size", min_value=0.0001, max_value=1000.0000, value=200.0000, key='cache_size_svc'),
+                    "class_weight": st.sidebar.selectbox("Class weight", ["balanced", None], key='class_weight_svc'),
+                    "verbose": st.sidebar.checkbox("Verbose?", key='verbose_svc'),
+                    "max_iter": st.sidebar.number_input("Maximum iterations", min_value=-1, max_value=1000, value=-1, key='max_iter_svc'),
+                    "decision_function_shape": st.sidebar.selectbox("Decision function shape", ["ovo", "ovr"], key='decision_function_shape_svc'),
+                    "random_state": st.sidebar.number_input("Random state", min_value=-0.5, max_value=1000.0, value=-0.5, key='random_state_svc'),
+                    "break_ties": st.sidebar.checkbox("Break ties?", key='break_ties_svc')}
+        elif algorithm == "GaussianNB":
+            return {}
+        elif algorithm == "RandomForestClassifier":
+            return {"n_estimators": st.sidebar.number_input("Number of estimators", min_value=1, max_value=1000, value=100, key='n_estimators_randomforestclassifier'),
+                    "criterion": st.sidebar.selectbox("Criterion", ["gini", "entropy"], key='criterion_randomforestclassifier'),
+                    "max_depth": st.sidebar.number_input("Maximum depth", min_value=-0.5, max_value=1000.0, value=-0.5, key='max_depth_randomforestclassifier'),
+                    "min_samples_split": st.sidebar.number_input("Minimum samples split", min_value=1, max_value=1000, value=2, key='min_samples_split_randomforestclassifier'),
+                    "min_samples_leaf": st.sidebar.number_input("Minimum samples leaf", min_value=1, max_value=1000, value=1, key='min_samples_leaf_randomforestclassifier'),
+                    "min_weight_fraction_leaf": st.sidebar.number_input("Minimum weight fraction leaf", min_value=0.0001, max_value=1.0, value=0.01, key='min_weight_fraction_leaf_randomforestclassifier'),
+                    "max_features": st.sidebar.selectbox("Maximum features", ["auto", "sqrt", "log2", None], key='max_features_randomforestclassifier'),
+                    "max_leaf_nodes": st.sidebar.number_input("Maximum leaf nodes", min_value=-0.5, max_value=1000.0, value=-0.5, key='max_leaf_nodes_randomforestclassifier'),
+                    "min_impurity_decrease": st.sidebar.number_input("Minimum impurity decrease", min_value=0.0001, max_value=1.0, value=0.01, key='min_impurity_decrease_randomforestclassifier'),
+                    "bootstrap": st.sidebar.checkbox("Bootstrap?", key='bootstrap_randomforestclassifier'),
+                    "oob_score": st.sidebar.checkbox("OOB score?", key='oob_score_randomforestclassifier'),
+                    "n_jobs": st.sidebar.number_input("Number of jobs", min_value=-0.5, max_value=1000.0, value=-0.5, key='n_jobs_randomforestclassifier'),
+                    "random_state": st.sidebar.number_input("Random state", min_value=-0.5, max_value=1000.0, value=-0.5, key='random_state_randomforestclassifier'),
+                    "verbose": st.sidebar.number_input("Verbose", min_value=0, max_value=1000, value=0, key='verbose_randomforestclassifier'),
+                    "ccp_alpha": st.sidebar.number_input("CCP alpha", min_value=0.0001, max_value=1.0, value=0.01, key='ccp_alpha_randomforestclassifier'),
+                    "class_weight": st.sidebar.selectbox("Class weight", ["balanced", "balanced_subsample", None], key='class_weight_randomforestclassifier'),
+                    "max_samples": st.sidebar.number_input("Maximum samples", min_value=-0.5, max_value=1.0, value=-0.5, key='max_samples_randomforestclassifier'),
+                    "warm_start": st.sidebar.checkbox("Warm start?", key='warm_start_randomforestclassifier')}
+        elif algorithm == "KMeans":
+            return {"n_clusters": st.sidebar.number_input("Number of clusters", min_value=1, max_value=1000, value=5, key='n_clusters_kmeans'),
+                    "init": st.sidebar.selectbox("Initialization method", ["k-means++", "random"], key='init_kmeans'),
+                    "n_init": st.sidebar.number_input("Number of initializations", min_value=1, max_value=1000, value=10, key='n_init_kmeans'),
+                    "max_iter": st.sidebar.number_input("Maximum number of iterations", min_value=1, max_value=1000, value=300, key='max_iter_kmeans'),
+                    "tol": st.sidebar.number_input("Tolerance", min_value=0.0001, max_value=1.0, value=0.0001, key='tol_kmeans')}
+        elif algorithm == "HistGradientBoostingClassifier":
+            return {"learning_rate": st.sidebar.slider("Learning rate", 0.01, 1.0, 0.1, step=0.01),
+                    "max_iter": st.sidebar.slider("Max number of iterations", 10, 1000, 100, step=10),
+                    "max_leaf_nodes": st.sidebar.slider("Max leaf nodes", 10, 200, 31, step=1),
+                    "max_depth": st.sidebar.slider("Max depth", 1, 50, 15, step=1),
+                    "l2_regularization": st.sidebar.slider("L2 regularization", 0.0, 1.0, 0.0, step=0.01)}
+        
     def select_split_strategy(strategy):
         if strategy == "KFold":
             return {"n_splits": st.sidebar.number_input("Number of splits", min_value=2, max_value=10, value=5),
@@ -1061,6 +1147,28 @@ elif general_option == 'Evaluation of a dataset':
         elif strategy == "train_test_split":
             return {"test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
                     "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
+        
+    def select_split_strategy_contextual(strategy):
+        if strategy == "ShuffleSplit":
+            n_splits = st.sidebar.number_input("Number of splits", 2, 100, 10)
+            train_size = st.sidebar.slider("Train set size (0.0 to 1.0)", 0.01, 1.0, 0.2, step=0.01)
+            random_state = st.sidebar.number_input("Random state", 0, 100, 42)
+            return {"n_splits": n_splits, "train_size": train_size, "random_state": random_state}
+        elif strategy == "KFold":
+            n_splits = st.sidebar.number_input("Number of folds", 2, 100, 5)
+            random_state = st.sidebar.number_input("Random state (KFold)", 0, 100, 42)
+            return {"n_splits": n_splits, "random_state": random_state}
+        elif strategy == "LeaveOneOut":
+            return {}
+        elif strategy == "RepeatedKFold":
+            n_splits = st.sidebar.number_input("Number of folds (RepeatedKFold)", 2, 100, 5)
+            n_repeats = st.sidebar.number_input("Number of repetitions", 1, 100, 10)
+            random_state = st.sidebar.number_input("Random state (RepeatedKFold)", 0, 100, 42)
+            return {"n_splits": n_splits, "n_repeats": n_repeats, "random_state": random_state}
+        elif strategy == "train_test_split":
+            test_size = st.sidebar.slider("Test set size (train_test_split, 0.0 to 1.0)", 0.01, 1.0, 0.2, step=0.01)
+            random_state = st.sidebar.number_input("Random state (train_test_split)", 0, 100, 42)
+            return {"test_size": test_size, "random_state": random_state}
 
     def evaluate_algo(algo_list, strategy_instance, metrics, data):
         results = []
@@ -1105,6 +1213,11 @@ elif general_option == 'Evaluation of a dataset':
         return df
 
     def visualize_results_algo(df, algorithm):
+        # Show the mean of the metrics for the chosen algorithm
+        df_algo = df[df["Algorithm"] == algorithm].drop(["Algorithm", "Fold"], axis=1)
+        st.write(f"**{algorithm}** mean")
+        st.write(df_algo.mean())
+
         # Filter the dataframe for the chosen algorithm
         filtered_df = df[df["Algorithm"] == algorithm]
 
@@ -1126,6 +1239,11 @@ elif general_option == 'Evaluation of a dataset':
         st.plotly_chart(fig, use_container_width=True)
 
     def visualize_results_metric(df, metric):
+        # Show the mean of the metrics for each algorithm
+        df_metric = df.pivot(index="Fold", columns="Algorithm", values=metric)
+        st.write(f"**{metric} mean**")
+        st.write(df_metric.mean())
+
         algorithms = df["Algorithm"].unique()
         fig = go.Figure()
         for algorithm in algorithms:
@@ -1138,7 +1256,6 @@ elif general_option == 'Evaluation of a dataset':
                 y=filtered_df[metric],
                 name=algorithm
             ))
-
         fig.update_layout(
             xaxis_title="Fold",
             yaxis_title="Value",
@@ -1146,45 +1263,238 @@ elif general_option == 'Evaluation of a dataset':
         )
         st.plotly_chart(fig, use_container_width=True)
 
+    def visualize_results_combined(df, algorithms, metrics, selected_users):
+        filtered_df = df[df["Algorithm"].isin(algorithms)]
+        fig = go.Figure()
+        for algorithm in algorithms:
+            for metric in metrics:
+                if "All users" in selected_users:
+                    users = df["User"].unique()
+                    algo_filtered_df = filtered_df[(filtered_df["Algorithm"] == algorithm) & (filtered_df["User"].isin(users))]
+                    mean_values = []
+                    for fold in algo_filtered_df["Fold"].unique():
+                        fold_filtered_df = algo_filtered_df[algo_filtered_df["Fold"] == fold]
+                        mean_value = fold_filtered_df[metric].mean()
+                        mean_values.append(mean_value)
+                    fig.add_trace(go.Scatter(
+                        x=algo_filtered_df["Fold"].unique(),
+                        y=mean_values,
+                        name=f"{algorithm} - {metric} - All users",
+                        mode="markers+lines"
+                    ))
+                else:
+                    for user in selected_users:
+                        algo_user_filtered_df = filtered_df[(filtered_df["Algorithm"] == algorithm) & (filtered_df["User"] == user)]
+                        fig.add_trace(go.Scatter(
+                            x=algo_user_filtered_df["Fold"],
+                            y=algo_user_filtered_df[metric],
+                            name=f"{algorithm} - {metric} - User {user}",
+                            mode="markers+lines"
+                        ))
+        fig.update_layout(
+            xaxis=dict(
+                title="Fold",
+                dtick=1,
+                tickmode='linear'
+            ),
+            yaxis_title="Performance",
+            legend=dict(title="Measures of performance")
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    def visualize_mean_evaluation_bar(df, algorithms, metrics, selected_users):
+        fig = go.Figure()
+        for algorithm in algorithms:
+            filtered_df = df[df["Algorithm"] == algorithm]
+            for metric in metrics:
+                if "All users" in selected_users:
+                    users = df["User"].unique()
+                    user_label = "All users"
+                    user_filtered_df = filtered_df[filtered_df["User"].isin(users)]
+                    mean_value = user_filtered_df[metric].mean()
+                    fig.add_trace(go.Bar(
+                        x=[f"{metric}"],
+                        y=[mean_value],
+                        name=f"{algorithm} - {user_label}",
+                        legendgroup=f"{algorithm} - {user_label}"
+                    ))
+                else:
+                    for user in selected_users:
+                        user_filtered_df = filtered_df[filtered_df["User"] == user]
+                        mean_value = user_filtered_df[metric].mean()
+                        fig.add_trace(go.Bar(
+                            x=[f"{metric}"],
+                            y=[mean_value],
+                            name=f"{algorithm} - User {user}",
+                            legendgroup=f"{algorithm} - User {user}"
+                        ))
+        fig.update_layout(
+            xaxis_title="Measures of performance",
+            yaxis_title="Performance",
+            legend=dict(title="Algorithms & Users"),
+            barmode='group'
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    def select_columns(df, label):
+        column_names = df.columns.tolist()
+        selected_columns = st.sidebar.multiselect(f'Select features ({label}):', column_names, column_names)
+        if selected_columns:
+            return df[selected_columns]
+        
+    def replace_with_none(params):
+        for key, value in params.items():
+            if value == -0.5:
+                params[key] = None
+        return params
+
     st.sidebar.title('Evaluation of a dataset')
-    st.sidebar.header("Algorithm selection")
-    algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"], default="SVD")
-    algo_list = []
-    for algorithm in algorithms:
-        algo_params = select_params(algorithm)
-        algo_instance = surprise_helpers.create_algorithm(algorithm, algo_params)
-        algo_list.append(algo_instance)
-        st.sidebar.markdown("""---""")
-    
-    st.sidebar.header("Split strategy selection")
-    strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut", "PredefinedKFold", "train_test_split"])
-    strategy_params = select_split_strategy(strategy)
-    strategy_instance = surprise_helpers.create_split_strategy(strategy, strategy_params)
-    
+    # Load the user, item, context rating files from streamlit session state
     if "rating" in st.session_state:
-        rating = st.session_state["rating"]
-        data = surprise_helpers.convert_to_surprise_dataset(rating)
+        rating_df = st.session_state["rating"]
+    if "item" in st.session_state:
+        item_df = st.session_state["item"]
+    if "context" in st.session_state:
+        context_df = st.session_state["context"]
+
+    if st.sidebar.checkbox("With context", value=True):
+        if "rating" in st.session_state and "item" in st.session_state and "context" in st.session_state:
+            st.sidebar.header("Paradigm selection")
+            paradigm = st.sidebar.selectbox("Select one paradigm", ["Contextual Modeling", "Pre-filtering", "Post-filtering"])
+            if paradigm == "Contextual Modeling":
+                st.sidebar.header("Features selection")
+                features_item = select_columns(item_df, "item")
+                features_context = select_columns(context_df, "context")
+                try:
+                    merged_df = rating_df.merge(features_item, on='item_id').merge(features_context, on='context_id')
+                except KeyError as e:
+                    st.error(f"The rating, user, item and context datasets don´t have '_id' columns in common. {e}")
+                st.sidebar.header("Algorithm selection")
+                algorithms = st.sidebar.multiselect("Select one or more algorithms", ["KNeighborsClassifier", "SVC", "GaussianNB", "RandomForestClassifier", "KMeans", "HistGradientBoostingClassifier"], default="KNeighborsClassifier")
+
+                algo_list = []
+                st.sidebar.write("-0.5 values will be replaced with None")
+                for algorithm in algorithms:
+                    algo_params = replace_with_none(select_params_contextual(algorithm))
+                    algo_instance = sklearn_helpers.create_algorithm(algorithm, algo_params)
+                    algo_list.append(algo_instance)
+                    st.sidebar.markdown("""---""")
+                st.sidebar.header("Split strategy selection")
+                strategy = st.sidebar.selectbox("Select a strategy", ["ShuffleSplit", "KFold", "LeaveOneOut", "RepeatedKFold", "train_test_split"])
+                strategy_params = select_split_strategy_contextual(strategy)
+                strategy_instance = sklearn_helpers.create_split_strategy(strategy, strategy_params)
+                st.sidebar.header("Metrics selection")
+                metrics = st.sidebar.multiselect("Select the metrics to calculate", config.SCIKIT_LEARN_METRICS, default="Precision")
+                st.sidebar.header("Target user")
+                # Extract unique user_ids and add "All users" option
+                user_ids = sorted(rating_df['user_id'].unique())
+                user_options = ["All users"] + user_ids
+                selected_users = st.sidebar.multiselect("Select one or more users or 'All users'", options=user_options, default="All users")
+
+                if st.sidebar.button("Evaluate"):
+                    if "All users" in selected_users:
+                        target_user_ids = None
+                    else:
+                        target_user_ids = selected_users
+                    results_contextual_df = sklearn_helpers.evaluate(merged_df, algo_list, strategy_instance, metrics, target_user_ids)
+                    st.session_state["results_contextual"] = results_contextual_df #Save the results dataframe in the session state
+                if "results_contextual" in st.session_state:
+                    results_contextual = st.session_state["results_contextual"]
+                    st.header("Evaluation Results")
+                    
+                    st.subheader("Mean evaluation results")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        algorithms = results_contextual["Algorithm"].unique()
+                        selected_algorithm = st.multiselect("Select an algorithm", algorithms)
+                    with col2:
+                        metrics = results_contextual.columns[3:]
+                        selected_metric = st.multiselect("Select a metric", metrics)
+                    with col3:
+                        users = results_contextual["User"].unique().tolist()  # Convert numpy array to a Python list
+                        users.insert(0, "All users")  # Insert "All users" at the beginning of the list
+                        selected_users_1 = st.multiselect("Select a user", users)
+                    
+                    visualize_mean_evaluation_bar(results_contextual, selected_algorithm, selected_metric, selected_users_1)
+                    mean_df = results_contextual.copy()
+                    mean_df.drop(columns=[col for col in ['Fold'] if col in mean_df.columns], inplace=True) #Delete the 'Fold' column if it exists in the DataFrame
+                    mean_df = mean_df.groupby(['Algorithm', 'User'], as_index=False).mean()  # Calculate the mean value of the metrics for each classification algorithm and user separately
+                    st.write("Detailed results:")
+                    st.dataframe(mean_df)
+                    link_results_mean = f'<a href="data:file/csv;base64,{base64.b64encode(mean_df.to_csv(index=False).encode()).decode()}" download="results_contextual_mean.csv">Download</a>'
+                    st.markdown(link_results_mean, unsafe_allow_html=True)
+
+                    st.subheader("Fold evaluation results")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        algorithms = results_contextual["Algorithm"].unique()
+                        selected_algorithms = st.multiselect("Select algorithms to plot", algorithms)
+                    with col2:
+                        metrics = results_contextual.columns[3:]
+                        selected_metrics = st.multiselect("Select metrics to plot", metrics)
+                    with col3:
+                        users = results_contextual["User"].unique().tolist()  # Convert numpy array to a Python list
+                        users.insert(0, "All users")  # Insert "All users" at the beginning of the list
+                        selected_users2 = st.multiselect("Select users to filter", users)
+                    
+                    visualize_results_combined(results_contextual, selected_algorithms, selected_metrics, selected_users2)
+                    st.write("Detailed results:")
+                    st.dataframe(results_contextual)
+                    link_results_contextual = f'<a href="data:file/csv;base64,{base64.b64encode(results_contextual.to_csv(index=False).encode()).decode()}" download="results_contextual.csv">Download</a>'
+                    st.markdown(link_results_contextual, unsafe_allow_html=True)
+            else:
+                st.write("TODO: pre-filtering and post-filtering")
+        else:
+            st.error("No rating, item or context datasets loaded.")
     else:
-        st.error("No rating dataset loaded")
+        if "rating" in st.session_state:
+            st.sidebar.header("Algorithm selection")
+            algorithms = st.sidebar.multiselect("Select one or more algorithms", ["BaselineOnly", "CoClustering", "KNNBaseline", "KNNBasic", "KNNWithMeans", "NMF", "NormalPredictor", "SlopeOne", "SVD", "SVDpp"], default="SVD")
+            algo_list = []
+            for algorithm in algorithms:
+                algo_params = select_params(algorithm)
+                algo_instance = surprise_helpers.create_algorithm(algorithm, algo_params)
+                algo_list.append(algo_instance)
+                st.sidebar.markdown("""---""")
 
-    st.sidebar.header("Metrics selection")
-    if binary_ratings.is_binary_rating(rating):
-        metrics = st.sidebar.multiselect("Select one or more cross validation binary metrics", ["Precision", "Recall", "F1_Score", "AUC_ROC"], default="Precision")
-    else:
-        metrics = st.sidebar.multiselect("Select one or more cross validation non-binary metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
+            st.sidebar.header("Split strategy selection")
+            strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut", "PredefinedKFold", "train_test_split"])
+            strategy_params = select_split_strategy(strategy)
+            strategy_instance = surprise_helpers.create_split_strategy(strategy, strategy_params)
 
-    if st.sidebar.button("Evaluate"):
-        results_df = evaluate_algo(algo_list, strategy_instance, metrics, data)
-        st.subheader("Evaluation Results:")
-        st.write(pd.DataFrame(results_df))
-        st.session_state["results"] = results_df #Save the results dataframe in the session state
+            data = surprise_helpers.convert_to_surprise_dataset(rating_df)
 
-    if "results" in st.session_state:
-        results_df = st.session_state["rating"]
-    results_df = pd.read_csv("results.csv")
-    st.subheader("Algorithm evaluation results")
-    algorithm = st.selectbox("Select an algorithm to plot", algorithms)
-    visualize_results_algo(results_df, algorithm)
-    st.subheader("Metric evaluation results")
-    metric = st.selectbox("Select a metric to plot", metrics)
-    visualize_results_metric(results_df, metric)
+            st.sidebar.header("Metrics selection")
+            if binary_ratings.is_binary_rating(rating_df):
+                metrics = st.sidebar.multiselect("Select one or more cross validation binary metrics", ["Precision", "Recall", "F1_Score", "AUC_ROC"], default="Precision")
+            else:
+                metrics = st.sidebar.multiselect("Select one or more cross validation non-binary metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
+
+            if st.sidebar.button("Evaluate"):
+                results_df = evaluate_algo(algo_list, strategy_instance, metrics, data)
+                st.session_state["results"] = results_df #Save the results dataframe in the session state
+
+            if "results" in st.session_state:
+                results_df = st.session_state["results"]
+                st.subheader("Detailed results")
+
+                st.dataframe(results_df)
+                st.download_button(
+                    label="Download results",
+                    data=results_df.to_csv(index=False),
+                    file_name="results.csv",
+                    mime="text/csv"
+                )
+
+                st.header("Evaluation Results")
+                st.subheader("Algorithm evaluation results")
+                algorithms = results_df["Algorithm"].unique()
+                algorithm = st.selectbox("Select an algorithm to plot", algorithms)
+                visualize_results_algo(results_df, algorithm)
+
+                st.subheader("Metric evaluation results")
+                metrics = results_df.columns[2:]
+                metric = st.selectbox("Select a metric to plot", metrics)
+                visualize_results_metric(results_df, metric)
+        else:
+            st.error("No rating dataset loaded.")
