@@ -8,7 +8,32 @@ from datagencars.synthetic_dataset.generator.generator_output_file.generator_rat
 
 class GenerateSyntheticDataset:
     '''
-    Generate a synthetic dataset.
+    Generates a synthetic dataset.
+
+    Input:    
+        [GC] generation_config.conf    
+        [US] user_schema.conf
+        [UP] user_profile.csv
+        [U]  user.csv    
+        [IS] item_schema.conf
+        [IP] item_profile.conf
+        [I]  item.csv
+        [CS] context_schema.conf <optional>
+        [C]  context.csv <optional>
+        [R]  rating.csv
+
+    Algorithm:
+        1- acces_schema: Access to schema information.
+        2- generator_attribute: Generate attributes, by using acces_schema.
+        3- generator_instance: Generate instances, by using generator_attribute.
+        4- generator_output_file: Generate user, item, context <optional>, rating files, by using generator_instance.
+        5- generate_synthetic_dataset: Generate all output files, by using generator_output_file.
+
+    Output:
+        [U]  user.csv   
+        [I]  item.csv
+        [C]  context.csv <optional>
+        [R]  rating.csv
     '''    
 
     def __init__(self, generation_config):
