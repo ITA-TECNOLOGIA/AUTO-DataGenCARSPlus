@@ -24,5 +24,6 @@
     ],
     "python.testing.pytestEnabled": false,
     "python.testing.unittestEnabled": true,
-    "python.formatting.provider": "black"
+    "python.formatting.provider": "black",
+    // "window.title": "TFM"
 }

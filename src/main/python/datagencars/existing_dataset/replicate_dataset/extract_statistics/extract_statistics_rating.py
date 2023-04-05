@@ -278,16 +278,13 @@ class ExtractStatisticsRating:
         :param data: The ratings dataset.
         :return: The number of unique users, items, contexts and timestamps.
         """
-        unique_users = data["user_id"].nunique()
-        unique_items = data["item_id"].nunique()
+        unique_users = data["user"].shape[0]
+        unique_items = data["item"].shape[0]
         unique_counts = {"Users": unique_users, "Items": unique_items}
-        if 'context_id' in data.columns:
-            unique_contexts = data["context_id"].nunique()
+        if 'context' in data:
+            unique_contexts = data["context"].shape[0]
             unique_counts["Contexts"] = unique_contexts
-        if 'timestamp' in data.columns:
-            unique_timestamps = data["timestamp"].nunique()
-            unique_counts["Timestamps"] = unique_timestamps
-        unique_ratings = data["rating"].nunique()
+        unique_ratings = data["rating"].shape[0]
         unique_counts["Ratings"] = unique_ratings
         unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count'])
         unique_counts_df.reset_index(inplace=True)
