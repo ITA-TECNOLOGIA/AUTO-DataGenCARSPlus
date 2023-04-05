@@ -53,7 +53,7 @@ class GeneratorRatingFile:
         self.calculate_att_rating = CalculateAttributeRating()
 
     def generate_file(self, with_context=False):
-        # sourcery skip: assign-if-exp, extract-duplicate-method, hoist-statement-from-loop, low-code-quality, merge-list-append
+        # sourcery skip: assign-if-exp, extract-duplicate-method, hoist-statement-from-loop, low-code-quality, merge-list-append, pandas-avoid-inplace
         '''
         Generates the rating file.   
         :param with_context: True if the file to be generated will be contextual and False in the otherwise.
@@ -179,7 +179,7 @@ class GeneratorRatingFile:
 
         # Sorting and returning a rating_df by user_id and item_id, and reseting index.
         rating_df.sort_values(by=['user_id', 'timestamp'], ascending=True, na_position='first', inplace=True)
-        rating_df.reset_index(drop=True, inplace=True)          
+        rating_df.reset_index(drop=True, inplace=True)
         return rating_df
 
     def get_rating(self, user_profile_id, item_id, context_id=None):
@@ -211,7 +211,7 @@ class GeneratorRatingFile:
             raise ValueError('The vectors have not the same size.')
         
         rating = 0
-        sum_weight = 0 # self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == user_profile_id, 'other'].iloc[0]        
+        sum_weight = 0 # self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == user_profile_id, 'other'].iloc[0]
         for idx, weight_importance in enumerate(weight_vector):
             # Getting importance and weight values:
             weight_importance_list = str(weight_importance).split('|')

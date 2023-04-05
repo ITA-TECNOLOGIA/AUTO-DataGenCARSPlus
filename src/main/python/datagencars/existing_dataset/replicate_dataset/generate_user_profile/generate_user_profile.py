@@ -43,7 +43,7 @@ class GenerateUserProfile:
         # Getting attribute names:
         item_attribute_name_list = self.access_item.get_item_attribute_list()
         context_attribute_name_list = self.access_context.get_context_attribute_list()
-        attribute_list = item_attribute_name_list+context_attribute_name_list+['other'] # , 'sum'
+        attribute_list = ['user_profile_id']+item_attribute_name_list+context_attribute_name_list+['other'] # , 'sum'
         # Initialiting user profile dataframe:
         user_profile_df = pd.DataFrame(columns=attribute_list)
         # Getting user ID list:
@@ -76,7 +76,7 @@ class GenerateUserProfile:
                     rank_weigth_list.append(rank_vector[idx]+'|'+str(x))
                 else:
                     rank_weigth_list.append(str(x))            
-            user_profile_df.loc[len(user_profile_df)] = rank_weigth_list # +[sum(weight_vector)]
+            user_profile_df.loc[len(user_profile_df)] = [int(user_id)]+rank_weigth_list # +[sum(weight_vector)]
         return user_profile_df
 
     def get_a_matrix(self, user_id):    # sourcery skip: extract-duplicate-method, extract-method, for-append-to-extend, inline-immediately-returned-variable, low-code-quality, merge-list-append, move-assign-in-block, use-dictionary-union
@@ -200,5 +200,6 @@ rating_path = 'resources/dataset_sts/ratings.csv'
 ratings_df = pd.read_csv(rating_path, encoding='utf-8', index_col=False, sep=';')
 
 gup = GenerateUserProfile(ratings_df, item_df, context_df)
-user_profile = gup.generate_user_profile()
-print(user_profile)
+user_profile_df = gup.generate_user_profile()
+print(user_profile_df.shape)
+user_profile_df.to_csv('resources/dataset_sts/user_profile.csv', sep=',', index=False, index_label='index')

@@ -4,9 +4,83 @@ import numpy as np
 
 class ExtractStatisticsUIC:
 
-    def __init__(self):
-        pass
+    def __init__(self, uic_df):
+        self.uic_df = uic_df
 
+    def get_number_id(self):
+        """
+        Gets the number of IDs (user_id, item_id and context_id) in a file (user.csv, item.csv and context.csv).
+        :return: The number of IDs in a file.
+        """        
+        return self.uic_df.shape[0]
+    
+    def get_number_possible_values_by_attribute(self):
+        """
+        Gets the number of possible values by attribute in a file (user.csv, item.csv and context.csv).
+        :return: The number of possible values by attribute in a file.
+        """
+        # Get the number of possible values by column:
+        number_possible_values_serie = self.uic_df.apply(lambda x: len(x.value_counts()))        
+        # Convert the Series to a DataFrame and reset the index:
+        number_possible_values_df = number_possible_values_serie.to_frame().reset_index(drop=True)
+        df = number_possible_values_df.T.reset_index(drop=True)        
+        # Rename the columns:
+        df.columns = number_possible_values_serie.index.tolist()        
+        return df
+
+    def get_avg_possible_values_by_attribute(self):
+        """
+        Gets the average of possible values by attribute in a file (user.csv, item.csv and context.csv).
+        :return: The average of possible values by attribute in a file.
+        """
+        # replace non-numeric values with NaN
+        df = self.uic_df.apply(pd.to_numeric, errors='coerce')
+        # calculate the average of each numeric column
+        avg_by_column_serie = df.mean()
+        # check for columns containing only non-numeric values and set the average to NaN
+        for col in df.columns:
+            if df[col].isna().all():
+                avg_by_column_serie[col] = np.nan
+        # Convert the Series to a DataFrame and reset the index:
+        avg_possible_values_df = avg_by_column_serie.to_frame().reset_index(drop=True)
+        df = avg_possible_values_df.T.reset_index(drop=True)        
+        # Rename the columns:
+        df.columns = avg_by_column_serie.index.tolist()          
+        return df
+    
+    def get_sd_possible_values_by_attribute(self):
+        """
+        Gets the standard deviation of possible values by attribute in a file (user.csv, item.csv and context.csv).
+        :return: The standard deviation of possible values by attribute in a file.
+        """
+        # replace non-numeric values with NaN
+        df = self.uic_df.apply(pd.to_numeric, errors='coerce')
+        # calculate standard deviation by column
+        std_by_column_serie = self.uic_df.std()        
+        # check for columns containing only non-numeric values and set the average to NaN
+        for col in df.columns:
+            if df[col].isna().all():
+                std_by_column_serie[col] = np.nan        
+        # Convert the Series to a DataFrame and reset the index:
+        sd_possible_values_df = std_by_column_serie.to_frame().reset_index(drop=True)
+        df = sd_possible_values_df.T.reset_index(drop=True)        
+        # Rename the columns:
+        df.columns = std_by_column_serie.index.tolist()
+        return df
+    
+    def get_frequency_possible_values_by_attribute(self):
+        # sourcery skip: dict-comprehension, inline-immediately-returned-variable
+        """
+        Gets the frequency of possible values by attribute in a file (user.csv, item.csv and context.csv).
+        :return: The frequency of possible values by attribute in a file.
+        """
+        # calculate frequency by column
+        freq_by_column_dict = {}
+        for col in self.uic_df.columns:
+            freq_by_column_dict[col] = self.uic_df[col].value_counts()
+        return freq_by_column_dict
+    
+    ########################## PENDING TO REVIEW ##########################
     def list_attributes_and_ranges(self, dataframe):
         # sourcery skip: low-code-quality, remove-redundant-pass, use-contextlib-suppress
         """
@@ -166,3 +240,24 @@ class ExtractStatisticsUIC:
                 percentage['Percentage'] = percentage['Percentage'].map('{:,.2%}'.format) # Show the Percentage column as 4.35% instead of 0.0435
                 statistics.append([column, round(dataframe[column].mean(), 2), round(dataframe[column].std(), 2), frequency, percentage])
         return statistics
+    
+
+# # user_df:
+# user_path = 'resources/data_schema/user.csv' # 'resources/dataset_sts/user.csv'
+# user_df = pd.read_csv(user_path, encoding='utf-8', index_col=False, sep=',')
+
+# # item_df:
+# item_path = 'resources/dataset_sts/item.csv'
+# item_df = pd.read_csv(item_path, encoding='utf-8', index_col=False, sep=';')
+
+# # context_df:
+# context_path = 'resources/dataset_sts/context.csv'
+# context_df = pd.read_csv(context_path, encoding='utf-8', index_col=False, sep=';')
+
+# extract = ExtractStatisticsUIC(uic_df=context_df)
+# print(extract.get_number_id())
+# print(extract.get_number_possible_values_by_attribute())
+# print(extract.get_avg_possible_values_by_attribute())
+# print(extract.get_sd_possible_values_by_attribute())
+# print(extract.get_frequency_possible_values_by_attribute())
+
