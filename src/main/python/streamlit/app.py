@@ -24,6 +24,7 @@ from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_s
 import datagencars.existing_dataset.label_encoding as label_encoding
 import datagencars.existing_dataset.mapping_categorization as mapping_categorization
 import datagencars.existing_dataset.binary_ratings as binary_ratings
+from geopy.geocoders import Nominatim
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -49,6 +50,7 @@ st.markdown("""---""")
 general_option = st.sidebar.selectbox(label='**Options available:**', options=['Select one option', 'Generate a synthetic dataset', 'Analysis an existing dataset', 'Evaluation of a dataset'])
 
 if general_option == 'Generate a synthetic dataset':
+    inconsistent = False
     def generate_schema_file(schema_type):
         value = ''
         schema_text_area = ''     
@@ -115,11 +117,13 @@ if general_option == 'Generate a synthetic dataset':
                         value += 'number_posible_values_attribute_'+str(position)+'='+str(number_possible_value)+'\n'
                         for i in range(number_possible_value):
                             value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(str_possible_value_list[i]).strip()+'\n'                    
-                elif generator_type == 'Fixed':                    
+                elif generator_type == 'Fixed':     
+                    value += 'generator_type_attribute_'+str(position)+'=FixedAttributeGenerator'+'\n' 
                     attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'String', 'Boolean'], key='attribute_type_'+str(position)+'_'+generator_type)
                     fixed_input = st.text_input(label='Imput the fixed value:', key='fixed_input_'+str(position))
                     value += 'input_parameter_attribute_'+str(position)+'='+str(fixed_input)+'\n'
-                elif generator_type == 'URL':                    
+                elif generator_type == 'URL':    
+                    value += 'generator_type_attribute_'+str(position)+'=URLAttributeGenerator'+'\n'                  
                     attribute_type = st.selectbox(label='Attribute type:', options=['AttributeComposite'], key='attribute_type_'+str(position)+'_'+generator_type)  
                     number_maximum_subattribute = 2
                     value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
@@ -143,8 +147,8 @@ if general_option == 'Generate a synthetic dataset':
                         input_parameter_list = []
                         if import_file := st.file_uploader(label='Import list', key='import_file'+str(position)):                                
                             input_parameter_text_area = ip_text_area.text_area(label='Introduce values (a value by line), keeping the header: <place>', value=import_file.getvalue().decode("utf-8"), key='import_url_ip_text_area_'+str(position))                    
-                            input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))
-                            input_parameter_list = input_parameter_df.astype(str).values.tolist()
+                    input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))
+                    input_parameter_list = input_parameter_df['place'].astype(str).values.tolist()
                     value += 'input_parameter_attribute_'+str(position)+'='+str(input_parameter_list)+'\n'
                     # Unique value?
                     unique_value = st.checkbox(label='Unique value?:', value=True, key='unique_value_'+str(position)+'_'+generator_type)
@@ -152,8 +156,10 @@ if general_option == 'Generate a synthetic dataset':
                         value += 'unique_value_attribute_'+str(position)+'=True'+'\n'
                     else:
                         value += 'unique_value_attribute_'+str(position)+'=False'+'\n'
-                elif generator_type == 'Address':                    
+                elif generator_type == 'Address':     
+                    value += 'generator_type_attribute_'+str(position)+'=AddressAttributeGenerator'+'\n'                     
                     attribute_type = st.selectbox(label='Attribute type:', options=['AttributeComposite'], key='attribute_type_'+str(position)+'_'+generator_type)
+                    address_complete_type = st.selectbox(label='Address complete type:', options=['Manually', 'Upload file', 'Search Address'], key='address_complete_type')
                     number_maximum_subattribute = 5
                     value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
                     value += 'name_subattribute_1'+'_attribute_'+str(position)+'=street'+'\n'
@@ -165,24 +171,54 @@ if general_option == 'Generate a synthetic dataset':
                         value += 'type_subattribute_'+str(idx+1)+'_attribute_'+str(position)+'=String'+'\n'                         
                     # Generate input parameter file: input_parameter_attribute_1=name_restaurant.csv
                     ip_text_area = st.empty()
-                    input_parameter_text_area = ip_text_area.text_area(label='Introduce address values (line by line), keeping the header: <street,number,zp,latitude,longitude>', value='street,number,zp,latitude,longitude', key='address_ip_text_area_'+str(position))   
-                    # Buttons: export and import values  
-                    export_button_column, import_area_column = st.columns(2)
-                    with export_button_column:
-                        file_name = attribute_name+'_input_parameter_list.csv'
-                        if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='address_ip_export_button_'+str(position)):
-                            if len(input_parameter_text_area) == 0:                                 
-                                st.warning('The file to be exported must not be empty.')
-                            else:
-                                st.success('The file has been saved with the name: '+file_name)
-                    with import_area_column:
+                    if address_complete_type == 'Manually':
+                        input_parameter_text_area = ip_text_area.text_area(label='Introduce address values (line by line), keeping the header: <street,number,zp,latitude,longitude>', value='street,number,zp,latitude,longitude', key='address_ip_text_area_'+str(position))   
+                        input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area), sep=",")                                                 
+                        input_parameter_list = input_parameter_df.astype(str).values.tolist()
+                        value += 'input_parameter_attribute_'+str(position)+'='+str(input_parameter_list)+'\n'
+                    if address_complete_type == 'Upload file':
+                        input_parameter_text_area = None
                         input_parameter_list = []
                         import_split = st.text_input(label='Specifies the type of separator to read the file (; , # tab)', key='import_split')
                         if import_file := st.file_uploader(label='Import list', key='import_file'+str(position)):                            
                             input_parameter_text_area = ip_text_area.text_area(label='Introduce address values below <street,number,zp,latitude,longitude> (line by line):', value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(position))                            
                             input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area), sep=import_split)                                                 
                             input_parameter_list = input_parameter_df.astype(str).values.tolist()                        
-                    value += 'input_parameter_attribute_'+str(position)+'='+str(input_parameter_list)+'\n'
+                        value += 'input_parameter_attribute_'+str(position)+'='+str(input_parameter_list)+'\n'
+                    if address_complete_type == 'Search Address':
+                        places_list = []
+                        places_str = 'street,number,zp,latitude,longitude\n'
+                        geolocator = Nominatim(user_agent="autodatagencars")
+                        input_parameter_text_area = ip_text_area.text_area(label='Introduce place_name to search address or list [name1,name2,...], keeping header: place', value='place', key='address_ip_text_area_'+str(position))   
+                        if import_file := st.file_uploader(label='Import place_name list, keeping header: place', key='import_file'+str(position)):                            
+                            input_parameter_text_area = ip_text_area.text_area(label='Introduce place_name to search address or list [name1,name2,...], keeping header: place', value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(position))                            
+                            input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
+                            input_parameter_list = input_parameter_df.astype(str).values.tolist()
+                            for place_name in input_parameter_list:   
+                                location = geolocator.geocode(place_name[0]) 
+                                if location == None:
+                                    st.write(str(place_name[0]) +' not found.')
+                                else:
+                                    item_info = []
+                                    item_info.append(location.address.split(", ")[0])
+                                    item_info.append(location.address.split(", ")[1].split(" ")[0])
+                                    item_info.append(location.address.split(", ")[-2].split(" ")[-1])
+                                    item_info.append(location.latitude)
+                                    item_info.append(location.longitude)
+                                    places_list.append(item_info)
+                                    places_str = places_str + item_info[0] + ', ' + item_info[1] + ', ' + item_info[2] + ', ' + str(item_info[3]) + ', ' + str(item_info[4]) + '\n'
+                        value += 'input_parameter_attribute_'+str(position)+'='+str(places_list)+'\n'            
+                        input_parameter_text_area = places_str
+                    # Buttons: export and import values  
+                    file_name = attribute_name+'_input_parameter_list.csv'
+                    if input_parameter_text_area != None:
+                        link_address_values = f'<a href="data:file/csv;base64,{base64.b64encode(input_parameter_text_area.encode()).decode()}" download={file_name}> Download </a>'
+                        if st.markdown(link_address_values, unsafe_allow_html=True):
+                        #if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='address_ip_export_button_'+str(position)):
+                            if len(input_parameter_text_area) == 0:                                 
+                                st.warning('The file to be exported must not be empty.')
+                            else:
+                                st.success('The file has been saved with the name: '+file_name)
                 elif generator_type == 'Date':                    
                     attribute_type = st.selectbox(label='Attribute type:', options=['Integer'], key='attribute_type_'+str(position)+'_'+generator_type)
                     st.write('Imput the range of dates (years only):')
@@ -190,34 +226,34 @@ if general_option == 'Generate a synthetic dataset':
                     value += 'minimum_value_attribute_'+str(position)+'='+str(date_min)+'\n'
                     date_max = st.number_input(label='Until:', value=2020, key='date_max_'+str(position))
                     value += 'maximum_value_attribute_'+str(position)+'='+str(date_max)+'\n'
-                elif generator_type == 'BooleanList':                    
+                elif generator_type == 'BooleanList':       
+                    value += 'generator_type_attribute_'+str(position)+'=BooleanListAttributeGenerator'+'\n'              
                     attribute_type = st.selectbox(label='Attribute type:', options=['List'], key='attribute_type_'+str(position)+'_'+generator_type)
                     component_list = st.text_area(label='Introduce component values to the list (split by comma): monday, tuesday, wednesday, thursday, friday', key='component_list_'+str(position)).split(',')
                     value += 'number_maximum_component_attribute_'+str(position)+'='+str(len(component_list))+'\n'
                     value += 'type_component_attribute_'+str(position)+'=Boolean'+'\n'
                     for idx, component in enumerate(component_list):
                         value += 'component_'+str(idx+1)+'_attribute_'+str(position)+'='+str(component).strip()+'\n'
-                    component_input_parameter = st.number_input(label='Number of boolean values to generate for these components:', value=1, key='component_input_parameter')
+                    component_input_parameter = st.number_input(label='Number of boolean values to generate for these components:', value=1, key='component_input_parameter_'+str(position))
                     value += 'input_parameter_attribute_'+str(position)+'='+str(component_input_parameter)+'\n'
 
                 value += 'type_attribute_'+str(position)+'='+str(attribute_type)+'\n'
                 # Important attributes:                
                 is_important_attribute = st.checkbox(label=f'Is {attribute_name} an important attribute to include in the user profile?', value=False, key=schema_type+'_is_important_attribute_'+str(position))
-                value += 'important_profile_attribute_'+str(position)+'='+str(is_important_attribute)+'\n'
+                value += 'important_weight_attribute_'+str(position)+'='+str(is_important_attribute)+'\n'
                 if is_important_attribute:
                     # Ranking order:
                     st.write('Examples of importance order:')
                     st.markdown("""- ascending: ``` quality food=[bad, normal, good], global_rating=[1, 5] ``` """)
                     st.markdown("""- descending: ``` quality food=[good, normal, bad], global_rating=[5, 1] ``` """)
-                    st.markdown("""- neutral: ``` quality food=[chinese, italian, vegetarian, international] ``` """)
-                    ranking_order_original = st.selectbox(label='Select an order of importance?', options=['ascending', 'descending', 'neutral'])
+                    st.markdown("""- neutral (no important order): ``` quality food=[chinese, italian, vegetarian, international] ``` """)
+                    ranking_order_original = st.selectbox(label='Select an order of importance?', options=['ascending', 'descending', 'neutral'], key="important_order_"+str(position))
                     ranking_order = 'neut'
                     if ranking_order_original == 'ascending':
                         ranking_order = 'asc'
                     elif ranking_order_original == 'descending':
                         ranking_order = 'desc'
                     value += 'ranking_order_by_attribute_'+str(position)+'='+ranking_order+'\n'
-                    value += 'important_weight_attribute_'+str(position)+'=True'+'\n'
                 value += '\n'
                 st.markdown("""---""")                    
         # Show generated schema file:
@@ -468,11 +504,17 @@ if general_option == 'Generate a synthetic dataset':
             @st.cache(allow_output_mutation=True)
             def get_dataframe():
                 df = pd.DataFrame(weight_np, columns=attribute_column_list)
+                for column in df.columns:
+                    df[column] = 0
+                df['user_profile_id'] = df.index+1
+                df['other'] = 1
+                df = df.astype(str)
                 # user_profile_id_list = list(range(1, number_user_profile+1))
                 # df['user_profile_id'] = user_profile_id_list
                 return df
             
             user_profile_df = get_dataframe()
+            export_df = user_profile_df.copy()
             # Create row, column, and value inputs:
             col_row, col_col, col_val = st.columns(3)
             with col_row:
@@ -480,70 +522,79 @@ if general_option == 'Generate a synthetic dataset':
                 row = st.number_input('row (profile)', max_value=user_profile_df.shape[0]) #, value=1
             with col_col:
                 # Choosing the column index:
-                selected_attribute = st.selectbox(label='column (attribute)', options=attribute_column_list)
-                attribute_position = attribute_column_list.index(selected_attribute)                           
-                col = attribute_position
-                # Getting possible values, in order to facilitate the importance ranking:
-                item_possible_value_list = item_access_schema.get_possible_values_attribute_list_from_name(attribute_name=selected_attribute)                
-                if with_context:
-                    context_possible_value_list = context_access_schema.get_possible_values_attribute_list_from_name(attribute_name=selected_attribute)
-                    if (selected_attribute != 'user_profile_id') and (selected_attribute != 'other'):                                 
+                attribute_column_list_box = attribute_column_list.copy()
+                attribute_column_list_box.remove('other')
+                attribute_column_list_box.remove('user_profile_id')
+                if len(attribute_column_list_box) > 0:
+                    selected_attribute = st.selectbox(label='column (attribute)', options=attribute_column_list_box)
+                    attribute_position = attribute_column_list_box.index(selected_attribute)                           
+                    col = attribute_position
+                    # Getting possible values, in order to facilitate the importance ranking:
+                    item_possible_value_list = item_access_schema.get_possible_values_attribute_list_from_name(attribute_name=selected_attribute)                
+                    if with_context:
+                        context_possible_value_list = context_access_schema.get_possible_values_attribute_list_from_name(attribute_name=selected_attribute)
                         if (len(item_possible_value_list) != 0) and (len(context_possible_value_list) == 0):
                             st.warning(item_possible_value_list)
                         elif (len(item_possible_value_list) == 0) and (len(context_possible_value_list) != 0):
                             st.warning(context_possible_value_list)                   
-                else:
-                    if (len(item_possible_value_list) != 0):
-                        st.warning(item_possible_value_list)                    
+                    else:
+                        if (len(item_possible_value_list) != 0):
+                            st.warning(item_possible_value_list)                    
             with col_val:   
                 # Inserting weight value:
-                value = st.text_input(label='weight (with range [0-1])', value=1)                
-                # Validating weight values:
-                if len(value) == 0:
-                    if (selected_attribute == 'user_profile_id'):
-                        st.warning('You must insert an ```integer``` value, starting with  ```1```.')
+                value = st.text_input(label='weight (with range [-1,1])', value=0)      
+                # Checking attribute weights:                    
+                # Float number:
+                if ('.' in str(value)) or (',' in str(value)):
+                    # Negative number:
+                    if float(value) < -1.0:
+                        st.warning('The ```weight``` must be greater than -1.')  
                     else:
-                        st.warning('You must insert an ```weight``` value in the range ```[0-1]```.')
+                        # Range [0-1]:
+                        if float(value) > 1.0:
+                            st.warning('The ```weight``` value must be in the range ```[-1,1]```.')  
                 else:
-                    # Checking user_profile_id:      
-                    if (selected_attribute == 'user_profile_id'):                    
-                        # Float number:
-                        if ('.' in value) or (',' in value):
-                            st.warning('The value of ```user_profile_id``` must not be of type ```float```.')
-                        # Negative or Zero numbers:
-                        elif (int(value) < 0) or (int(value) == 0):
-                            st.warning('The ```user_profile_id``` value must be an ```integer``` and greater than zero (e.g., 1, 2, 3, ...).')  
-                        # First value:
-                        elif (int(value) > 1 and row == 0):
-                            st.warning('The first value of ```user_profile_id``` must start at ```1```.')                    
+                    # Negative number:
+                    if int(value) < -1:
+                        st.warning('The ```weight``` must be greater than -1.')  
                     else:
-                        # Checking attribute weights:                    
-                        # Float number:
-                        if ('.' in value) or (',' in value):
-                            # Negative number:
-                            if float(value) < 0:
-                                st.warning('The ```weight``` must be a positive value.')  
-                            else:
-                                # Range [0-1]:
-                                if float(value) > 1.0:
-                                    st.warning('The ```weight``` value must be in the range ```[0-1]```.')  
-                        else:
-                            # Negative number:
-                            if int(value) < 0:
-                                st.warning('The ```weight``` must be a positive value.')  
-                            else:
-                                # Range [0-1]:
-                                if (int(value) > 1):
-                                    st.warning('The ```weight``` value must be positive and in the range ```[0-1]```.')  
+                        # Range [0-1]:
+                        if (int(value) > 1):
+                            st.warning('The ```weight``` value must be in the range ```[-1,1]```.')  
+                
 
             # Change the entry at (row, col) to the given weight value:
-            user_profile_df.values[row][col] = str(value)
+            user_profile_df.values[row][col+1] = str(value)
+            other_value = 1
+            for column in attribute_column_list:
+                if column != 'user_profile_id' and column != 'other':
+                    other_value = float(other_value-abs(float(user_profile_df.values[row][attribute_column_list.index(column)])))
+            user_profile_df.values[row][len(user_profile_df.columns)-1] = f"{other_value:.1f}"
+            if float(user_profile_df.values[row][len(user_profile_df.columns)-1]) < 0 or float(user_profile_df.values[row][len(user_profile_df.columns)-1]) > 1:
+                st.warning('Values in a row for user must equal 1')
+                inconsistent = True
+            else:
+                for index, row in user_profile_df.iterrows():
+                    for column in user_profile_df.columns:
+                        if column != 'user_profile_id' and column != 'other':
+                            if float(row[column]) > 0:
+                                export_df.values[index][attribute_column_list.index(column)] = f'(+)|{str(abs(float(row[column])))}'
+                            elif float(row[column]) < 0:
+                                export_df.values[index][attribute_column_list.index(column)] = f'(-)|{str(abs(float(row[column])))}'
+                            else:
+                                export_df.values[index][attribute_column_list.index(column)] = f'0'
+                        if column == 'other':
+                            if float(row[column]) == 0:
+                                export_df.values[index][attribute_column_list.index(column)] = f'0'
+                            else:
+                                export_df.values[index][attribute_column_list.index(column)] = f'{str(abs(float(row[column])))}'
             # Show the user profile dataframe:
-            st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[0-1]```.""")
+            st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[-1,1]```.""")
             st.dataframe(user_profile_df)
             # Downloading user_profile.csv:
-            link_user_profile = f'<a href="data:file/csv;base64,{base64.b64encode(user_profile_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
-            st.markdown(link_user_profile, unsafe_allow_html=True)  
+            if not inconsistent:
+                link_user_profile = f'<a href="data:file/csv;base64,{base64.b64encode(export_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
+                st.markdown(link_user_profile, unsafe_allow_html=True)  
 
     # RUN:
     with tab_run:                   
@@ -557,77 +608,80 @@ if general_option == 'Generate a synthetic dataset':
         output = st.empty()    
 
         with console.st_log(output.code):
-            if button_run:
-                if context:
-                    steps = 4
-                else: 
-                    steps = 3
-                current_step = 0
-                print('Starting execution')
-                # Check if all the files required for the synthetic data generation exist.                    
-                # Checking the existence of the file: "user_schema.conf"  
-                progress_text = f'Generating data .....step {current_step + 1} from {steps}'
-                my_bar = st.progress(0, text=progress_text)
-                if user_schema_value:
-                    st.write('user.csv')
-                    print('Generating user.csv')           
-                    user_file_df = generator.generate_user_file(user_schema=user_schema_value)                           
-                    st.dataframe(user_file_df)
-                    link_user = f'<a href="data:file/csv;base64,{base64.b64encode(user_file_df.to_csv(index=False).encode()).decode()}" download="user.csv">Download user CSV</a>'
-                    st.markdown(link_user, unsafe_allow_html=True)              
-                else:
-                    st.warning('The user schema file (user_schema.conf) is required.')
-                current_step = current_step + 1
-                if button_stop:
-                    st.experimental_rerun()
-                else:
-                    # Checking the existence of the file: "item_schema.conf"            
-                    my_bar.progress(int(100/steps)*current_step, f'Generating data Step {current_step + 1} from {steps}: ')
-                    if item_schema_value:
-                        st.write('item.csv')
-                        print('Generating item.csv')                    
-                        item_file_df = generator.generate_item_file(item_schema=item_schema_value, item_profile=item_profile_value, with_correlation=with_correlation_checkbox)
-                        st.dataframe(item_file_df)   
-                        link_item = f'<a href="data:file/csv;base64,{base64.b64encode(item_file_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download item CSV</a>'
-                        st.markdown(link_item, unsafe_allow_html=True)
-                        current_step = current_step + 1
+            if not inconsistent:
+                if button_run:
+                    if context:
+                        steps = 4
+                    else: 
+                        steps = 3
+                    current_step = 0
+                    print('Starting execution')
+                    # Check if all the files required for the synthetic data generation exist.                    
+                    # Checking the existence of the file: "user_schema.conf"  
+                    progress_text = f'Generating data .....step {current_step + 1} from {steps}'
+                    my_bar = st.progress(0, text=progress_text)
+                    if user_schema_value:
+                        st.write('user.csv')
+                        print('Generating user.csv')           
+                        user_file_df = generator.generate_user_file(user_schema=user_schema_value)                           
+                        st.dataframe(user_file_df)
+                        link_user = f'<a href="data:file/csv;base64,{base64.b64encode(user_file_df.to_csv(index=False).encode()).decode()}" download="user.csv">Download user CSV</a>'
+                        st.markdown(link_user, unsafe_allow_html=True)              
                     else:
-                        st.warning('The item schema file (item_schema.conf) is required.')
-                    my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
+                        st.warning('The user schema file (user_schema.conf) is required.')
+                    current_step = current_step + 1
                     if button_stop:
                         st.experimental_rerun()
                     else:
-                        if context:
-                            # Checking the existence of the file: "context_schema.conf"                             
-                            if context_schema_value:
-                                st.write('context.csv')
-                                print('Generating context.csv')                        
-                                context_file_df = generator.generate_context_file(context_schema=context_schema_value)
-                                st.dataframe(context_file_df)
-                                link_context = f'<a href="data:file/csv;base64,{base64.b64encode(context_file_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download context CSV</a>'
-                                st.markdown(link_context, unsafe_allow_html=True)
-                                current_step = current_step + 1
-                            else:
-                                st.warning('The context schema file (context_schema.conf) is required.')               
-                        # Checking the existence of the file: "generation_config.conf" 
+                        # Checking the existence of the file: "item_schema.conf"            
+                        my_bar.progress(int(100/steps)*current_step, f'Generating data Step {current_step + 1} from {steps}: ')
+                        if item_schema_value:
+                            st.write('item.csv')
+                            print('Generating item.csv')                    
+                            item_file_df = generator.generate_item_file(item_schema=item_schema_value, item_profile=item_profile_value, with_correlation=with_correlation_checkbox)
+                            st.dataframe(item_file_df)   
+                            link_item = f'<a href="data:file/csv;base64,{base64.b64encode(item_file_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download item CSV</a>'
+                            st.markdown(link_item, unsafe_allow_html=True)
+                            current_step = current_step + 1
+                        else:
+                            st.warning('The item schema file (item_schema.conf) is required.')
                         my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
                         if button_stop:
                             st.experimental_rerun()
                         else:
-                            if config_file_text_area:
-                                st.write('rating.csv')
-                                print('Generating rating.csv')           
-                                if with_context:
-                                    rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value, with_context=with_context, context_df=context_file_df, context_schema=context_schema_value)        
+                            if context:
+                                # Checking the existence of the file: "context_schema.conf"                             
+                                if context_schema_value:
+                                    st.write('context.csv')
+                                    print('Generating context.csv')                        
+                                    context_file_df = generator.generate_context_file(context_schema=context_schema_value)
+                                    st.dataframe(context_file_df)
+                                    link_context = f'<a href="data:file/csv;base64,{base64.b64encode(context_file_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download context CSV</a>'
+                                    st.markdown(link_context, unsafe_allow_html=True)
+                                    current_step = current_step + 1
                                 else:
-                                    rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value)
-                                st.dataframe(rating_file_df)
-                                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
-                                st.markdown(link_rating, unsafe_allow_html=True)
+                                    st.warning('The context schema file (context_schema.conf) is required.')               
+                            # Checking the existence of the file: "generation_config.conf" 
+                            my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
+                            if button_stop:
+                                st.experimental_rerun()
                             else:
-                                st.warning('The configuration file (generation_config.conf) is required.')
-                            print('Synthetic data generation has finished.')   
-                            my_bar.progress(100, 'Synthetic data generation has finished.')                     
+                                if config_file_text_area:
+                                    st.write('rating.csv')
+                                    print('Generating rating.csv')           
+                                    if with_context:
+                                        rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value, with_context=with_context, context_df=context_file_df, context_schema=context_schema_value)        
+                                    else:
+                                        rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value)
+                                    st.dataframe(rating_file_df)
+                                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
+                                    st.markdown(link_rating, unsafe_allow_html=True)
+                                else:
+                                    st.warning('The configuration file (generation_config.conf) is required.')
+                                print('Synthetic data generation has finished.')   
+                                my_bar.progress(100, 'Synthetic data generation has finished.')    
+            else:
+                st.warning('Before generating data ensure all files are correctly generated.')                 
 
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
