@@ -4,10 +4,10 @@ import sys
 import streamlit as st
 import config
 import pandas as pd
+import altair as alt
 import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
-import altair as alt
 import seaborn as sns
 from pathlib import Path
 import console
@@ -18,11 +18,13 @@ sys.path.append("src/main/python")
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
 import datagencars.evaluation.sklearn_helpers as sklearn_helpers
 import datagencars.evaluation.rs_surprise.evaluation as evaluation
-from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating as extract_statistics_rating
-from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC as extract_statistics_uic
+from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
+from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
 import datagencars.existing_dataset.label_encoding as label_encoding
 import datagencars.existing_dataset.mapping_categorization as mapping_categorization
 import datagencars.existing_dataset.binary_ratings as binary_ratings
+from streamlit_app import util
+
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -621,77 +623,27 @@ if general_option == 'Generate a synthetic dataset':
                
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
+    is_context = st.sidebar.checkbox('With context', value=True)
+    
     if is_analysis == 'Data visualization':
-        if is_context := st.sidebar.checkbox('With context', value=True):
-            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings', 'Total'])
+        user_df = pd.DataFrame()
+        item_df = pd.DataFrame()
+        context_df = pd.DataFrame()
+        rating_df = pd.DataFrame()
+
+        if is_context:
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings'])
         else:
-            tab1, tab2, tab3, tab5, tab6 = st.tabs(['Upload dataset', 'Users', 'Items', 'Ratings', 'Total'])
-        def read_uploaded_file(uploaded_file, data, file_type, separator):
-            # Read the header of the file to determine column names
-            header = uploaded_file.readline().decode("utf-8").strip()
-            column_names = header.split(separator)
-
-            # Rename columns
-            for i, col in enumerate(column_names):
-                if "user" in col.lower() and "id" in col.lower() and "profile" not in col.lower():
-                    column_names[i] = "user_id"
-                elif "item" in col.lower() and "id" in col.lower():
-                    column_names[i] = "item_id"
-                elif "context" in col.lower() and "id" in col.lower():
-                    column_names[i] = "context_id"
-
-            data[file_type] = pd.read_csv(uploaded_file, sep=separator, names=column_names)
-            st.session_state[file_type] = data[file_type]
-            return data
-
-        def plot_column_attributes_count(data, column, sort):
-            if sort == 'asc':
-                sort_field = alt.EncodingSortField('count', order='ascending')
-            elif sort == 'desc':
-                sort_field = alt.EncodingSortField('count', order='descending') 
-            else:
-                sort_field = None
-            chart = alt.Chart(data).mark_bar().encode(
-                x=alt.X(column + ':O', title='Attribute values', sort=sort_field),
-                y=alt.Y('count:Q', title='Count'),
-                tooltip=[column, 'count']
-            ).interactive()
-            st.altair_chart(chart, use_container_width=True)
-            
-        def print_statistics_by_attribute(statistics):
-            st.header("Statistics by attribute")
-            for stat in statistics:
-                st.subheader(stat[0])
-                st.write('Average: ', stat[1])
-                st.write('Standard deviation: ', stat[2])
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write('Frequencies:')
-                    st.dataframe(stat[3])
-                with col2:
-                    st.write('Percentages:')
-                    st.dataframe(stat[4])
+            tab1, tab2, tab3, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Ratings'])                
+        
+        # Upload dataset tab:
         with tab1:
             option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
             if option == 'Multiple files':
-                data = {} #Dictionary with the dataframes
-                for file_type in ["user", "item", "context", "rating"]:
-                    if file_type == "context":
-                        if not is_context:
-                            continue
-                    with st.expander(f"Upload your {file_type}.csv file"):
-                        separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ';')", ";")
-                        uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
-                        if uploaded_file is not None:
-                            if not separator:
-                                st.error('Please provide a separator.')
-                            else:
-                                try:
-                                    data = read_uploaded_file(uploaded_file, data, file_type, separator)
-                                    st.dataframe(data[file_type].head())
-                                except Exception as e:
-                                    st.error(f"An error occurred while reading the {file_type} file: {str(e)}")
-                                    data[file_type] = None
+                user_df = util.load_uicr_file(file_type='user')
+                item_df = util.load_uicr_file(file_type='item')
+                context_df = util.load_uicr_file(file_type='context')
+                rating_df = util.load_uicr_file(file_type='rating')               
             elif option == 'Single file':
                 data = {} #Dictionary with the dataframes
                 data_file = st.file_uploader("Select the single file", type="csv")
@@ -702,223 +654,412 @@ elif general_option == 'Analysis an existing dataset':
                     else:
                         try:
                             df = pd.read_csv(data_file, sep=separator)
-                            st.dataframe(df.head())
-                            def create_dataframe(label, df):
-                                if columns := st.multiselect(label=f"Select the columns for the {label} dataframe:", options=df.columns):
-                                    # Create a new dataframe with the selected columns
-                                    new_df = df[columns]
-                                    st.dataframe(new_df.head())
-                                    st.session_state[label] = new_df #Save the label dataframe in the session state
-                                    st.download_button(
-                                        label=f"Download {label} dataset CSV",
-                                        data=new_df.to_csv(index=False),
-                                        file_name=f"{label}.csv",
-                                        mime='text/csv'
-                                    )
-                                    return new_df
-                            data = {'user': create_dataframe('user', df),
-                                    'item': create_dataframe('item', df),
-                                    'rating': create_dataframe('rating', df)}
+                            st.dataframe(df.head())                            
+                            user_df = util.create_dataframe('user', df)
+                            item_df = util.create_dataframe('item', df)
+                            rating_df = util.create_dataframe('rating', df)
                             if is_context:
-                                data['context'] = create_dataframe('context', df)
+                                context_df = util.create_dataframe('context', df)
                         except Exception as e:
                             st.error(f"An error occurred while reading the file: {str(e)}")
+        # Users tab:
         with tab2:
-            if 'user' in data and data['user'] is not None:
+            if not user_df.empty:
                 try:
-                    st.dataframe(data['user'] )
-                    missing_values2 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
-                    st.write("Missing values:")
-                    st.table(missing_values2)
-                    
-                    st.write("Attributes, data types and value ranges:")
-                    table2 = extract_statistics_uic.list_attributes_and_ranges(data['user'])
+                    # User dataframe:
+                    st.header("User file")
+                    st.dataframe(user_df)                    
+                    # Extracted statistics:
+                    extract_statistics_user = ExtractStatisticsUIC(user_df)
+                    # Missing values:
+                    st.header("Missing values")
+                    missing_values2 = extract_statistics_user.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})                    
+                    st.table(missing_values2)                    
+                    # Attributes, data types and value ranges:
+                    st.header("Attributes, data types and value ranges")
+                    table2 = extract_statistics_user.get_attributes_and_ranges()
                     st.table(pd.DataFrame(table2, columns=["Attribute name", "Data type", "Value ranges"]))
-                    
+                    # Showing one figure by attribute:
+                    st.header("Analysis by attribute")
                     col1, col2 = st.columns(2)
                     with col1:
-                        column2 = st.selectbox("Select an attribute", data['user'].columns)
+                        user_attribute_list = user_df.columns.tolist()
+                        user_attribute_list.remove('user_id')
+                        column2 = st.selectbox("Select an attribute", user_attribute_list, key='column2')
                     with col2:
                         sort2 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort2')
-                    data2 = extract_statistics_uic.column_attributes_count(data['user'], column2)
-                    plot_column_attributes_count(data2, column2, sort2)
-
-                    statistics = extract_statistics_uic.statistics_by_attribute(data['user'])
-                    print_statistics_by_attribute(statistics)
+                    data2 = extract_statistics_user.column_attributes_count(column2)
+                    util.plot_column_attributes_count(data2, column2, sort2)
+                    # Showing extracted statistics:
+                    st.header("Extracted statistics")                    
+                    st.write('Number total of users: ', extract_statistics_user.get_number_id())
+                    st.write('Analyzing possible values per attribute: ')
+                    number_possible_values_df = extract_statistics_user.get_number_possible_values_by_attribute()
+                    avg_possible_values_df = extract_statistics_user.get_avg_possible_values_by_attribute()
+                    sd_possible_values_df = extract_statistics_user.get_sd_possible_values_by_attribute()                                        
+                    extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
+                    # Insert the new column at index 0:
+                    label_column_list = ['count', 'average', 'standard deviation']                    
+                    extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
+                    if extracted_statistics_df.isnull().values.any():
+                        st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
+                    st.dataframe(extracted_statistics_df)                    
+                    # Showing more details:
+                    with st.expander('More details'):
+                        statistics = extract_statistics_user.statistics_by_attribute()
+                        util.print_statistics_by_attribute(statistics)          
+                    # Showing correlation between attributes:
+                    st.header("Correlation between attributes")
+                    corr_matrix = util.correlation_matrix(df=user_df, label='user')                    
+                    if not corr_matrix.empty:                        
+                        fig, ax = plt.subplots(figsize=(10, 10))                    
+                        sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
+                        st.pyplot(fig)      
                 except Exception as e:
                     st.error(f"Make sure the user dataset is in the right format. {e}")
             else:
-                st.error("User dataset not found.")
+                st.warning("The user file (user.csv) has not been uploaded in the 'Uploaded dataset' tab.")
+        # Items tab:
         with tab3:
-            if 'item' in data and data['item'] is not None:
+            if not item_df.empty:
                 try:
-                    st.dataframe(data['item'] )
-                    missing_values3 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
-                    st.write("Missing values:")
-                    st.table(missing_values3)
-                    
-                    st.write("Attributes, data types and value ranges:")
-                    table3 = extract_statistics_uic.list_attributes_and_ranges(data['item'])
+                    # Item dataframe:
+                    st.header("Item file")
+                    st.dataframe(item_df)
+                    # Extracted statistics:
+                    extract_statistics_item = ExtractStatisticsUIC(item_df)
+                    # Missing values:
+                    st.header("Missing values")
+                    missing_values3 = extract_statistics_item.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})                    
+                    st.table(missing_values3)                    
+                    # Attributes, data types and value ranges:
+                    st.header("Attributes, data types and value ranges")
+                    table3 = extract_statistics_item.get_attributes_and_ranges()
                     st.table(pd.DataFrame(table3, columns=["Attribute name", "Data type", "Value ranges"]))
-
+                    # Showing one figure by attribute:
+                    st.header("Analysis by attribute")
                     col1, col2 = st.columns(2)
-                    with col1:
-                        column3 = st.selectbox("Select an attribute", data['item'].columns)
+                    with col1:                        
+                        item_attribute_list = item_df.columns.tolist()
+                        item_attribute_list.remove('item_id')
+                        column3 = st.selectbox("Select an attribute", item_attribute_list, key='column3')
                     with col2:
                         sort3 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort3')
-                    data3 = extract_statistics_uic.column_attributes_count(data['item'], column3)
-                    plot_column_attributes_count(data3, column3, sort3)
-
-                    if 'rating' in data and data['rating'] is not None:
-                        merged_df = pd.merge(data['rating'], data['item'], on="item_id")
-                        users = merged_df['user_id'].unique()
-                        selected_user = st.selectbox("Select a user:", users, key="selected_user_tab3")
-                        stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "items")
-                        st.table(pd.DataFrame([stats]))
-
-                    statistics = extract_statistics_uic.statistics_by_attribute(data['item'])
-                    print_statistics_by_attribute(statistics)
+                    data3 = extract_statistics_item.column_attributes_count(column3)
+                    util.plot_column_attributes_count(data3, column3, sort3)
+                    # Showing extracted statistics:
+                    st.header("Extracted statistics")                    
+                    st.write('Number total of items: ', extract_statistics_item.get_number_id())
+                    st.write('Analyzing possible values per attribute: ')
+                    number_possible_values_df = extract_statistics_item.get_number_possible_values_by_attribute()
+                    avg_possible_values_df = extract_statistics_item.get_avg_possible_values_by_attribute()
+                    sd_possible_values_df = extract_statistics_item.get_sd_possible_values_by_attribute()                                        
+                    extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
+                    # Insert the new column at index 0:
+                    label_column_list = ['count', 'average', 'standard deviation']                    
+                    extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
+                    if extracted_statistics_df.isnull().values.any():
+                        st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
+                    st.dataframe(extracted_statistics_df) 
+                    # Showing more details:
+                    with st.expander('More details'):                        
+                        statistics = extract_statistics_item.statistics_by_attribute()
+                        util.print_statistics_by_attribute(statistics)                        
+                    # Showing correlation between attributes:
+                    st.header("Correlation between attributes")
+                    corr_matrix = util.correlation_matrix(df=item_df, label='item')
+                    if not corr_matrix.empty:                        
+                        fig, ax = plt.subplots(figsize=(10, 10))                    
+                        sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
+                        st.pyplot(fig)                        
                 except Exception as e:
                     st.error(f"Make sure the item dataset is in the right format. {e}")
             else:
-                st.error("Item dataset not found.")
+                st.warning("The item file (item.csv) has not been uploaded in the 'Uploaded dataset' tab.")
+        # Contexts tab:
         if is_context:
             with tab4:
-                if 'context' in data and data['context'] is not None:
+                if not context_df.empty:
                     try:
-                        st.dataframe(data['context'] )
-                        missing_values4 = extract_statistics_uic.count_missing_values(data['user'],replace_values={"NULL":np.nan,-1:np.nan})
-                        st.write("Missing values:")
+                        # Context dataframe:
+                        st.header("Context file")
+                        st.dataframe(context_df)
+                        # Extracted statistics:
+                        extract_statistics_context = ExtractStatisticsUIC(context_df)
+                        # Missing values:
+                        st.header("Missing values")
+                        missing_values4 = extract_statistics_context.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})                        
                         st.table(missing_values4)
-
-                        st.write("Attributes, data types and value ranges:")
-                        table4 = extract_statistics_uic.list_attributes_and_ranges(data['context'])
+                        # Attributes, data types and value ranges:
+                        st.header("Attributes, data types and value ranges")
+                        table4 = extract_statistics_context.get_attributes_and_ranges()
                         st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
-                        
+                        # Showing one figure by attribute:
                         col1, col2 = st.columns(2)
                         with col1:
-                            column4 = st.selectbox("Select an attribute", data['context'].columns)
+                            context_attribute_list = context_df.columns.tolist()
+                            context_attribute_list.remove('context_id')
+                            column4 = st.selectbox("Select an attribute", context_attribute_list, key='column4')
                         with col2:
                             sort4 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort4')
-                        data4 = extract_statistics_uic.column_attributes_count(data['context'], column4)
-                        plot_column_attributes_count(data4, column4, sort4)
-
-                        if 'rating' in data and data['rating'] is not None:
-                            merged_df = pd.merge(data['rating'], data['context'], on="context_id")
-                            users = merged_df['user_id'].unique()
-                            selected_user = st.selectbox("Select a user:", users, key="selected_user_tab4")
-                            stats = extract_statistics_uic.statistics_by_user(merged_df, selected_user, "contexts")
-                            st.table(pd.DataFrame([stats]))
-
-                        statistics = extract_statistics_uic.statistics_by_attribute(data['context'])
-                        print_statistics_by_attribute(statistics)
+                        data4 = extract_statistics_context.column_attributes_count(column4)
+                        util.plot_column_attributes_count(data4, column4, sort4)
+                        # Showing extracted statistics:
+                        st.header("Extracted statistics")                    
+                        st.write('Number total of contexts: ', extract_statistics_context.get_number_id())
+                        st.write('Analyzing possible values per attribute: ')
+                        number_possible_values_df = extract_statistics_context.get_number_possible_values_by_attribute()
+                        avg_possible_values_df = extract_statistics_context.get_avg_possible_values_by_attribute()
+                        sd_possible_values_df = extract_statistics_context.get_sd_possible_values_by_attribute()                                        
+                        extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
+                        # Insert the new column at index 0:
+                        label_column_list = ['count', 'average', 'standard deviation']                    
+                        extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
+                        if extracted_statistics_df.isnull().values.any():
+                            st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
+                        st.dataframe(extracted_statistics_df)
+                        # Showing more details:
+                        with st.expander('More details'):
+                            statistics = extract_statistics_context.statistics_by_attribute()
+                            util.print_statistics_by_attribute(statistics)       
+                        # Showing correlation between attributes:
+                        st.header("Correlation between attributes")
+                        corr_matrix = util.correlation_matrix(df=context_df, label='context')
+                        if not corr_matrix.empty:                        
+                            fig, ax = plt.subplots(figsize=(10, 10))                    
+                            sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
+                            st.pyplot(fig)         
                     except Exception as e:
                         st.error(f"Make sure the context dataset is in the right format. {e}")
                 else:
-                    st.error("Context dataset not found.")
+                    st.warning("The context file (context.csv) has not been uploaded in the 'Uploaded dataset' tab.")
+        # Ratings tab:
         with tab5:
-            if 'rating' in data and data['rating'] is not None:
-                try:
-                    data['rating'] = extract_statistics_rating.replace_missing_values(data['rating'])
-
-                    st.dataframe(data['rating'])
-
-                    if 'user' in data and data['user'] is not None and 'item' in data and data['item'] is not None:
-                        unique_counts_df = extract_statistics_rating.count_unique(data)
-                        st.write("General statistics:")
-                        st.table(unique_counts_df)
-                    else:
-                        st.error("User, item and/or context datasets are required to show general statistics.")
-                    
-                    st.write("Attributes, data types and value ranges:")
-                    table5 = extract_statistics_uic.list_attributes_and_ranges(data['rating'])
+            if not rating_df.empty:
+                # try:
+                    # Rating dataframe:
+                    st.header("Rating file")          
+                    st.dataframe(rating_df)
+                    # Extracted statistics:
+                    extract_statistics_rating = ExtractStatisticsRating(rating_df=rating_df)                    
+                    # General statistics:
+                    st.header("General statistics")
+                    unique_users = extract_statistics_rating.get_number_users()
+                    unique_items = extract_statistics_rating.get_number_items()
+                    unique_counts = {"Users": unique_users, "Items": unique_items}
+                    if is_context:
+                        unique_contexts = extract_statistics_rating.get_number_contexts()
+                        unique_counts["Contexts"] = unique_contexts
+                    unique_ratings = extract_statistics_rating.get_number_ratings()
+                    unique_counts["Ratings"] = unique_ratings
+                    unique_counts_df = pd.DataFrame.from_dict(unique_counts, orient='index', columns=['Count'])
+                    unique_counts_df.reset_index(inplace=True)
+                    unique_counts_df.rename(columns={"index": "Attribute name"}, inplace=True)                    
+                    st.table(unique_counts_df)               
+                    # Attributes, data types and value ranges:
+                    st.header("Attributes, data types and value ranges")
+                    table5 = extract_statistics_rating.get_attributes_and_ranges()
                     st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
-
-                    # Plot the distribution of ratings
-                    counts = np.bincount(data['rating']['rating'])[np.nonzero(np.bincount(data['rating']['rating']))] #Count the frequency of each rating
-                    df5 = pd.DataFrame({'Rating': np.arange(1, len(counts) + 1), 'Frequency': counts})
+                    # Histogram of ratings:
+                    st.header("Histogram of ratings")
+                    counts = np.bincount(rating_df['rating'])[np.nonzero(np.bincount(rating_df['rating']))] #Count the frequency of each rating
+                    df5 = pd.DataFrame({'Type of ratings': np.arange(1, len(counts) + 1), 'Number of ratings': counts})
                     chart5 = alt.Chart(df5).mark_bar(color='#0099CC').encode(
-                        x=alt.X('Rating:O', axis=alt.Axis(title='Rating')),
-                        y=alt.Y('Frequency:Q', axis=alt.Axis(title='Frequency')),
-                        tooltip=['Rating', 'Frequency']
+                        x=alt.X('Type of ratings:O', axis=alt.Axis(title='Type of ratings')),
+                        y=alt.Y('Number of ratings:Q', axis=alt.Axis(title='Number of ratings')),
+                        tooltip=['Type of ratings', 'Number of ratings']
                     ).properties(
                         title={
-                            'text': 'Distribution of ratings',
+                            'text': 'Histogram of ratings',
                             'fontSize': 16,
                         }
-                    )
-                    st.altair_chart(chart5, use_container_width=True)
-
-                    # Plot the distribution of the number of items voted by each user
-                    users = data['rating']['user_id'].unique()
-                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab5")
-                    counts_items, unique_items, total_count, percent_ratings_by_user = extract_statistics_rating.count_items_voted_by_user(data['rating'], selected_user)
-                    df = pd.DataFrame({'Items': counts_items.index, 'Frequency': counts_items.values})
-                    counts_items = pd.Series(counts_items, name='count').reset_index()
-                    counts_items = counts_items.rename(columns={'index': 'item'})
+                    )                    
+                    st.altair_chart(chart5, use_container_width=True)                    
+                     
+                    # Statistics per user:
+                    st.header("Statistics per user")
+                    users = list(rating_df['user_id'].unique())                    
+                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab5")   
+                    # Items per user:
+                    st.markdown("*Items*")                           
+                    counts_items, unique_items, total_count = extract_statistics_rating.get_number_items_from_user(selected_user)
+                    df = pd.DataFrame({'Type of items': counts_items.index, 'Number of items': counts_items.values})                    
+                    counts_items = pd.Series(counts_items, name='Number of items').reset_index()
+                    counts_items = counts_items.rename(columns={'index': 'Type of items'})
                     chart = alt.Chart(counts_items).mark_bar(color="#0099CC").encode(
-                        x=alt.X('item:O', axis=alt.Axis(labelExpr='datum.value', title='Items')),
-                        y=alt.Y('count:Q', axis=alt.Axis(title='Frequency')),
-                        tooltip=['item', 'count']
+                        x=alt.X('Type of items:O', axis=alt.Axis(labelExpr='datum.value', title='Type of items')),
+                        y=alt.Y('Number of items:Q', axis=alt.Axis(title='Number of items')),
+                        tooltip=['Type of items', 'Number of items']
                     ).properties(
                         title={
-                        "text": [f"Number of items voted by user {str(selected_user)} (total={total_count}) (percentage={percent_ratings_by_user:.2f}%)"],
+                        "text": [f"Histogram of items rated per user {str(selected_user)} (total={total_count})"],
                         "fontSize": 16,
                         }
-                    )
-                    st.altair_chart(chart, use_container_width=True)
+                    )                    
+                    st.altair_chart(chart, use_container_width=True) 
+                    # Statistics of items:
+                    item_statistics_dict = {}         
+                    # Number of items by user:           
+                    number_items_df = extract_statistics_rating.get_number_ratings_by_user()
+                    number_items = number_items_df.loc[number_items_df['user_id'] == selected_user, 'count_ratings'].iloc[0]
+                    # Percentage of items by user:
+                    percentage_items_df = extract_statistics_rating.get_percentage_ratings_by_user()                    
+                    percentage_items = percentage_items_df.loc[percentage_items_df['user_id'] == selected_user, 'percentage_ratings'].iloc[0]
+                    # Average of items by user:    
+                    avg_items_df = extract_statistics_rating.get_avg_items_by_user()
+                    avg_items = avg_items_df.loc[avg_items_df['user_id'] == selected_user, 'avg_items'].iloc[0]
+                    # Variance of items by user:
+                    variance_items_df = extract_statistics_rating.get_variance_items_by_user()
+                    variance_items = variance_items_df.loc[variance_items_df['user_id'] == selected_user, 'variance_items'].iloc[0]                    
+                    # Standard deviation of items by user:
+                    sd_items_df = extract_statistics_rating.get_sd_items_by_user()                    
+                    sd_items = sd_items_df.loc[sd_items_df['user_id'] == selected_user, 'sd_items'].iloc[0]                    
+                    # Number of not repeated items by user:                    
+                    number_not_repeated_items_df = extract_statistics_rating.get_number_not_repeated_items_by_user()
+                    number_not_repeated_items = number_not_repeated_items_df.loc[number_not_repeated_items_df['user_id'] == selected_user, 'not_repeated_items'].iloc[0]
+                    # Percentage of not repeated items by user:                    
+                    percentage_not_repeated_items_df = extract_statistics_rating.get_percentage_not_repeated_items_by_user()
+                    percentage_not_repeated_items = percentage_not_repeated_items_df.loc[percentage_not_repeated_items_df['user_id'] == selected_user, 'percentage_not_repeated_items'].iloc[0]
+                    # Percentage of not repeated items by user:                    
+                    percentage_repeated_items_df = extract_statistics_rating.get_percentage_repeated_items_by_user()
+                    percentage_repeated_items = percentage_repeated_items_df.loc[percentage_repeated_items_df['user_id'] == selected_user, 'porcentage_repeated_items'].iloc[0]
+                    item_statistics_dict['user_id'] = [selected_user]
+                    item_statistics_dict['count'] = [number_items]
+                    item_statistics_dict['percentage'] = [percentage_items]
+                    item_statistics_dict['average'] = [avg_items]                  
+                    item_statistics_dict['variance'] = [variance_items]                  
+                    item_statistics_dict['standard deviation'] = [sd_items]      
+                    item_statistics_dict['not repeated items'] = [number_not_repeated_items]
+                    item_statistics_dict['percentage not repeated items'] = [percentage_not_repeated_items]
+                    item_statistics_dict['percentage repeated items'] = [percentage_repeated_items]
+                    item_statistics_df = pd.DataFrame(item_statistics_dict)
+                    st.dataframe(item_statistics_df)   
 
+                    # Contexts per user:                    
+                    st.markdown("*Contexts*")
+                    # Statistics of contexts:
+                    context_statistics_dict = {}         
+                    # Number of contexts by user:           
+                    number_contexts_df = extract_statistics_rating.get_number_ratings_by_user()
+                    number_contexts = number_contexts_df.loc[number_contexts_df['user_id'] == selected_user, 'count_ratings'].iloc[0]
+                    # Percentage of contexts by user:
+                    percentage_contexts_df = extract_statistics_rating.get_percentage_ratings_by_user()
+                    percentage_contexts = percentage_contexts_df.loc[percentage_contexts_df['user_id'] == selected_user, 'percentage_ratings'].iloc[0]
+                    # Average of contexts by user:    
+                    avg_contexts_df = extract_statistics_rating.get_avg_contexts_by_user()
+                    avg_contexts = avg_contexts_df.loc[avg_contexts_df['user_id'] == selected_user, 'avg_contexts'].iloc[0]
+                    # Variance of contexts by user:
+                    variance_contexts_df = extract_statistics_rating.get_variance_contexts_by_user()
+                    variance_contexts = variance_contexts_df.loc[variance_contexts_df['user_id'] == selected_user, 'variance_contexts'].iloc[0]
+                    # Standard deviation of contexts by user:
+                    sd_contexts_df = extract_statistics_rating.get_sd_contexts_by_user()                    
+                    sd_contexts = sd_contexts_df.loc[sd_contexts_df['user_id'] == selected_user, 'sd_contexts'].iloc[0]                    
+                    # Number of not repeated contexts by user:                    
+                    number_not_repeated_contexts_df = extract_statistics_rating.get_number_not_repeated_contexts_by_user()
+                    number_not_repeated_contexts = number_not_repeated_contexts_df.loc[number_not_repeated_contexts_df['user_id'] == selected_user, 'not_repeated_contexts'].iloc[0]
+                    # Percentage of not repeated contexts by user:                    
+                    percentage_not_repeated_contexts_df = extract_statistics_rating.get_percentage_not_repeated_contexts_by_user()
+                    percentage_not_repeated_contexts = percentage_not_repeated_contexts_df.loc[percentage_not_repeated_contexts_df['user_id'] == selected_user, 'percentage_not_repeated_contexts'].iloc[0]
+                    # Percentage of not repeated contexts by user:                    
+                    percentage_repeated_contexts_df = extract_statistics_rating.get_percentage_repeated_contexts_by_user()
+                    percentage_repeated_contexts = percentage_repeated_contexts_df.loc[percentage_repeated_contexts_df['user_id'] == selected_user, 'porcentage_repeated_contexts'].iloc[0]
+                    context_statistics_dict['user_id'] = [selected_user]
+                    context_statistics_dict['count'] = [number_contexts]
+                    context_statistics_dict['percentage'] = [percentage_contexts]
+                    context_statistics_dict['average'] = [avg_contexts]                  
+                    context_statistics_dict['variance'] = [variance_contexts]                  
+                    context_statistics_dict['standard deviation'] = [sd_contexts] 
+                    context_statistics_dict['not repeated contexts'] = [number_not_repeated_contexts]
+                    context_statistics_dict['percentage not repeated contexts'] = [percentage_not_repeated_contexts]
+                    context_statistics_dict['percentage repeated contexts'] = [percentage_repeated_contexts]     
+                    context_statistics_df = pd.DataFrame(context_statistics_dict)
+                    st.dataframe(context_statistics_df)    
 
-                    # Show the statistics of the selected user votes
-                    users = ["All users"] + list(users)
-                    selected_user = st.selectbox("Select user", users)
-                    vote_stats = extract_statistics_rating.calculate_vote_stats(data['rating'], selected_user)
-                    for key, value in vote_stats.items():
-                        st.write(f"{key}: {value}")
-                except Exception as e:
-                    st.error(f"Make sure the rating dataset is in the right format. {e}")
+                    # Ratings per user:                    
+                    st.markdown("*Ratings*")                  
+                    rating_statistics_dict = {}         
+                    # Number of ratings by user:           
+                    number_ratings_df = extract_statistics_rating.get_number_ratings_by_user()
+                    number_ratings = number_ratings_df.loc[number_ratings_df['user_id'] == selected_user, 'count_ratings'].iloc[0]
+                    # Percentage of ratings by user:
+                    percentage_ratings_df = extract_statistics_rating.get_percentage_ratings_by_user()                    
+                    percentage_ratings = percentage_ratings_df.loc[percentage_ratings_df['user_id'] == selected_user, 'percentage_ratings'].iloc[0]
+                    # Average of ratings by user:    
+                    avg_ratings_df = extract_statistics_rating.get_avg_ratings_by_user()
+                    avg_ratings = avg_ratings_df.loc[avg_ratings_df['user_id'] == selected_user, 'avg_ratings'].iloc[0]
+                    # Variance of ratings by user:
+                    variance_ratings_df = extract_statistics_rating.get_variance_ratings_by_user()
+                    variance_ratings = variance_ratings_df.loc[variance_ratings_df['user_id'] == selected_user, 'variance_ratings'].iloc[0]
+                    # Standard deviation of ratings by user:
+                    sd_ratings_df = extract_statistics_rating.get_sd_items_by_user()                    
+                    sd_ratings = sd_ratings_df.loc[sd_ratings_df['user_id'] == selected_user, 'sd_items'].iloc[0]                    
+                    rating_statistics_dict['user_id'] = [selected_user]
+                    rating_statistics_dict['count'] = [number_ratings]
+                    rating_statistics_dict['percentage'] = [percentage_ratings]  
+                    rating_statistics_dict['average'] = [avg_ratings]                  
+                    rating_statistics_dict['variance'] = [variance_ratings]                  
+                    rating_statistics_dict['standard deviation'] = [sd_ratings]      
+                    rating_statistics_df = pd.DataFrame(rating_statistics_dict)
+                    st.dataframe(rating_statistics_df)                  
+                # except Exception as e:
+                #     st.error(f"Make sure the rating dataset is in the right format. {e}")
             else:
-                st.error("Ratings dataset not found.")
-        with tab6:
-            try:
-                # Merge the dataframes
-                merged_df = data["rating"]
-                for key in ["user", "item", "context"]:
-                    if key in data:
-                        merged_df = pd.merge(merged_df, data[key], on=key+"_id", how="left")
-
-                stats = extract_statistics_uic.general_statistics(merged_df)
-                st.table(pd.DataFrame([stats]))
-                
-                st.header("Correlation matrix")
-                columns_id = merged_df.filter(regex='_id$').columns.tolist()
-                columns_not_id = [col for col in merged_df.columns if col not in columns_id]
-                data_types = []
-                for col in columns_not_id:
-                    for file_type in ['context', 'item', 'rating', 'user']:
-                        if file_type in data and data[file_type] is not None and col in data[file_type].columns:
-                            data_types.append({"Attribute": col, "Data Type": str(merged_df[col].dtype), "File Type": file_type})
-                            break
-                df_data_types = pd.DataFrame(data_types)
-                st.dataframe(df_data_types)
-                selected_columns = st.multiselect("Select columns to analyze", columns_not_id)
-                method = st.selectbox("Select a method", ['pearson', 'kendall', 'spearman'])
-                if st.button("Generate correlation matrix") and selected_columns:
-                    with st.spinner("Generating correlation matrix..."):
-                        merged_df_selected = merged_df[selected_columns].copy()
-                        # Categorize non-numeric columns using label encoding
-                        for col in merged_df_selected.select_dtypes(exclude=[np.number]):
-                            merged_df_selected[col], _ = merged_df_selected[col].factorize()
-                        
-                        corr_matrix = merged_df_selected.corr(method=method)
-                        
-                        fig, ax = plt.subplots(figsize=(10, 10))
-                        sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
-                        st.pyplot(fig)
-            except Exception as e:
-                st.error(f"User, item, rating or context datasets not found or in the wrong format. {e}")
+                st.warning("The rating file (rating.csv) has not been uploaded in the 'Uploaded dataset' tab.")
     elif is_analysis == 'Replicate dataset':
         st.write('TODO')
+        # tab1 = st.tabs(['Upload dataset']) 
+        # option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
+        # if option == 'Multiple files':
+        #     data = {} #Dictionary with the dataframes
+        #     for file_type in ["user", "item", "context", "rating"]:
+        #         if file_type == "context":
+        #             if not is_context:
+        #                 continue
+        #         with st.expander(f"Upload your {file_type}.csv file"):
+        #             separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ';')", ";")
+        #             uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
+        #             if uploaded_file is not None:
+        #                 if not separator:
+        #                     st.error('Please provide a separator.')
+        #                 else:
+        #                     try:
+        #                         data = read_uploaded_file(uploaded_file, data, file_type, separator)
+        #                         st.dataframe(data[file_type].head())
+        #                     except Exception as e:
+        #                         st.error(f"An error occurred while reading the {file_type} file: {str(e)}")
+        #                         data[file_type] = None
+        # elif option == 'Single file':
+        #     data = {} #Dictionary with the dataframes
+        #     data_file = st.file_uploader("Select the single file", type="csv")
+        #     separator = st.text_input("Enter the separator for your single file (default is '	')", "	")
+        #     if data_file is not None:
+        #         if not separator:
+        #             st.error('Please provide a separator.')
+        #         else:
+        #             try:
+        #                 df = pd.read_csv(data_file, sep=separator)
+        #                 st.dataframe(df.head())
+        #                 def create_dataframe(label, df):
+        #                     if columns := st.multiselect(label=f"Select the columns for the {label} dataframe:", options=df.columns):
+        #                         # Create a new dataframe with the selected columns
+        #                         new_df = df[columns]
+        #                         st.dataframe(new_df.head())
+        #                         st.session_state[label] = new_df #Save the label dataframe in the session state
+        #                         st.download_button(
+        #                             label=f"Download {label} dataset CSV",
+        #                             data=new_df.to_csv(index=False),
+        #                             file_name=f"{label}.csv",
+        #                             mime='text/csv'
+        #                         )
+        #                         return new_df
+        #                 data = {'user': create_dataframe('user', df),
+        #                         'item': create_dataframe('item', df),
+        #                         'rating': create_dataframe('rating', df)}
+        #                 if is_context:
+        #                     data['context'] = create_dataframe('context', df)
+        #             except Exception as e:
+        #                 st.error(f"An error occurred while reading the file: {str(e)}")
+
     elif is_analysis == 'Extend dataset':
         st.write('TODO')
     elif is_analysis == 'Recalculate ratings':

@@ -19,7 +19,7 @@ class AccessItem:
     
     def get_item_value_from_item_attributte(self, item_id, attribute_name):
         '''
-        '''
+        '''               
         return self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]
     
     def get_item_possible_value_list_from_attributte(self, attribute_name):
