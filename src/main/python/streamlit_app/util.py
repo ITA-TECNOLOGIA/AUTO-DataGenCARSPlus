@@ -4,8 +4,10 @@ import altair as alt
 import numpy as np
 
 
-def load_uicr_file(file_type):
-    df = pd.DataFrame()
+def load_one_file(file_type):
+    """
+    """
+    df = pd.DataFrame()    
     with st.expander(f"Upload your {file_type}.csv file"):
         separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ';')", ";")
         uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
@@ -32,35 +34,25 @@ def load_uicr_file(file_type):
                     df = None
     return df
 
-def create_dataframe(label, df):
-    if columns := st.multiselect(label=f"Select the columns for the {label} dataframe:", options=df.columns):
-        # Create a new dataframe with the selected columns
-        new_df = df[columns]
-        st.dataframe(new_df.head())
-        st.session_state[label] = new_df #Save the label dataframe in the session state
-        st.download_button(
-            label=f"Download {label} dataset CSV",
-            data=new_df.to_csv(index=False),
-            file_name=f"{label}.csv",
-            mime='text/csv'
-        )
-        return new_df
-    
 def plot_column_attributes_count(data, column, sort):
-            if sort == 'asc':
-                sort_field = alt.EncodingSortField('count', order='ascending')
-            elif sort == 'desc':
-                sort_field = alt.EncodingSortField('count', order='descending') 
-            else:
-                sort_field = None
-            chart = alt.Chart(data).mark_bar().encode(
-                x=alt.X(column + ':O', title='Attribute values', sort=sort_field),
-                y=alt.Y('count:Q', title='Count'),
-                tooltip=[column, 'count']
-            ).interactive()
-            st.altair_chart(chart, use_container_width=True)
+    """
+    """
+    if sort == 'asc':
+        sort_field = alt.EncodingSortField('count', order='ascending')
+    elif sort == 'desc':
+        sort_field = alt.EncodingSortField('count', order='descending') 
+    else:
+        sort_field = None
+    chart = alt.Chart(data).mark_bar().encode(
+        x=alt.X(column + ':O', title='Attribute values', sort=sort_field),
+        y=alt.Y('count:Q', title='Count'),
+        tooltip=[column, 'count']
+    ).interactive()
+    st.altair_chart(chart, use_container_width=True)
             
-def print_statistics_by_attribute(statistics):    
+def print_statistics_by_attribute(statistics):
+    """
+    """
     for stat in statistics:
         st.subheader(stat[0])
         st.write('Average: ', stat[1])
@@ -74,6 +66,8 @@ def print_statistics_by_attribute(statistics):
             st.dataframe(stat[4])
 
 def correlation_matrix(df, label):
+    """
+    """
     corr_matrix = pd.DataFrame()
     columns_id = df.filter(regex='_id$').columns.tolist()
     columns_not_id = [col for col in df.columns if col not in columns_id]
@@ -86,7 +80,7 @@ def correlation_matrix(df, label):
     if st.button("Generate correlation matrix", key='button_'+label) and selected_columns:
         with st.spinner("Generating correlation matrix..."):
             merged_df_selected = df[selected_columns].copy()
-            # Categorize non-numeric columns using label encoding
+            # Categorize non-numeric columns using label encoding:
             for col in merged_df_selected.select_dtypes(exclude=[np.number]):
                 merged_df_selected[col], _ = merged_df_selected[col].factorize()            
             corr_matrix = merged_df_selected.corr(method=method)     

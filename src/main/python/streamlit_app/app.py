@@ -626,42 +626,18 @@ elif general_option == 'Analysis an existing dataset':
     is_context = st.sidebar.checkbox('With context', value=True)
     
     if is_analysis == 'Data visualization':
-        user_df = pd.DataFrame()
-        item_df = pd.DataFrame()
-        context_df = pd.DataFrame()
-        rating_df = pd.DataFrame()
-
         if is_context:
             tab1, tab2, tab3, tab4, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Contexts', 'Ratings'])
         else:
-            tab1, tab2, tab3, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Ratings'])                
-        
+            tab1, tab2, tab3, tab5 = st.tabs(['Upload dataset', 'Users', 'Items', 'Ratings'])                        
         # Upload dataset tab:
         with tab1:
-            option = st.selectbox('Choose between uploading multiple files or a single file:', ('Multiple files', 'Single file'))
-            if option == 'Multiple files':
-                user_df = util.load_uicr_file(file_type='user')
-                item_df = util.load_uicr_file(file_type='item')
-                context_df = util.load_uicr_file(file_type='context')
-                rating_df = util.load_uicr_file(file_type='rating')               
-            elif option == 'Single file':
-                data = {} #Dictionary with the dataframes
-                data_file = st.file_uploader("Select the single file", type="csv")
-                separator = st.text_input("Enter the separator for your single file (default is '	')", "	")
-                if data_file is not None:
-                    if not separator:
-                        st.error('Please provide a separator.')
-                    else:
-                        try:
-                            df = pd.read_csv(data_file, sep=separator)
-                            st.dataframe(df.head())                            
-                            user_df = util.create_dataframe('user', df)
-                            item_df = util.create_dataframe('item', df)
-                            rating_df = util.create_dataframe('rating', df)
-                            if is_context:
-                                context_df = util.create_dataframe('context', df)
-                        except Exception as e:
-                            st.error(f"An error occurred while reading the file: {str(e)}")
+            # Uploading a dataset:
+            user_df = util.load_one_file(file_type='user')
+            item_df = util.load_one_file(file_type='item')
+            if is_context:
+                context_df = util.load_one_file(file_type='context')
+            rating_df = util.load_one_file(file_type='rating')              
         # Users tab:
         with tab2:
             if not user_df.empty:
@@ -1059,7 +1035,6 @@ elif general_option == 'Analysis an existing dataset':
         #                     data['context'] = create_dataframe('context', df)
         #             except Exception as e:
         #                 st.error(f"An error occurred while reading the file: {str(e)}")
-
     elif is_analysis == 'Extend dataset':
         st.write('TODO')
     elif is_analysis == 'Recalculate ratings':
