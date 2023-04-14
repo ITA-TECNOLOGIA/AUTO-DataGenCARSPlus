@@ -57,8 +57,9 @@ class ExtractStatisticsRating(ExtractStatistics):
         number_ratings_by_user_df['percentage_ratings'] = number_ratings_by_user_df['count_ratings'].apply(lambda x: (x*100)/self.get_number_ratings())
         percentage_ratings_by_user_df = number_ratings_by_user_df[['user_id', 'percentage_ratings']]
         # Round the float column to two decimal places:
-        percentage_ratings_by_user_df['percentage_ratings'] = percentage_ratings_by_user_df['percentage_ratings'].round(2)
-        return percentage_ratings_by_user_df
+        df = percentage_ratings_by_user_df.copy()
+        df['percentage_ratings'] = df['percentage_ratings'].round(2)
+        return df
     
     def get_avg_ratings_by_user(self):
         """

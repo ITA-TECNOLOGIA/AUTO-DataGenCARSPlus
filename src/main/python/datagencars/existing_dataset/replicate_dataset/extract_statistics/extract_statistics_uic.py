@@ -63,12 +63,12 @@ class ExtractStatisticsUIC(ExtractStatistics):
         :return: The standard deviation of possible values by attribute in a file.
         """
         # replace non-numeric values with NaN
-        df = self.df.apply(pd.to_numeric, errors='coerce')
+        df_aux = self.df.apply(pd.to_numeric, errors='coerce')
         # calculate standard deviation by column
-        std_by_column_serie = self.df.std()        
+        std_by_column_serie = df_aux.std() # self.df.std()        
         # check for columns containing only non-numeric values and set the average to NaN
-        for col in df.columns:
-            if df[col].isna().all():
+        for col in df_aux.columns:
+            if df_aux[col].isna().all():
                 std_by_column_serie[col] = np.nan        
         # Convert the Series to a DataFrame and reset the index:
         sd_possible_values_df = std_by_column_serie.to_frame().reset_index(drop=True)
