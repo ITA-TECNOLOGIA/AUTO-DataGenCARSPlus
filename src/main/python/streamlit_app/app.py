@@ -194,9 +194,9 @@ if general_option == 'Generate a synthetic dataset':
                             input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(position))                            
                         input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
                         input_parameter_list = input_parameter_df.astype(str).values.tolist()
-                        print(input_parameter_text_area)
+                        # print(input_parameter_text_area)
                         for place in input_parameter_list:   
-                            print(place)
+                            # print(place)
                             # Construct the API endpoint URL
                             if place[1] == '':
                                 url = f"https://nominatim.openstreetmap.org/search?q={place[0]}&format=json&limit=1000"
@@ -205,7 +205,7 @@ if general_option == 'Generate a synthetic dataset':
 
                             # Send a GET request to the API endpoint
                             response = requests.get(url).json()
-                            print(response)
+                            # print(response)
 
                             # If more than one result, return the first one
                             location = response[0]
@@ -228,7 +228,7 @@ if general_option == 'Generate a synthetic dataset':
                                     #print(location)
                                     name = str(location2['display_name'].split(',')[0])
                                     if name.lower() == place[0].lower():
-                                        print('IF')
+                                        # print('IF')
                                         street = location2['address']['road'] 
                                         try:
                                             number = location2['address']['house_number']
@@ -241,9 +241,9 @@ if general_option == 'Generate a synthetic dataset':
                                         item_info.append(lat)
                                         item_info.append(lon)
                                         places_list.append(item_info)
-                                        print(places_list)
+                                        # print(places_list)
                                         places_str = places_str + item_info[0] + ', ' + item_info[1] + ', ' + item_info[2] + ', ' + str(item_info[3]) + ', ' + str(item_info[4]) + '\n'
-                                        print(places_str)
+                                        # print(places_str)
                                 except Exception as ex:
                                     print(ex)
                                     pass
