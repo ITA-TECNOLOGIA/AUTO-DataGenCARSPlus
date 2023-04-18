@@ -194,9 +194,9 @@ if general_option == 'Generate a synthetic dataset':
                             input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(position))                            
                         input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
                         input_parameter_list = input_parameter_df.astype(str).values.tolist()
-                        print(input_parameter_text_area)
+                        # print(input_parameter_text_area)
                         for place in input_parameter_list:   
-                            print(place)
+                            # print(place)
                             # Construct the API endpoint URL
                             if place[1] == '':
                                 url = f"https://nominatim.openstreetmap.org/search?q={place[0]}&format=json&limit=1000"
@@ -205,7 +205,7 @@ if general_option == 'Generate a synthetic dataset':
 
                             # Send a GET request to the API endpoint
                             response = requests.get(url).json()
-                            print(response)
+                            # print(response)
 
                             # If more than one result, return the first one
                             location = response[0]
@@ -228,7 +228,7 @@ if general_option == 'Generate a synthetic dataset':
                                     #print(location)
                                     name = str(location2['display_name'].split(',')[0])
                                     if name.lower() == place[0].lower():
-                                        print('IF')
+                                        # print('IF')
                                         street = location2['address']['road'] 
                                         try:
                                             number = location2['address']['house_number']
@@ -241,9 +241,9 @@ if general_option == 'Generate a synthetic dataset':
                                         item_info.append(lat)
                                         item_info.append(lon)
                                         places_list.append(item_info)
-                                        print(places_list)
+                                        # print(places_list)
                                         places_str = places_str + item_info[0] + ', ' + item_info[1] + ', ' + item_info[2] + ', ' + str(item_info[3]) + ', ' + str(item_info[4]) + '\n'
-                                        print(places_str)
+                                        # print(places_str)
                                 except Exception as ex:
                                     print(ex)
                                     pass
@@ -724,8 +724,7 @@ if general_option == 'Generate a synthetic dataset':
                                 print('Synthetic data generation has finished.')   
                                 my_bar.progress(100, 'Synthetic data generation has finished.')    
             else:
-                st.warning('Before generating data ensure all files are correctly generated.')                 
-               
+                st.warning('Before generating data ensure all files are correctly generated.')               
 
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
@@ -740,10 +739,14 @@ elif general_option == 'Analysis an existing dataset':
         with tab1:
             # Uploading a dataset:
             user_df = util.load_one_file(file_type='user')
+            st.session_state["user"] = user_df
             item_df = util.load_one_file(file_type='item')
+            st.session_state["item"] = item_df
             if is_context:
                 context_df = util.load_one_file(file_type='context')
-            rating_df = util.load_one_file(file_type='rating')              
+                st.session_state["context"] = context_df
+            rating_df = util.load_one_file(file_type='rating')
+            st.session_state["rating"] = rating_df
         # Users tab:
         with tab2:
             if not user_df.empty:
@@ -877,6 +880,7 @@ elif general_option == 'Analysis an existing dataset':
                         table4 = extract_statistics_context.get_attributes_and_ranges()
                         st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
                         # Showing one figure by attribute:
+                        st.header("Analysis by attribute")                        
                         col1, col2 = st.columns(2)
                         with col1:
                             context_attribute_list = context_df.columns.tolist()
@@ -1195,6 +1199,7 @@ elif general_option == 'Analysis an existing dataset':
                             )
                 else:
                     st.write("No categorical columns found.")
+
 elif general_option == 'Evaluation of a dataset':
     def select_params(algorithm):
         if algorithm == "SVD":
@@ -1647,21 +1652,14 @@ elif general_option == 'Evaluation of a dataset':
             if "results" in st.session_state:
                 results_df = st.session_state["results"]
                 st.subheader("Detailed results")
-
                 st.dataframe(results_df)
-                st.download_button(
-                    label="Download results",
-                    data=results_df.to_csv(index=False),
-                    file_name="results.csv",
-                    mime="text/csv"
-                )
-
+                link_item = f'<a href="data:file/csv;base64,{base64.b64encode(results_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download results</a>'
+                st.markdown(link_item, unsafe_allow_html=True)
                 st.header("Evaluation Results")
                 st.subheader("Algorithm evaluation results")
                 algorithms = results_df["Algorithm"].unique()
                 algorithm = st.selectbox("Select an algorithm to plot", algorithms)
                 visualize_results_algo(results_df, algorithm)
-
                 st.subheader("Metric evaluation results")
                 metrics = results_df.columns[2:]
                 metric = st.selectbox("Select a metric to plot", metrics)
