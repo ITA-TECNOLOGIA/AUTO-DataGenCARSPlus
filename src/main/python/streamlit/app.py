@@ -24,7 +24,7 @@ from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_s
 import datagencars.existing_dataset.label_encoding as label_encoding
 import datagencars.existing_dataset.mapping_categorization as mapping_categorization
 import datagencars.existing_dataset.binary_ratings as binary_ratings
-from geopy.geocoders import Nominatim
+import requests
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -40,7 +40,7 @@ with col1:
     # Title:
     st.title('AUTO-DataGenCARS')
     # Description:
-    st.write('DataGenCARS is a complete Java-based synthetic dataset generator for the evaluation of Context-Aware Recommendation Systems (CARS) to obtain the required datasets for any type of scenario desired.')
+    st.write('DataGenCARS is a complete Python-based synthetic dataset generator for the evaluation of Context-Aware Recommendation Systems (CARS) to obtain the required datasets for any type of scenario desired.')
 with col2:    
     # Icon:
     st.image(image=config.AUTO_DATAGENCARS_ICON, use_column_width=False, output_format="auto") # width=200, 
@@ -188,25 +188,67 @@ if general_option == 'Generate a synthetic dataset':
                     if address_complete_type == 'Search Address':
                         places_list = []
                         places_str = 'street,number,zp,latitude,longitude\n'
-                        geolocator = Nominatim(user_agent="autodatagencars")
-                        input_parameter_text_area = ip_text_area.text_area(label='Introduce place_name to search address or list [name1,name2,...], keeping header: place', value='place', key='address_ip_text_area_'+str(position))   
+                        input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value='place, zipcode', key='address_ip_text_area_'+str(position))   
                         if import_file := st.file_uploader(label='Import place_name list, keeping header: place', key='import_file'+str(position)):                            
-                            input_parameter_text_area = ip_text_area.text_area(label='Introduce place_name to search address or list [name1,name2,...], keeping header: place', value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(position))                            
-                            input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
-                            input_parameter_list = input_parameter_df.astype(str).values.tolist()
-                            for place_name in input_parameter_list:   
-                                location = geolocator.geocode(place_name[0]) 
-                                if location == None:
-                                    st.write(str(place_name[0]) +' not found.')
-                                else:
-                                    item_info = []
-                                    item_info.append(location.address.split(", ")[0])
-                                    item_info.append(location.address.split(", ")[1].split(" ")[0])
-                                    item_info.append(location.address.split(", ")[-2].split(" ")[-1])
-                                    item_info.append(location.latitude)
-                                    item_info.append(location.longitude)
-                                    places_list.append(item_info)
-                                    places_str = places_str + item_info[0] + ', ' + item_info[1] + ', ' + item_info[2] + ', ' + str(item_info[3]) + ', ' + str(item_info[4]) + '\n'
+                            input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(position))                            
+                        input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
+                        input_parameter_list = input_parameter_df.astype(str).values.tolist()
+                        print(input_parameter_text_area)
+                        for place in input_parameter_list:   
+                            print(place)
+                            # Construct the API endpoint URL
+                            if place[1] == '':
+                                url = f"https://nominatim.openstreetmap.org/search?q={place[0]}&format=json&limit=1000"
+                            else:
+                                url = f"https://nominatim.openstreetmap.org/search?q={place[0]}, {place[1]}&format=json&limit=1000"
+
+                            # Send a GET request to the API endpoint
+                            response = requests.get(url).json()
+                            print(response)
+
+                            # If more than one result, return the first one
+                            location = response[0]
+
+                            # Extract the latitude and longitude coordinates from the first result
+                            lat = location['lat']
+                            lon = location['lon']
+
+                            url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
+                            response = requests.get(url)
+                            # Extract the JSON response as a dictionary
+                            location2 = response.json()
+                            #print(location2)
+                            if location2 == None:
+                                st.write(str(place[0]) +' not found.')
+                            else:
+                                item_info=[]
+                                try:
+                                    #zp = location2['address']['postcode']
+                                    #print(location)
+                                    name = str(location2['display_name'].split(',')[0])
+                                    if name.lower() == place[0].lower():
+                                        print('IF')
+                                        street = location2['address']['road'] 
+                                        try:
+                                            number = location2['address']['house_number']
+                                        except: 
+                                            number = 'S/N'
+                                        zp = location2['address']['postcode']
+                                        item_info.append(street)
+                                        item_info.append(number)
+                                        item_info.append(zp)
+                                        item_info.append(lat)
+                                        item_info.append(lon)
+                                        places_list.append(item_info)
+                                        print(places_list)
+                                        places_str = places_str + item_info[0] + ', ' + item_info[1] + ', ' + item_info[2] + ', ' + str(item_info[3]) + ', ' + str(item_info[4]) + '\n'
+                                        print(places_str)
+                                except Exception as ex:
+                                    print(ex)
+                                    pass
+                        
+                        ip_text_area_2 = st.empty()
+                        input_parameter_text_area_2 = ip_text_area_2.text_area(label='Address values generated', value=places_str, key='address_ip_text_area_2_'+str(position))   
                         value += 'input_parameter_attribute_'+str(position)+'='+str(places_list)+'\n'            
                         input_parameter_text_area = places_str
                     # Buttons: export and import values  

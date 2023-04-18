@@ -1,0 +1,88 @@
+{"workflows" : [
+    {"workflow_name": "Generate_user_profile", 
+     "nodes" : [
+        {"node_name": "Start", 
+         "optional" : "False"}, 
+         {"node_name": "Generate_user_profile", 
+         "optional" : "False"}, 
+         {"node_name": "End", 
+         "optional" : "False"}
+     ], 
+     "arrows" : [
+        {"init_node": "Start", 
+         "end_node": "Generate_user_profile", 
+         "label": "[I,C,R]"},
+         {"init_node": "Generate_user_profile", 
+         "end_node": "End", 
+         "label": "[UP]"}
+     ],
+     "legend":[
+        {"short_name": "I", 
+         "description": "item.csv"},
+        {"short_name": "C", 
+         "description": "context.csv"},
+        {"short_name": "R", 
+         "description": "rating.csv"},
+        {"short_name": "UP", 
+         "description": "user_profile.csv"}
+     ]
+    }, 
+    {"workflow_name": "Replicate_dataset", 
+     "nodes" : [
+        {"node_name": "Start", 
+         "optional" : "False"}, 
+         {"node_name": "Generate_user_profile", 
+         "optional" : "False"}, 
+         {"node_name": "Replicate_dataset", 
+         "optional" : "False"}, 
+         {"node_name": "Replace_NULLs_values", 
+         "optional" : "True"}, 
+         {"node_name": "Extract_statistics", 
+         "optional" : "False"}, 
+         {"node_name": "End", 
+         "optional" : "False"}
+     ], 
+     "arrows" : [
+        {"init_node": "Start", 
+         "end_node": "Generate_user_profile",
+         "label": "[I,C,R]"},
+         {"init_node": "Start", 
+          "end_node": "Extract_statistics",
+          "label": "[U,I,C,R]"},
+         {"init_node": "Start", 
+         "end_node": "Replace_NULLs_values",
+         "label": "[I,C]"}, 
+         {"init_node": "Replace_NULLs_values", 
+         "end_node": "Extract_statistics",
+         "label": "[I,C]"}, 
+         {"init_node": "Replace_NULLs_values", 
+         "end_node": "End",
+         "label": "[I,C]"}, 
+         {"init_node": "Extract_statistics", 
+         "end_node": "Generate_user_profile",
+         "label": "[I,C,R]"}, 
+         {"init_node": "Generate_user_profile", 
+         "end_node": "End",
+         "label": "[UP]"}, 
+         {"init_node": "Generate_user_profile", 
+         "end_node": "Replicate_dataset", 
+         "label": "[UP]"},
+         {"init_node": "Replicate_dataset", 
+         "end_node": "End",
+         "label": "[U,I,C,R]"}
+     ],
+     "legend":[
+        {"short_name": "I", 
+         "description": "item.csv"},
+        {"short_name": "C", 
+         "description": "context.csv"},
+        {"short_name": "R", 
+         "description": "rating.csv"},
+        {"short_name": "UP", 
+         "description": "user_profile.csv"},
+        {"short_name": "U", 
+         "description": "user.csv"}
+     ]
+    }
+]
+}
