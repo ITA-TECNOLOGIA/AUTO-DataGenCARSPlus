@@ -724,8 +724,7 @@ if general_option == 'Generate a synthetic dataset':
                                 print('Synthetic data generation has finished.')   
                                 my_bar.progress(100, 'Synthetic data generation has finished.')    
             else:
-                st.warning('Before generating data ensure all files are correctly generated.')                 
-               
+                st.warning('Before generating data ensure all files are correctly generated.')               
 
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
@@ -740,10 +739,14 @@ elif general_option == 'Analysis an existing dataset':
         with tab1:
             # Uploading a dataset:
             user_df = util.load_one_file(file_type='user')
+            st.session_state["user"] = user_df
             item_df = util.load_one_file(file_type='item')
+            st.session_state["item"] = item_df
             if is_context:
                 context_df = util.load_one_file(file_type='context')
-            rating_df = util.load_one_file(file_type='rating')              
+                st.session_state["context"] = context_df
+            rating_df = util.load_one_file(file_type='rating')
+            st.session_state["rating"] = rating_df
         # Users tab:
         with tab2:
             if not user_df.empty:
@@ -1195,6 +1198,7 @@ elif general_option == 'Analysis an existing dataset':
                             )
                 else:
                     st.write("No categorical columns found.")
+
 elif general_option == 'Evaluation of a dataset':
     def select_params(algorithm):
         if algorithm == "SVD":
