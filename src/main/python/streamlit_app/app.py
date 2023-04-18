@@ -725,6 +725,7 @@ if general_option == 'Generate a synthetic dataset':
                                 my_bar.progress(100, 'Synthetic data generation has finished.')    
             else:
                 st.warning('Before generating data ensure all files are correctly generated.')                 
+               
 
 elif general_option == 'Analysis an existing dataset':
     is_analysis = st.sidebar.radio(label='Analysis an existing dataset', options=['Data visualization', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
