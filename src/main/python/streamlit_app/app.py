@@ -880,6 +880,7 @@ elif general_option == 'Analysis an existing dataset':
                         table4 = extract_statistics_context.get_attributes_and_ranges()
                         st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
                         # Showing one figure by attribute:
+                        st.header("Analysis by attribute")                        
                         col1, col2 = st.columns(2)
                         with col1:
                             context_attribute_list = context_df.columns.tolist()
