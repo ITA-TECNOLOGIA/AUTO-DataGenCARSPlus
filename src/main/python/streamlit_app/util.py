@@ -8,7 +8,6 @@ import pyarrow as pa
 def load_one_file(file_type):
     """
     """
-    # pd.options.io.pandas_arrow_dtype = True
     df = pd.DataFrame()    
     with st.expander(f"Upload your {file_type}.csv file"):
         separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ';')", ";")
@@ -29,23 +28,11 @@ def load_one_file(file_type):
                     elif "context" in col.lower() and "id" in col.lower():
                         column_names[i] = "context_id"
                 try:                    
-                    df = pd.read_csv(uploaded_file, sep=separator, names=column_names) # df['column_name'] = df['column_name'].astype('string')     
+                    df = pd.read_csv(uploaded_file, sep=separator, names=column_names)                             
                     st.dataframe(df.head())
                 except Exception as e:
                     st.error(f"An error occurred while reading the {file_type} file: {str(e)}")
                     df = None
-                # # convert the DataFrame to an Arrow Table
-                # df = pd.read_csv(uploaded_file, sep=separator, names=column_names)
-                # # convert the DataFrame to an Arrow Table
-                # try:
-                #     table = pa.Table.from_pandas(df)
-                # except pa.ArrowInvalid as e:
-                #     # print(f"Serialization of DataFrame to Arrow Table was unsuccessful due to: {e}")
-                #     # print("Applying automatic fixes for column types to make the DataFrame Arrow-compatible.")
-                #     df = df.infer_objects()
-                #     table = pa.Table.from_pandas(df)
-                # # display the Arrow Table in a streamlit app
-                # st.write(table.to_pandas())
     return df
 
 def plot_column_attributes_count(data, column, sort):

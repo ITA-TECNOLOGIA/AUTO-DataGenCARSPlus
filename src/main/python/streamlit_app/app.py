@@ -38,12 +38,12 @@ st.markdown("""---""")
 col1, col2 = st.columns(2)
 with col1:
     # Title:
-    st.title('AUTO-DataGenCARS')
+    st.header('AUTO-DataGenCARS')
     # Description:
-    st.write('DataGenCARS is a complete Java-based synthetic dataset generator for the evaluation of Context-Aware Recommendation Systems (CARS) to obtain the required datasets for any type of scenario desired.')
+    st.write('It is a complete Python-based synthetic dataset generator for the evaluation of Context-Aware Recommendation Systems (CARS) to obtain the required datasets for any type of scenario desired.')
 with col2:    
     # Icon:
-    st.image(image=config.AUTO_DATAGENCARS_ICON, use_column_width=False, output_format="auto") # width=200, 
+    st.image(image=config.AUTO_DATAGENCARS_ICON, use_column_width=False, output_format="auto", width=180) # width=200, 
 st.markdown("""---""")
 
 # Tool bar:
