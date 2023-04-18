@@ -51,7 +51,7 @@ class AccessUserProfile():
         '''
         attribute_rating_vector = []
         # Determining the rating by attribute, by using he line through of the two points:
-        for idx, weight_importance in enumerate(weight_vector):            
+        for idx, weight_importance in enumerate(weight_vector):        
             # Getting importance and weight values:
             weight_importance_list = str(weight_importance).split('|')
             importance_rank = None
@@ -73,13 +73,12 @@ class AccessUserProfile():
                         attribute_rating_aux = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
                         sum_attribute_rating += attribute_rating_aux
                     attribute_rating = sum_attribute_rating/len(attribute_value_list[idx])
+                elif attribute_value_list[idx]: #not np.isnan(attribute_value_list[idx]):
+                    # Calculating attribute_rating of "y" for one point (x,y) in the line:                              
+                    position_array = attribute_possible_value_list[idx].index(attribute_value_list[idx])
+                    attribute_rating = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
                 else:
-                    if not np.isnan(attribute_value_list[idx]):
-                        # Calculating attribute_rating of "y" for one point (x,y) in the line:                              
-                        position_array = attribute_possible_value_list[idx].index(attribute_value_list[idx])
-                        attribute_rating = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
-                    else:
-                        attribute_rating = 0
+                    attribute_rating = 0
             else:
                 # If the attribute is not relevant for the user (weight=0 without label (+) or (-)):                            
                 attribute_rating = 0

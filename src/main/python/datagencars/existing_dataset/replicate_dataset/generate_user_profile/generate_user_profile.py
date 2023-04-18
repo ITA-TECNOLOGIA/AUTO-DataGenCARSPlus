@@ -187,19 +187,19 @@ class GenerateUserProfile:
         return lsmr(A, b)
 
 
-# item_df:
-item_path = 'resources/dataset_sts/item.csv'
-item_df = pd.read_csv(item_path, encoding='utf-8', index_col=False, sep=';')
+# # item_df:
+# item_path = 'resources/dataset_sts/item.csv'
+# item_df = pd.read_csv(item_path, encoding='utf-8', index_col=False, sep=';')
 
-# context_df:
-context_path = 'resources/dataset_sts/context.csv'
-context_df = pd.read_csv(context_path, encoding='utf-8', index_col=False, sep=';')
+# # context_df:
+# context_path = 'resources/dataset_sts/context.csv'
+# context_df = pd.read_csv(context_path, encoding='utf-8', index_col=False, sep=';')
 
-# rating_df:
-rating_path = 'resources/dataset_sts/ratings.csv'
-ratings_df = pd.read_csv(rating_path, encoding='utf-8', index_col=False, sep=';')
+# # rating_df:
+# rating_path = 'resources/dataset_sts/ratings.csv'
+# ratings_df = pd.read_csv(rating_path, encoding='utf-8', index_col=False, sep=';')
 
-gup = GenerateUserProfile(ratings_df, item_df, context_df)
-user_profile_df = gup.generate_user_profile()
-print(user_profile_df.shape)
-user_profile_df.to_csv('resources/dataset_sts/user_profile.csv', sep=',', index=False, index_label='index')
+# gup = GenerateUserProfile(ratings_df, item_df, context_df)
+# user_profile_df = gup.generate_user_profile()
+# print(user_profile_df.shape)
+# user_profile_df.to_csv('resources/dataset_sts/user_profile.csv', sep=',', index=False, index_label='index')

@@ -181,9 +181,9 @@ class GeneratorRatingFile:
         # Contexts:
         if with_context:
             # Sorting and returning a rating_df by user_id and item_id.
-            rating_df = rating_df.sort_values(by=['user_id, item_id', 'context_id'], ascending=True, na_position='first')
+            rating_df = rating_df.sort_values(by=['user_id', 'item_id', 'context_id'], ascending=True, na_position='first')
         else:
-            rating_df = rating_df.sort_values(by=['user_id, item_id'], ascending=True, na_position='first')
+            rating_df = rating_df.sort_values(by=['user_id', 'item_id'], ascending=True, na_position='first')
         # Reseting index.
         rating_df.reset_index(drop=True, inplace=True)
         return rating_df

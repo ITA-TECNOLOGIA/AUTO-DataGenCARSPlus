@@ -1652,21 +1652,14 @@ elif general_option == 'Evaluation of a dataset':
             if "results" in st.session_state:
                 results_df = st.session_state["results"]
                 st.subheader("Detailed results")
-
                 st.dataframe(results_df)
-                st.download_button(
-                    label="Download results",
-                    data=results_df.to_csv(index=False),
-                    file_name="results.csv",
-                    mime="text/csv"
-                )
-
+                link_item = f'<a href="data:file/csv;base64,{base64.b64encode(results_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download results</a>'
+                st.markdown(link_item, unsafe_allow_html=True)
                 st.header("Evaluation Results")
                 st.subheader("Algorithm evaluation results")
                 algorithms = results_df["Algorithm"].unique()
                 algorithm = st.selectbox("Select an algorithm to plot", algorithms)
                 visualize_results_algo(results_df, algorithm)
-
                 st.subheader("Metric evaluation results")
                 metrics = results_df.columns[2:]
                 metric = st.selectbox("Select a metric to plot", metrics)
