@@ -1,11 +1,11 @@
 from graphviz import Digraph
 import json
-import config as cf
+
 
 class Workflow:
 
     def __init__(self):
-        self.workflow_file_description = cf.WORKFLOWS_DESCRIPTION
+        self.workflow_file_description = 'src/main/python/streamlit_app/workflow/workflows.json'
 
     def create_workflow(self):
         with open(self.workflow_file_description, 'r') as f:
@@ -36,11 +36,13 @@ class Workflow:
                 legend_text = '''<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">
                                             <TR><TD PORT="files" COLSPAN="2">Files</TD></TR>'''
                 for legend_item in workflow['legend']:
-                    key = legend_item['short_name']
-                    value = legend_item['description']
-                    legend_text = legend_text + '''<TR><TD ALIGN="LEFT">'''+key+'''</TD><TD ALIGN="LEFT">'''+value+'''</TD></TR>'''
+                    legend_text = legend_text + '''<TR><TD ALIGN="LEFT">'''+legend_item+'''</TD><TD ALIGN="LEFT">'''+data["legend"][legend_item]+'''</TD></TR>'''
                 legend_text = legend_text + '''</TABLE>>'''
                 legend.node('legend', legend_text)
 
             # Save the graph as a PNG file
             g.render()
+
+if __name__ == "__main__":
+    wf = Workflow()
+    wf.create_workflow()

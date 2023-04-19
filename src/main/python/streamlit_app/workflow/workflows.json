@@ -16,16 +16,7 @@
          "end_node": "End", 
          "label": "[UP]"}
      ],
-     "legend":[
-        {"short_name": "I", 
-         "description": "item.csv"},
-        {"short_name": "C", 
-         "description": "context.csv"},
-        {"short_name": "R", 
-         "description": "rating.csv"},
-        {"short_name": "UP", 
-         "description": "user_profile.csv"}
-     ]
+     "legend":["I", "C", "R", "UP"]
     }, 
     {"workflow_name": "Replicate_dataset", 
      "nodes" : [
@@ -71,18 +62,19 @@
          "end_node": "End",
          "label": "[U,I,C,R]"}
      ],
-     "legend":[
-        {"short_name": "I", 
-         "description": "item.csv"},
-        {"short_name": "C", 
-         "description": "context.csv"},
-        {"short_name": "R", 
-         "description": "rating.csv"},
-        {"short_name": "UP", 
-         "description": "user_profile.csv"},
-        {"short_name": "U", 
-         "description": "user.csv"}
-     ]
+     "legend":["I", "C", "R", "UP", "U"]
     }
-]
+],
+"legend": {
+    "GC": "generation_config.conf",
+    "US": "user_schema.conf",
+    "UP": "user_profile.csv",
+    "U": "user.csv",
+    "IS": "item_schema.conf",
+    "IP": "item_profile.conf",
+    "I": "item.csv",
+    "CS": "context_schema.conf",
+    "C": "context.csv",
+    "R": "ratings.csv"
+}
 }
