@@ -43,7 +43,7 @@ services:
     restart: always
     #volumes:
     #  - ./data/count/data/output/RSU/:/app/data/:ro
-    command: ["streamlit", "run", "./streamlit/app.py"]
+    command: ["streamlit", "run", "./streamlit_app/app.py"]
     networks:
       - backend
     logging: *logging
