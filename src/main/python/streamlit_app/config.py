@@ -1,7 +1,7 @@
 
 # Images or icons:
-AUTO_DATAGENCARS_ICON =  'resources/icons/logo-datagencars.jpg' #
-USER_PROFILE =  'resources/icons/user_profile.png' #
+AUTO_DATAGENCARS_ICON =  'resources/icons/logo-datagencars.jpg'
+USER_PROFILE =  'resources/icons/user_profile.png'
 
 # JSON files
 WORKFLOWS_DESCRIPTION = 'streamlit/workflow/workflows.json'

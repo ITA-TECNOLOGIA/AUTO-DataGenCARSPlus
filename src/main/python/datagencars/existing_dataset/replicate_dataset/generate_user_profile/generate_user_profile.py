@@ -24,26 +24,32 @@ class GenerateUserProfile:
         [R] ratings.csv
     '''
 
-    def __init__(self, ratings_df, item_df, context_df=None):        
+    def __init__(self, rating_df, item_df, context_df=None):        
         # Item file: item.csv        
         self.access_item = AccessItem(item_df)
-        # Context file (optional): context.csv   
-        self.is_context = False
-        if not context_df.empty:                   
-            self.access_context = AccessContext(context_df)      
-            self.is_context = True    
+        # Context file (optional): context.csv           
+        if context_df is None:
+            context_df = pd.DataFrame()
+            self.is_context = False
+        elif not context_df.empty:
+            self.access_context = AccessContext(context_df)   
+            self.is_context = True         
         # Rating file: ratings.csv        
-        self.access_rating = AccessRating(ratings_df)  
+        self.access_rating = AccessRating(rating_df)  
         self.calculate_att_rating = CalculateAttributeRating()      
 
     def generate_user_profile(self):
         '''
         Gets the value of the weights (or unknown variables) by using LSMR method to generate the user profile.
+        :return: A dataframe with the automatically generated user profile.
         '''
         # Getting attribute names:
         item_attribute_name_list = self.access_item.get_item_attribute_list()
-        context_attribute_name_list = self.access_context.get_context_attribute_list()
-        attribute_list = ['user_profile_id']+item_attribute_name_list+context_attribute_name_list+['other'] # , 'sum'
+        if self.is_context:
+            context_attribute_name_list = self.access_context.get_context_attribute_list()
+            attribute_list = ['user_profile_id']+item_attribute_name_list+context_attribute_name_list+['other']
+        else:
+            attribute_list = ['user_profile_id']+item_attribute_name_list+['other']        
         # Initialiting user profile dataframe:
         user_profile_df = pd.DataFrame(columns=attribute_list)
         # Getting user ID list:
@@ -79,8 +85,11 @@ class GenerateUserProfile:
             user_profile_df.loc[len(user_profile_df)] = [int(user_id)]+rank_weigth_list # +[sum(weight_vector)]
         return user_profile_df
 
-    def get_a_matrix(self, user_id):    # sourcery skip: extract-duplicate-method, extract-method, for-append-to-extend, inline-immediately-returned-variable, low-code-quality, merge-list-append, move-assign-in-block, use-dictionary-union
+    def get_a_matrix(self, user_id):  # sourcery skip: extract-duplicate-method, extract-method, for-append-to-extend, inline-immediately-returned-variable, low-code-quality, merge-list-append, move-assign-in-block, use-dictionary-union
         '''
+        Gets the matrix A.
+        :param user_id: The user ID of the current user.
+        :return: The matrix A.
         '''        
         # Analysing ITEMS by user_id:
         # Getting item attibute names:
@@ -126,8 +135,11 @@ class GenerateUserProfile:
 
         # Calculating attribute ratings:        
         minimum_value_rating = self.access_rating.get_min_rating()
-        maximum_value_rating = self.access_rating.get_max_rating()
-        attribute_list = item_attribute_name_list+context_attribute_name_list
+        maximum_value_rating = self.access_rating.get_max_rating()      
+        if self.is_context:  
+            attribute_list = item_attribute_name_list+context_attribute_name_list
+        else:
+            attribute_list = item_attribute_name_list
         # Initializing the matrix A[MxN]:
         a_matrix = pd.DataFrame(columns=attribute_list)        
         rank_vector = []
