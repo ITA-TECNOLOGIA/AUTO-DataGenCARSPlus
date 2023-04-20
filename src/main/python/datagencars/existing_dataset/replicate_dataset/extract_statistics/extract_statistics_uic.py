@@ -190,23 +190,3 @@ class ExtractStatisticsUIC(ExtractStatistics):
                 percentage['Percentage'] = percentage['Percentage'].map('{:,.2%}'.format) # Show the Percentage column as 4.35% instead of 0.0435
                 statistics.append([column, round(self.df[column].mean(), 2), round(self.df[column].std(), 2), frequency, percentage])
         return statistics
-    
-
-# # user_df:
-# user_path = 'resources/data_schema/user.csv' # 'resources/dataset_sts/user.csv'
-# user_df = pd.read_csv(user_path, encoding='utf-8', index_col=False, sep=',')
-
-# # item_df:
-# item_path = 'resources/dataset_sts/item.csv'
-# item_df = pd.read_csv(item_path, encoding='utf-8', index_col=False, sep=';')
-
-# # context_df:
-# context_path = 'resources/dataset_sts/context.csv'
-# context_df = pd.read_csv(context_path, encoding='utf-8', index_col=False, sep=';')
-
-# extract = ExtractStatisticsUIC(context_df)
-# print(extract.get_number_id())
-# print(extract.get_number_possible_values_by_attribute())
-# print(extract.get_avg_possible_values_by_attribute())
-# print(extract.get_sd_possible_values_by_attribute())
-# print(extract.get_frequency_possible_values_by_attribute())

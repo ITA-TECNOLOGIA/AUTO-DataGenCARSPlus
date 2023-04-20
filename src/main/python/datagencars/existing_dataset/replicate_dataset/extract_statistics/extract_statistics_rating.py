@@ -71,7 +71,7 @@ class ExtractStatisticsRating(ExtractStatistics):
         df = avg_ratings_serie.to_frame().reset_index()
         # Rename the columns:
         df.columns = ['user_id', 'avg_ratings']
-        return df
+        return df.round(2)
     
     def get_variance_ratings_by_user(self):
         """
@@ -316,32 +316,3 @@ class ExtractStatisticsRating(ExtractStatistics):
         # Drop two columns in place:
         merged_df.drop(columns=['not_repeated_contexts', 'count_ratings', 'repeated_contexts'], inplace=True)
         return merged_df    
-        
-
-# # rating_df:
-# rating_path = 'resources/dataset_sts/ratings.csv'
-# ratings_df = pd.read_csv(rating_path, encoding='utf-8', index_col=False, sep=';')
-
-# extract = ExtractStatisticsRating(rating_df=ratings_df)
-
-# print(extract.get_number_ratings())
-# print(extract.get_number_users())
-# print(extract.get_number_items())
-# print(extract.get_number_contexts())
-# print(extract.get_number_ratings_by_user())
-# print(extract.get_percentage_ratings_by_user())
-# print(extract.get_avg_ratings_by_user())
-
-# print(extract.get_avg_items_by_user())
-# print(extract.get_variance_items_by_user())
-# print(extract.get_variance_items_by_user())
-# print(extract.get_sd_items_by_user())
-# print(extract.get_number_not_repeated_items_by_user())
-# print(extract.get_percentage_not_repeated_items_by_user())
-# print(extract.get_percentage_repeated_items_by_user())
-# print(extract.get_avg_contexts_by_user())
-# print(extract.get_variance_contexts_by_user())
-# print(extract.get_sd_contexts_by_user())
-# print(extract.get_number_not_repeated_contexts_by_user())
-# print(extract.get_percentage_not_repeated_contexts_by_user())
-# print(extract.get_percentage_repeated_contexts_by_user())
