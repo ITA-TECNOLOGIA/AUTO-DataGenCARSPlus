@@ -39,7 +39,7 @@ with col1:
     st.write('It is a complete Python-based synthetic dataset generator for the evaluation of Context-Aware Recommendation Systems (CARS) to obtain the required datasets for any type of scenario desired.')
 with col2:    
     # Icon:
-    st.image(image=config.AUTO_DATAGENCARS_ICON, use_column_width=False, output_format="auto", width=180) # width=200, 
+    st.image(image=config.AUTO_DATAGENCARS_ICON, use_column_width=False, output_format="auto", width=180)
 st.markdown("""---""")
 
 # Tool bar:
@@ -50,6 +50,8 @@ with_context = st.sidebar.checkbox('With context', value=True)
 if general_option == 'Generate a synthetic dataset':
     feedback_option_radio = st.sidebar.radio(label='Select a type of user feedback:', options=['Explicit ratings', 'Implicit ratings'])
     if feedback_option_radio == 'Explicit ratings':
+        with st.expander(label='Help information'):
+            st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")
         inconsistent = False
         # AVAILABLE TABS:
         if with_context:
@@ -451,6 +453,8 @@ if general_option == 'Generate a synthetic dataset':
                 else:
                     st.warning('Before generating data ensure all files are correctly generated.')
     elif feedback_option_radio == 'Implicit ratings':
+        with st.expander(label='Help information'):
+            st.markdown("""Workflow to generate a completely-synthetic dataset based on implicit ratings.""")
         st.write('DOING: Marcos')
 
 ####### Pre-process a dataset #######
@@ -458,27 +462,44 @@ elif general_option == 'Pre-process a dataset':
     st.header('Load dataset')
     # WORKFLOWS:
     is_preprocess = st.sidebar.radio(label='Select a workflow:', options=['Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
-    if is_preprocess == 'Replicate dataset':        
+    if is_preprocess == 'Replicate dataset':
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
         else:
             user_df, item_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
-        st.header('Apply workflow: Replicate dataset')        
-        st.write('DOING: MC')
+        st.header('Apply workflow: Replicate dataset')                
+        with st.expander(label='Help information'):
+            st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
+        with st.expander(label='Workflow'):
+            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto")      
+        st.write('DOING: MC')        
     elif is_preprocess == 'Extend dataset':        
-        rating_df = util.load_dataset(file_type_list=['rating'])
+        _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
         st.header('Apply workflow: Extend dataset')
+        with st.expander(label='Help information'):
+            st.markdown("""Workflow to generate a dataset of ratings incrementally.""")
+        with st.expander(label='Workflow'):
+            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto")
         st.write('TODO')
     elif is_preprocess == 'Recalculate ratings':          
-        rating_df = util.load_dataset(file_type_list=['rating'])
+        _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
         st.header('Apply workflow: Recalculate ratings')
-        st.write('TODO')
+        with st.expander(label='Help information'):
+            st.markdown("""TODO""")
+        with st.expander(label='Workflow'):
+            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto") 
+        st.write('TODO')        
     elif is_preprocess == 'Replace NULL values':
-        if with_context:
-            user_df, item_df, context_df = util.load_dataset(file_type_list=['user', 'item', 'context'])
-        else:
-            user_df, item_df = util.load_dataset(file_type_list=['user', 'item'])
+        file_selectibox = st.selectbox(label='Files available:', options=['item', 'context'])
+        if file_selectibox == 'item':
+            _, df, _, _ = util.load_dataset(file_type_list=['item'])
+        elif file_selectibox == 'context':
+            _, _, df, _ = util.load_dataset(file_type_list=['context'])
         st.header('Apply workflow: Replace NULL values')
+        with st.expander(label='Help information'):
+            st.markdown("""Workflow to complete unknown contextual information.""")
+        with st.expander(label='Workflow'):
+            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto") 
         st.write('TODO')
     elif is_preprocess == 'Generate user profile':
         if with_context:
@@ -486,13 +507,19 @@ elif general_option == 'Pre-process a dataset':
         else:
             user_df, item_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
         st.header('Apply workflow: Generate user profile')
+        with st.expander(label='Help information'):
+            st.markdown("""TODO""")
+        with st.expander(label='Workflow'):
+            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto") 
         st.write('TODO')
     elif is_preprocess == 'Ratings to binary':        
-        user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['rating'])
+        _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
         st.header('Apply workflow: Ratings to binary')        
         with st.expander(label='Help information'):
             st.markdown("""This tool allows you to convert ratings to binary values. For example, if you have a dataset with ratings from ```1``` to ```5```, you can convert them to ```0``` and ```1```, where ```0``` represents a negative rating and ```1``` a positive one.""")
             st.markdown("""The tool will convert the ratings to binary values using a threshold. For example, if you set the threshold to ```3```, all ratings equal or greater than ```3``` will be converted to ```1```, and all ratings less than ```3``` will be converted to ```0```.""")                    
+        with st.expander(label='Workflow'):
+            st.image(image='resources/workflows/ratings_to_binary.png', use_column_width=False, output_format="auto")
         if not rating_df.empty:            
             min_rating = rating_df['rating'].min()
             max_rating = rating_df['rating'].max()
@@ -512,13 +539,15 @@ elif general_option == 'Pre-process a dataset':
             _, df, _, _ = util.load_dataset(file_type_list=['item'])
         elif file_selectibox == 'context':
             _, _, df, _ = util.load_dataset(file_type_list=['context'])   
-        st.header('Apply workflow: Mapping categorization')      
+        st.header('Apply workflow: Mapping categorization')
+        with st.expander(label='Workflow'):
+            st.image(image='resources/workflows/mapping_categorization.png', use_column_width=False, output_format="auto")         
         option = st.radio(options=['From numerical to categorical', 'From categorical to numerical'], label='Select an option')
         if not df.empty:
             if option == 'From numerical to categorical':
                 st.header("Category Encoding")
                 with st.expander(label='Help information'):
-                    st.markdown("""This tool allows you to convert numerical values to categorical values. For example, you can convert the numerical values of a rating scale to the corresponding categories of the scale (e.g. ```1-2 -> Bad```, ```3-4 -> Average```, ```5 -> Good```).""")
+                    st.markdown("""This workflow allows you to convert numerical values to categorical values. For example, you can convert the numerical values of a rating scale to the corresponding categories of the scale (e.g. ```1-2 -> Bad```, ```3-4 -> Average```, ```5 -> Good```).""")
                     st.markdown("""To use this tool, you need to upload a CSV file containing the numerical values to convert. Then, you need to specify the mapping for each numerical value. For example, you could to specify the following mappings: numerical values ```1```, ```2```, ```3```, ```4``` and ```5``` to categories ```Bad```, ```Average```, ```Good```, ```Very good``` and ```Excellent```, respectively.""")
                     st.markdown("""Objects and datetime values are ignored.""")                    
                 include_nan = st.checkbox("Include NaN values")
@@ -534,47 +563,37 @@ elif general_option == 'Pre-process a dataset':
                                     col_mappings[val] = np.nan
                                     continue
                                 else:
-                                    mapping = st.text_input(f"Mapping for {val}", "", key=f"{col}_{val}")
+                                    mapping = st.text_input(f"Mapping for {val}", "", key=f"{col}_{val}")                                    
                                     if mapping:
                                         col_mappings[val] = mapping
                                     else:
-                                        col_mappings[val] = val
-                            mappings[col] = col_mappings
-                # st.markdown("""---""")
-                # st.write("Mappings:", mappings)
+                                        col_mappings[val] = val                                
+                            st.write(col_mappings)
+                            mappings[col] = col_mappings                
                 if st.button("Generate mapping"):
                     categorized_df = mapping_categorization.apply_mappings(df, mappings)
                     st.header("Categorized dataset:")
                     st.dataframe(categorized_df)
-                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(categorized_df.to_csv(index=False).encode()).decode()}" download="file.csv">Download</a>'
+                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(categorized_df.to_csv(index=False).encode()).decode()}" download="{file_selectibox}.csv">Download</a>'
                     st.markdown(link_rating, unsafe_allow_html=True)
             else:
                 st.header("Label Encoding")
                 with st.expander(label='Help information'):
-                    st.write("Label encoding is a process of transforming categorical values into numerical values.")
-                    st.write("For example, you can convert the categorical values of a rating scale to the corresponding numerical values of the scale (e.g. Bad -> 1, Average -> 2, Good -> 3, Very good -> 4, Excellent -> 5).")
-                    st.write("To use this tool, you need to upload a CSV file containing the categorical values to convert. Then, you need to select the categorical columns to convert.")
-                st.write("Upload a CSV file containing categorical values to convert them to numerical values.")
-                uploaded_file = st.file_uploader("Choose a file")
-                delimiter = st.text_input("CSV delimiter", '\t')
-                if uploaded_file is not None:
-                    df = pd.read_csv(uploaded_file, delimiter=delimiter)
-                    categorical_cols = [col for col in df.select_dtypes(exclude=[np.number]) if 'id' not in col.lower()]
-                    if categorical_cols:
-                        selected_cols = st.multiselect("Select categorical columns to label encode:", categorical_cols)
-                        if selected_cols:
-                            if st.button("Encode categorical columns"):
-                                encoded_df = label_encoding.apply_label_encoder(df, selected_cols)
-                                st.header("Encoded dataset:")
-                                st.write(encoded_df)
-                                st.download_button(
-                                    label="Download encoded dataset CSV",
-                                    data=encoded_df.to_csv(index=False),
-                                    file_name=Path(uploaded_file.name).stem + "_encoded.csv",
-                                    mime='text/csv'
-                                )
-                    else:
-                        st.write("No categorical columns found.")
+                    st.markdown("""This workflow allows you to convert categorical values into numerical values.""")
+                    st.markdown("""For example, you can convert the categorical values of a rating scale to the corresponding numerical values of the scale (e.g. ```Bad -> 1```, ```Average -> 2```, ```Good -> 3```, ```Very good -> 4```, ```Excellent -> 5```).""")
+                    st.markdown("""To use this tool, you need to upload a CSV file containing the categorical values to convert. Then, you need to select the categorical columns to convert.""")
+                categorical_cols = [col for col in df.select_dtypes(exclude=[np.number]) if 'id' not in col.lower()]
+                if categorical_cols:
+                    selected_cols = st.multiselect("Select categorical columns to label encode:", categorical_cols)
+                    if selected_cols:
+                        if st.button("Encode categorical columns"):
+                            encoded_df = label_encoding.apply_label_encoder(df, selected_cols)
+                            st.header("Encoded dataset:")
+                            st.write(encoded_df)
+                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(encoded_df.to_csv(index=False).encode()).decode()}" download="{file_selectibox}.csv">Download</a>'
+                            st.markdown(link_rating, unsafe_allow_html=True)
+                else:
+                    st.write("No categorical columns found.")
         else:
             st.warning("The user, item or context file has not been uploaded.")
 
