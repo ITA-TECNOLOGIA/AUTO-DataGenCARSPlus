@@ -2,5 +2,6 @@
 cert/
 .vscode/*
 *
+!./resources/
 !./src/main/python
 !./src/main/nginx

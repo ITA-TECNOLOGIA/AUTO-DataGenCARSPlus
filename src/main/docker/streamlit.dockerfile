@@ -17,6 +17,7 @@ COPY ./src/main/python/requeriments.txt /home/worker/
 RUN pip3 install --user -r /home/worker/requeriments.txt
 
 COPY --chown=worker ./src/main/python/datagencars/ /home/worker/datagencars/
+COPY --chown=worker ./resources/ /home/worker/resources/
 COPY --chown=worker ./src/main/python/streamlit_app/ /home/worker/streamlit_app/
 #RUN mkdir -p /home/worker/.streamlit/
 COPY ./src/main/python/streamlit_app/config.toml  /home/worker/.streamlit/
