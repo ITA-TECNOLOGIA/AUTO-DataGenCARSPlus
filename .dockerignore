@@ -1,0 +1,6 @@
+.git/
+cert/
+.vscode/*
+*
+!./src/main/python
+!./src/main/nginx

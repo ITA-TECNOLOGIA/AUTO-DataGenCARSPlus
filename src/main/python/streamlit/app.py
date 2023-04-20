@@ -14,7 +14,7 @@ import console
 import base64
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
-sys.path.append("src/main/python")
+#sys.path.append("src/main/python")
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
 import datagencars.evaluation.sklearn_helpers as sklearn_helpers
 import datagencars.evaluation.rs_surprise.evaluation as evaluation

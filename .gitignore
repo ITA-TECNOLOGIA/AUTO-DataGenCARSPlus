@@ -2,3 +2,4 @@ resources/*
 *.pyc
 *.csv
 app_tmp.py
+cert/
