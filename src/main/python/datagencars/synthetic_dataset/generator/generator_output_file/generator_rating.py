@@ -225,8 +225,8 @@ class GeneratorRatingFile:
                 weight = float(weight_importance)
             sum_weight += weight
             rating += weight * attribute_rating_vector[idx]
-        if sum_weight != 1:
-            raise ValueError('The weights not sum 1. You must verify the user_profile.csv file.')
+        if sum_weight != 1:            
+            raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
         return round(rating, 2)
     
     def get_attribute_value_and_possible_value_list(self, atribute_name_list, item_id, context_id=None):
