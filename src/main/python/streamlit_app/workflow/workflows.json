@@ -88,10 +88,12 @@
      "arrows" : [
         {"init_node": "BEGIN", 
          "end_node": "Transform To Binary Ratings", 
-         "label": "[R, Threshold]"},
+         "label": "[R, Threshold]", 
+         "optional": "False"},
          {"init_node": "Transform To Binary Ratings", 
          "end_node": "END", 
-         "label": "[R]"}
+         "label": "[R]",
+         "optional": "False"}
      ],
      "legend":["R", "Threshold"]
     }, 
