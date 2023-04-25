@@ -46,7 +46,9 @@ class ReplicateDataset:
 
     def replicate_dataset(self, percentage_rating_variation):
         """
-
+        Replicates an original dataset.
+        :param percentage_rating_variation: The percentage of rating variation.
+        :return: A replicated dataset.
         """
         rating_df = None
         if self.rating_statistics.get_number_contexts() != 0:
@@ -79,7 +81,6 @@ class ReplicateDataset:
             new_item_id_list = np.clip(new_item_id_list, minimum_item_id, maximum_item_id)  # clip values to min and max
             new_item_id_list = new_item_id_list.round().astype(int)  # round to integers            
             item_id_list.extend(new_item_id_list.tolist())
-
             # Contexts:
             if self.rating_statistics.get_number_contexts() != 0:
                 original_context_id_list = self.access_rating.get_context_id_list_from_user(user_id=user_id)
@@ -92,8 +93,7 @@ class ReplicateDataset:
                 new_context_id_list = np.random.normal(loc=avg_contexts, scale=std_contexts, size=len(original_context_id_list))
                 new_context_id_list = np.clip(new_context_id_list, minimum_context_id, maximum_context_id)  # clip values to min and max
                 new_context_id_list = new_context_id_list.round().astype(int)  # round to integers
-                context_id_list.extend(new_context_id_list.tolist())
-                
+                context_id_list.extend(new_context_id_list.tolist())                
             # Ratings:
             user_rating_list = []                        
             for idx, item_id in enumerate(new_item_id_list):                
@@ -108,18 +108,15 @@ class ReplicateDataset:
                 # Modifying the generated rating.                
                 modified_rating = self.modify_rating_by_user_expectations(rating, k, user_rating_list, min_rating_value, max_rating_value, percentage_rating_variation)
                 rating_list.append(modified_rating)
-
             # Users:
             k = len(original_item_id_list)
-            user_id_list.extend([int(user_id)] * k)                    
-        
+            user_id_list.extend([int(user_id)] * k)                            
         if rating_df.empty:
             rating_df['user_id'] = user_id_list
             rating_df['item_id'] = item_id_list
             if self.rating_statistics.get_number_contexts() != 0:
                 rating_df['context_id'] = context_id_list
-            rating_df['rating'] = rating_list
-           
+            rating_df['rating'] = rating_list           
         # Contexts:
         if self.rating_statistics.get_number_contexts() != 0:
             # Sorting and returning a rating_df by user_id and item_id.

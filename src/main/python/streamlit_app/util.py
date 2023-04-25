@@ -11,6 +11,11 @@ import requests
 
 ####### Generate a synthetic dataset #######
 def generate_schema_file(schema_type):
+    """
+    Generates schema files from streamlit.
+    :param schema_type: The schema type (user_schema.conf, item_schema.conf, context_schema.conf or generation_config.conf).
+    :return: A text area with the generated schema.
+    """
     value = ''
     schema_text_area = ''     
     attribute_name = ''   
@@ -271,10 +276,15 @@ def generate_schema_file(schema_type):
 ####### Pre-process a dataset #######
 # LOAD DATASET:
 def load_dataset(file_type_list):
+    """
+    Loads dataset files (user.csv, item.csv, context.csv and rating.csv) in dataframes.
+    :param file_type_list: List of file types.
+    :return: Dataframes related to the uploaded dataset files.
+    """
     user_df = pd.DataFrame()
     item_df = pd.DataFrame()
     context_df = pd.DataFrame()
-    rating_df = pd.DataFrame()
+    rating_df = pd.DataFrame()    
     # Uploading a dataset:
     if 'user' in file_type_list:
         user_df = load_one_file(file_type='user')
@@ -288,6 +298,9 @@ def load_dataset(file_type_list):
 
 def load_one_file(file_type):
     """
+    Load only one file (user.csv, item.csv, context.csv or rating.csv).
+    :param file_type: The file type.
+    :return: A dataframe with the information of uploaded file.
     """
     df = pd.DataFrame()    
     with st.expander(f"Upload your {file_type}.csv file"):
@@ -324,6 +337,11 @@ def load_one_file(file_type):
 # Generate user profile:
 # Ratings to binary:
 def ratings_to_binary(df, threshold=3):
+    """
+    Transforms ratings based on value ranges (e.g., [1-5]) to binary values (e.g., [0-1]), by applying a threshold.
+    :param threshold: The rating threshold.
+    :return: A dataframe with binary ratings.
+    """
     def binary_rating(rating):
         return 1 if rating >= threshold else 0
     df['rating'] = df['rating'].apply(binary_rating)
@@ -334,6 +352,10 @@ def ratings_to_binary(df, threshold=3):
 # VISUALIZATION:
 def plot_column_attributes_count(data, column, sort):
     """
+    Plot the number of values by attribute.
+    :param data: TODO
+    :param column: TODO
+    :param sort: TODO
     """
     if sort == 'asc':
         sort_field = alt.EncodingSortField('count', order='ascending')
@@ -350,6 +372,8 @@ def plot_column_attributes_count(data, column, sort):
             
 def print_statistics_by_attribute(statistics):
     """
+    Prints in streamlit statistics by attribute.
+    :param statistics: The statistics.    
     """
     for stat in statistics:
         st.subheader(stat[0])
@@ -365,6 +389,10 @@ def print_statistics_by_attribute(statistics):
 
 def correlation_matrix(df, label):
     """
+    Determines the correlation matrix.
+    :param label: TODO
+    :param df: TODO
+    :return: A correlation matrix.
     """
     corr_matrix = pd.DataFrame()
     columns_id = df.filter(regex='_id$').columns.tolist()
@@ -386,6 +414,11 @@ def correlation_matrix(df, label):
 
 # EVALUATION:
 def select_params(algorithm):
+    """
+    Select parameters of the specified recommendation algorithm.
+    :param algorithm: A recommendation algorithm.
+    :return: A dictionary with parameter values.
+    """
     if algorithm == "SVD":
         return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_svd'),
                 "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svd'),
@@ -429,6 +462,11 @@ def select_params(algorithm):
                 "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_all_svdpp')}
 
 def select_params_contextual(algorithm):
+    """
+    Select parameters of the specified context-aware recommendation algorithm.
+    :param algorithm: A context-aware recommendation algorithm.
+    :return: A dictionary with parameter values.
+    """
     if algorithm == "KNeighborsClassifier":
         return {"n_neighbors": st.sidebar.number_input("Number of neighbors", min_value=1, max_value=1000, value=5, key='n_neighbors_kneighborsclassifier'),
                 "weights": st.sidebar.selectbox("Weights", ["uniform", "distance"], key='weights_kneighborsclassifier'),
@@ -488,6 +526,11 @@ def select_params_contextual(algorithm):
                 "l2_regularization": st.sidebar.slider("L2 regularization", 0.0, 1.0, 0.0, step=0.01)}
     
 def select_split_strategy(strategy):
+    """
+    Select parameters related to the specified split strategy (RS).
+    :param strategy: The split strategy.
+    :return: A dictionary with parameter values. 
+    """
     if strategy == "KFold":
         return {"n_splits": st.sidebar.number_input("Number of splits", min_value=2, max_value=10, value=5),
                 "shuffle": st.sidebar.checkbox("Shuffle?")}
@@ -508,6 +551,11 @@ def select_split_strategy(strategy):
                 "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
     
 def select_split_strategy_contextual(strategy):
+    """
+    Select parameters related to the specified split strategy (CARS).
+    :param strategy: The split strategy.
+    :return: A dictionary with parameter values. 
+    """
     if strategy == "ShuffleSplit":
         n_splits = st.sidebar.number_input("Number of splits", 2, 100, 10)
         train_size = st.sidebar.slider("Train set size (0.0 to 1.0)", 0.01, 1.0, 0.2, step=0.01)
@@ -530,6 +578,14 @@ def select_split_strategy_contextual(strategy):
         return {"test_size": test_size, "random_state": random_state}
 
 def evaluate_algo(algo_list, strategy_instance, metrics, data):
+    """
+    Evaluates recommendation algorithms.
+    :param algo_list: Recommendation algorithms.
+    :param strategy_instance: Split strategy.
+    :param metrics: The evaluation metrics.
+    :param data: Recommendation data.
+    :return: A dataframe with evaluation results.
+    """
     results = []
     fold_counter = {} # To count the number of folds for each algorithm
     fold_count = 0
@@ -572,6 +628,11 @@ def evaluate_algo(algo_list, strategy_instance, metrics, data):
     return df
 
 def visualize_results_algo(df, algorithm):
+    """
+    Visualize results of the evaluation of recommendation algorithms.    
+    :param df: A dataframe with evaluation results.
+    :param algorithm: Recommendation algorithms.    
+    """
     # Show the mean of the metrics for the chosen algorithm
     df_algo = df[df["Algorithm"] == algorithm].drop(["Algorithm", "Fold"], axis=1)
     st.write(f"**{algorithm}** mean")
@@ -598,6 +659,11 @@ def visualize_results_algo(df, algorithm):
     st.plotly_chart(fig, use_container_width=True)
 
 def visualize_results_metric(df, metric):
+    """
+    Visualize evaluation results by metric.    
+    :param df: A dataframe with evaluation results.
+    :param metric: The metric.
+    """
     # Show the mean of the metrics for each algorithm
     df_metric = df.pivot(index="Fold", columns="Algorithm", values=metric)
     st.write(f"**{metric} mean**")
@@ -623,6 +689,13 @@ def visualize_results_metric(df, metric):
     st.plotly_chart(fig, use_container_width=True)
 
 def visualize_results_combined(df, algorithms, metrics, selected_users):
+    """
+    Visualize a line graphic with evaluation results considering different algorithms, metrics and users.
+    :param df: A dataframe with evaluation results.
+    :param algorithms: List of recommendation algorithms.
+    :param metrics: List of metrics.
+    :param selected_users: List of users.
+    """
     filtered_df = df[df["Algorithm"].isin(algorithms)]
     fig = go.Figure()
     for algorithm in algorithms:
@@ -662,6 +735,13 @@ def visualize_results_combined(df, algorithms, metrics, selected_users):
     st.plotly_chart(fig, use_container_width=True)
 
 def visualize_mean_evaluation_bar(df, algorithms, metrics, selected_users):
+    """
+    Visualize a bar graphic with evaluation results considering different algorithms, metrics and users.
+    :param df: A dataframe with evaluation results.
+    :param algorithms: List of recommendation algorithms.
+    :param metrics: List of metrics.
+    :param selected_users: List of users.
+    """
     fig = go.Figure()
     for algorithm in algorithms:
         filtered_df = df[df["Algorithm"] == algorithm]
@@ -696,12 +776,23 @@ def visualize_mean_evaluation_bar(df, algorithms, metrics, selected_users):
     st.plotly_chart(fig, use_container_width=True)
 
 def select_columns(df, label):
+    """
+    TODO
+    :param df: TODO
+    :param label: TODO
+    ;return: TODO
+    """
     column_names = df.columns.tolist()
     selected_columns = st.sidebar.multiselect(f'Select features ({label}):', column_names, column_names)
     if selected_columns:
         return df[selected_columns]
     
 def replace_with_none(params):
+    """
+    TODO
+    :param params: TODO
+    :return: TODO
+    """
     for key, value in params.items():
         if value == -0.5:
             params[key] = None

@@ -601,7 +601,10 @@ elif general_option == 'Pre-process a dataset':
 elif general_option == 'Analysis a dataset':
     # LOAD DATASET:
     st.header('Load dataset')
-    user_df, item_df, context_df, rating_df = util.load_dataset(with_context)
+    if with_context:
+        user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
+    else:
+        user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
     is_analysis = st.sidebar.radio(label='Select one option:', options=['Visualization', 'Evaluation'])
     # VISUALIZATION:    
     if is_analysis == 'Visualization':
