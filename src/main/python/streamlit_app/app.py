@@ -10,6 +10,8 @@ import seaborn as sns
 from pathlib import Path
 import console
 import base64
+from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
+from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
@@ -478,40 +480,175 @@ elif general_option == 'Pre-process a dataset':
         init_step = 'True'
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
+            st.session_state["context_df"] = context_df
         else:
-            user_df, item_df, _, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
-        st.header('Apply workflow: Replicate dataset')                
+            user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])      
+        st.session_state["user_df"] = user_df
+        st.session_state["item_df"] = item_df      
+        st.session_state["rating_df"] = rating_df
+
+        st.header('Apply workflow: Replicate dataset')
         with st.expander(label='Help information'):
             st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
-        with st.expander(label='Workflow'):
-            json_opt_params = {}
-            json_opt_params['CARS'] = str(with_context)
-            json_opt_params['NULLValues'] = 'True'
-            json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('ReplicateDataset', json_opt_params)
-            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
-            os.remove(path)     
-        null_values = st.checkbox("Replace NULL values", value=True)
-        if null_values:
-            json_opt_params = {}
-            json_opt_params['CARS'] = str(with_context)
-            json_opt_params['NULLValues'] = str(null_values)
-            json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('ReplicateDataset', json_opt_params)
-            image.empty()
-            image.image(image=path, use_column_width=False, output_format="auto", width=650)  
-            os.remove(path)            
-        else:
-            init_step = 'False'
-            json_opt_params = {}
-            json_opt_params['CARS'] = str(with_context)
-            json_opt_params['NULLValues'] = str(null_values)
-            json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('ReplicateDataset', json_opt_params)
-            image.empty()
-            image.image(image=path, use_column_width=False, output_format="auto", width=650)  
-            os.remove(path)  
-        st.write('DOING: MC')        
+        # with st.expander(label='Workflow'):
+        #     json_opt_params = {}
+        #     json_opt_params['CARS'] = str(with_context)
+        #     json_opt_params['NULLValues'] = 'True'
+        #     json_opt_params['init_step'] = init_step
+        #     path = wf.create_workflow('ReplicateDataset', json_opt_params)
+        #     image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+        #     os.remove(path)
+              
+        tab_preprocessing, tab_user_profile, tab_replicate  = st.tabs(['Pre-processing', 'User Profile', 'Replicate'])   
+        new_item_df = pd.DataFrame()
+        new_context_df = pd.DataFrame()
+        # PRE-PROCESSING TAB:  
+        with tab_preprocessing:
+            output = st.empty()  
+            with console.st_log(output.code):
+                null_values = st.checkbox("Do you want to replace the null values?", value=True)                
+                if null_values:
+                    # json_opt_params = {}
+                    # json_opt_params['CARS'] = str(with_context)
+                    # json_opt_params['NULLValues'] = str(null_values)
+                    # json_opt_params['init_step'] = init_step
+                    # path = wf.create_workflow('ReplicateDataset', json_opt_params)
+                    # image.empty()
+                    # image.image(image=path, use_column_width=False, output_format="auto", width=650)  
+                    # os.remove(path)                    
+                    # Pre-processs: replace null values:
+                    if with_context:
+                        if (not item_df.empty) and (not context_df.empty):                                        
+                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
+                            if st.button(label='Replace', key='button_replace_item_context'):
+                                if file_type_selectbox == 'item':
+                                    # Check if item_df has NaN values:
+                                    print(f'Checking if {file_type_selectbox}.csv has NaN values.')
+                                    if item_df.isnull().values.any():        
+                                        print(f'Replacing NaN values.')
+                                        new_item_df = pd.DataFrame() # TODO
+                                        print('The null values have been replaced.')
+                                        with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
+                                            st.dataframe(new_item_df)
+                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
+                                            st.markdown(link_rating, unsafe_allow_html=True)
+                                    else:
+                                        new_item_df = item_df.copy()
+                                        st.warning(f'The {file_type_selectbox}.csv file has no null values.')
+                                    st.session_state["item_df"] = new_item_df
+                                elif file_type_selectbox == 'context':
+                                    # Check if context_df has NaN values:
+                                    print(f'Checking if {file_type_selectbox}.csv has NaN values')
+                                    if context_df.isnull().values.any():
+                                        print(f'Replacing NaN values.')
+                                        new_context_df = pd.DataFrame() # TODO
+                                        print('The null values have been replaced.')
+                                        with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
+                                            st.dataframe(new_context_df)
+                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_context_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
+                                            st.markdown(link_rating, unsafe_allow_html=True)
+                                    else:
+                                        new_context_df = context_df.copy()
+                                        st.warning(f'The {file_type_selectbox}.csv file has no null values.')
+                                    st.session_state["context_df"] = new_context_df
+                        else:
+                            st.warning("The item and context files have not been uploaded.")
+                    else:
+                        if not item_df.empty:                                        
+                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item'])
+                            if st.button(label='Replace', key='button_replace_item'):
+                                # Check if item_df has NaN values:
+                                print(f'Checking if {file_type_selectbox}.csv has NaN values')
+                                if item_df.isnull().values.any():
+                                    print(f'Replacing NaN values.')
+                                    new_item_df = pd.DataFrame() # TODO
+                                    print('The null values have been replaced.')
+                                    with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
+                                        st.dataframe(new_item_df)
+                                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
+                                        st.markdown(link_rating, unsafe_allow_html=True)
+                                else:
+                                    new_item_df = item_df.copy()
+                                    st.warning(f'The {file_type_selectbox}.csv file has no null values.')
+                                st.session_state["item_df"] = new_item_df
+                        else:
+                            st.warning("The item file has not been uploaded.")
+                # else:
+                #     init_step = 'False'
+                #     json_opt_params = {}
+                #     json_opt_params['CARS'] = str(with_context)
+                #     json_opt_params['NULLValues'] = str(null_values)
+                #     json_opt_params['init_step'] = init_step
+                #     path = wf.create_workflow('ReplicateDataset', json_opt_params)
+                #     image.empty()
+                #     image.image(image=path, use_column_width=False, output_format="auto", width=650)
+                #     os.remove(path)                    
+        # USER PROFILE TAB:
+        with tab_user_profile:
+            output = st.empty()
+            with console.st_log(output.code):
+                # Generate user profile, by using an original dataset:
+                generate_up = None
+                user_profile_df = pd.DataFrame()                    
+                if with_context:                     
+                    # With context:
+                    if (not item_df.empty and "item_df" in st.session_state) and (not context_df.empty and "context_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):
+                        if st.button(label='Generate', key='button_generate_up_cars'):
+                            print('Automatically generating user profiles.')
+                            generate_up = GenerateUserProfile(st.session_state["rating_df"], st.session_state["item_df"], st.session_state["context_df"])
+                            user_profile_df = util.generate_up(generate_up)
+                            st.session_state["user_profile_df"] = user_profile_df
+                            print('The user profile has been generated.')                                                    
+                    else:
+                        st.warning("The item, context and rating files have not been uploaded.")
+                else:            
+                    # Without context:                        
+                    if (not item_df.empty and "item_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state): 
+                        if st.button(label='Generate', key='button_generate_up_rs'):
+                            print('Automatically generating user profiles.')
+                            generate_up = GenerateUserProfile(st.session_state["rating_df"], st.session_state["item_df"])
+                            user_profile_df = util.generate_up(generate_up)
+                            st.session_state["user_profile_df"] = user_profile_df
+                            print('The user profile has been generated.')                               
+                    else:
+                        st.warning("The item and rating files have not been uploaded.")
+        # REPLICATE TAB:
+        with tab_replicate:
+                output = st.empty()
+                with console.st_log(output.code):
+                    if with_context:
+                        percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+                        # With context:
+                        if (not item_df.empty and "item_df" in st.session_state) and (not context_df.empty and "context_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):
+                            if st.button(label='Replicate', key='button_replicate_cars'):
+                                print('Extracting statistics.')
+                                print('Replicating the rating.csv file.')
+                                replicate_cars = ReplicateDataset( st.session_state["rating_df"],  st.session_state["user_profile_df"], st.session_state["item_df"], st.session_state["context_df"])                            
+                                new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)
+                                st.session_state["rating_df"] = new_rating_df
+                                with st.expander(label='Show the replicated file: rating.csv'):
+                                    st.dataframe(st.session_state["rating_df"])
+                                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(st.session_state["rating_df"].to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
+                                    st.markdown(link_rating, unsafe_allow_html=True) 
+                                print('Replicated data generation has finished.')
+                        else:
+                            st.warning("The item, context and rating files have not been uploaded.")
+                    else:            
+                        # Without context:                        
+                        if (not item_df.empty and "item_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):                             
+                            if st.button(label='Replicate', key='button_replicate_rs'):
+                                print('Extracting statistics.')
+                                print('Replicating the rating.csv file.')
+                                replicate_cars = ReplicateDataset( st.session_state["rating_df"],  st.session_state["user_profile_df"], st.session_state["item_df"])                                
+                                new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)
+                                st.session_state["rating_df"] = new_rating_df
+                                with st.expander(label='Show the replicated file: rating.csv'):
+                                    st.dataframe(st.session_state["rating_df"])
+                                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(st.session_state["rating_df"].to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
+                                    st.markdown(link_rating, unsafe_allow_html=True)
+                                print('Replicated data generation has finished.')
+                        else:
+                            st.warning("The item and rating files have not been uploaded.")
     elif is_preprocess == 'Extend dataset':        
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
         st.header('Apply workflow: Extend dataset')
@@ -680,7 +817,10 @@ elif general_option == 'Pre-process a dataset':
 elif general_option == 'Analysis a dataset':
     # LOAD DATASET:
     st.header('Load dataset')
-    user_df, item_df, context_df, rating_df = util.load_dataset(with_context)
+    if with_context:
+        user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
+    else:
+        user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
     is_analysis = st.sidebar.radio(label='Select one option:', options=['Visualization', 'Evaluation'])
     # VISUALIZATION:    
     if is_analysis == 'Visualization':

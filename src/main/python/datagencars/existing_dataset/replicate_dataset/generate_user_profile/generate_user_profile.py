@@ -27,7 +27,8 @@ class GenerateUserProfile:
     def __init__(self, rating_df, item_df, context_df=None):        
         # Item file: item.csv        
         self.access_item = AccessItem(item_df)
-        # Context file (optional): context.csv           
+        # Context file (optional): context.csv   
+        self.is_context = None
         if context_df is None:
             context_df = pd.DataFrame()
             self.is_context = False

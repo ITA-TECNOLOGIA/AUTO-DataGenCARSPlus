@@ -41,7 +41,7 @@ class TestAccessUser(unittest.TestCase):
         '''
         Gets the value of the weights (or unknown variables) by using LSMR method to generate the user profile. For RS.
         '''         
-        user_profile_df = self.__generate_rs.generate_user_profile()
+        user_profile_df = self.__generate_rs.generate_user_profile()        
         logging.info(f'user_profile_df: {user_profile_df.shape[0]}')         
         self.assertEqual(user_profile_df.shape[0], 325)
 
