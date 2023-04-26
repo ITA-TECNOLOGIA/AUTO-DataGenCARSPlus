@@ -10,6 +10,8 @@ import seaborn as sns
 from pathlib import Path
 import console
 import base64
+from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
+from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
@@ -466,13 +468,97 @@ elif general_option == 'Pre-process a dataset':
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
         else:
-            user_df, item_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
-        st.header('Apply workflow: Replicate dataset')                
+            user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])            
+        st.header('Apply workflow: Replicate dataset')
         with st.expander(label='Help information'):
             st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
         with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto")      
-        st.write('DOING: MC')        
+            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto")     
+
+        output = st.empty()
+        with console.st_log(output.code):
+            # Pre-processs: replace null values:
+            print('Checking null values.')
+            if with_context:
+                if (not user_df.empty) and (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):                    
+                    if st.checkbox('In the item or context file there are null values. Do you want to replace the null values?', value=True):
+                        file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
+            else:
+                if (not user_df.empty) and (not item_df.empty) and (not rating_df.empty):                    
+                    if st.checkbox('In the item or context file there are null values. Do you want to replace the null values?', value=True):
+                        file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
+
+            
+            if (item_df.isnull().values.any()) or (context_df.isnull().values.any()):
+                # Pre-processs: replace null values:
+                if st.checkbox('In the item or context file there are null values. Do you want to replace the null values?', value=True):
+                    if with_context:
+                        if (not user_df.empty) and (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
+                        else:
+                            st.warning("The user, item, context and rating files have not been uploaded.")
+                    else:
+                        if (not user_df.empty) and (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
+                        else:
+                            st.warning("The user, item, context and rating files have not been uploaded.")
+                            
+
+
+
+            # if with_context:
+            #     if (not user_df.empty) and (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                    # # Check if a dataframe has NaN values:
+                    # print('Checking null values.')
+                    # if (item_df.isnull().values.any()) or (context_df.isnull().values.any()):
+                    #     # Pre-processs: replace null values:
+                    #     if st.checkbox('In the item or context file there are null values. Do you want to replace the null values?', value=True):
+
+                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
+                            if st.button(label='Replace'):
+                                if file_type_selectbox == 'item':
+                                    print('Replacing null values in the item file.')                                    
+                                    item_df = pd.DataFrame()
+                                    with st.expander(label='Show replicated file: rating.csv'):
+                                        st.dataframe(context_df)
+                                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
+                                        st.markdown(link_rating, unsafe_allow_html=True)
+                                elif file_type_selectbox == 'context':
+                                    print('Replacing null values in the context file.')                                    
+                                    context_df = pd.DataFrame()      
+                                    with st.expander(label='Show replicated file: rating.csv'):
+                                        st.dataframe(context_df)
+                                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
+                                        st.markdown(link_rating, unsafe_allow_html=True)                      
+                                
+
+                    # # Generate user profile by using an original dataset:                    
+                    # if with_context:     
+                    #     # With context:       
+                    #     generate_up = GenerateUserProfile(rating_df, item_df, context_df)                        
+                    # else:            
+                    #     # Without context:
+                    #     generate_up = GenerateUserProfile(rating_df, item_df)
+                    # print('Automatically generating the user profile.')
+                    # user_profile_df = generate_up.generate_user_profile()
+                    
+                    # # Extract statistics and replicate an original dataset:
+                    # print('Extracting statistics from the original dataset.')     
+                    # if with_context:                   
+                    #     generate_dataset = ReplicateDataset(rating_df, user_profile_df, item_df, context_df)
+                    # else:           
+                    #     generate_dataset = ReplicateDataset(rating_df, user_profile_df, item_df)                                   
+                    # if st.button(label='Run', key='button_run_replicate'):
+                    #     print('Starting execution')
+                    #     print('Replicating the file rating.csv')
+                    #     percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation')
+                    #     new_rating_df = generate_dataset.replicate_dataset(percentage_rating_variation)
+                    #     with st.expander(label='Show the replicated file: rating.csv'):
+                    #         st.dataframe(new_rating_df)
+                    #     print('Replicated data generation has finished.') 
+                else:            
+                    st.warning("The user, item, context and rating files have not been uploaded.")        
+
     elif is_preprocess == 'Extend dataset':        
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
         st.header('Apply workflow: Extend dataset')
