@@ -331,6 +331,19 @@ def load_one_file(file_type):
 
 # WORKFLOW:
 # Replicate dataset:
+def generate_up(generate_up):
+    """
+    Generates user profiles (automatically).
+    :param generate_up: The constructor of the user profile generator.
+    :return: A dataframe with user profiles.
+    """
+    user_profile_df = generate_up.generate_user_profile()    
+    with st.expander(label=f'Show the generated user profile file.'):
+        st.dataframe(user_profile_df)
+        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(user_profile_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
+        st.markdown(link_rating, unsafe_allow_html=True) 
+    return user_profile_df
+
 # Extend dataset:
 # Recalculate ratings:
 # Replace NULL values:
