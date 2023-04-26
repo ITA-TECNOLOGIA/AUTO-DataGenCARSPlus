@@ -9,6 +9,7 @@ class Workflow:
         self.CARS_remove = ['C', 'CSc']
 
     def create_workflow(self, workflow_name, json_opt_params):
+        print(json_opt_params)
         with open(self.workflow_file_description, 'r') as f:
             # Load the JSON data into a Python dictionary
             data = json.load(f)
@@ -26,10 +27,16 @@ class Workflow:
                     else:
                         if node['optional'] == 'True':
                             if json_opt_params['init_step'] == 'True':
-                                g.node(node['node_name'], color = 'red', shape='rect')
+                                if node['condition'][0][0] == 'CARS':
+                                    if json_opt_params['CARS'] == 'True':
+                                        g.node(node['node_name'], color = 'red', shape='rect')
+                                else:
+                                    g.node(node['node_name'], color = 'red', shape='rect')
                             else:
                                 draw_node = True
+                                print(node['condition'])
                                 for condition in node['condition']:
+                                    print(condition)
                                     if json_opt_params[condition[0]] != condition[1]:
                                         draw_node = False
                                         break
@@ -57,7 +64,6 @@ class Workflow:
                 # Add an edge connecting the two nodes
                 arrows = workflow['arrows']
                 for arrow in arrows:
-                    print(arrow)
                     if arrow['optional'] == 'False':
                         draw_arrow = True
                     else:
@@ -70,7 +76,7 @@ class Workflow:
                         label = (arrow['label'][1:-1].split(','))
                         if 'CARS' in json_opt_params.keys() and json_opt_params['CARS'] == 'False':
                             for elem in self.CARS_remove:
-                                if elem in arrow['label']:
+                                if elem in label:
                                     label.remove(elem)
                         label_str = str(label)
                         if label_str.replace('[','').replace(']','').replace('\'','') == 'F' and json_opt_params['init_step'] == 'False':
@@ -113,8 +119,7 @@ class Workflow:
 if __name__ == "__main__":
     wf = Workflow()
     json_opt_params = {}
-    json_opt_params['CARS'] = "True"
-    json_opt_params['Num2Cat'] = "False"
-    json_opt_params['init_step'] = "False"
-    json_opt_params['file'] = "C"
-    print(wf.create_workflow('MappingToCategorization', json_opt_params))
+    json_opt_params['CARS'] = 'True'
+    json_opt_params['NULLValues'] = 'True'
+    json_opt_params['init_step'] = 'True'
+    path = wf.create_workflow('ReplicateDataset', json_opt_params)

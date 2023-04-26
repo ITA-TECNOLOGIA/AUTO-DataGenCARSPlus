@@ -20,6 +20,8 @@ import datagencars.existing_dataset.label_encoding as label_encoding
 import datagencars.existing_dataset.mapping_categorization as mapping_categorization
 import datagencars.existing_dataset.binary_ratings as binary_ratings
 from streamlit_app import util
+from workflow.graph_generate import Workflow
+import os
 sys.path.append("src/main/python")
 
 # Setting the main page:
@@ -45,13 +47,23 @@ st.markdown("""---""")
 # Tool bar:
 general_option = st.sidebar.selectbox(label='**Options available:**', options=['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis a dataset'])
 with_context = st.sidebar.checkbox('With context', value=True)
+wf = Workflow()
 
 ####### Generate a synthetic dataset #######
 if general_option == 'Generate a synthetic dataset':
+    init_step = 'True'
     feedback_option_radio = st.sidebar.radio(label='Select a type of user feedback:', options=['Explicit ratings', 'Implicit ratings'])
     if feedback_option_radio == 'Explicit ratings':
         with st.expander(label='Help information'):
             st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")
+        with st.expander(label='Workflow'):
+            json_opt_params = {}
+            json_opt_params['CARS'] = str(with_context)
+            json_opt_params['UP'] = 'Manual'
+            json_opt_params['init_step'] = init_step
+            path = wf.create_workflow('GenerateSyntheticDataset(Explicit_ratings)', json_opt_params)
+            st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)      
         inconsistent = False
         # AVAILABLE TABS:
         if with_context:
@@ -458,20 +470,47 @@ if general_option == 'Generate a synthetic dataset':
         st.write('DOING: Marcos')
 
 ####### Pre-process a dataset #######
-elif general_option == 'Pre-process a dataset':    
+elif general_option == 'Pre-process a dataset':        
     st.header('Load dataset')
     # WORKFLOWS:
     is_preprocess = st.sidebar.radio(label='Select a workflow:', options=['Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
     if is_preprocess == 'Replicate dataset':
+        init_step = 'True'
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
         else:
-            user_df, item_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
+            user_df, item_df, _, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
         st.header('Apply workflow: Replicate dataset')                
         with st.expander(label='Help information'):
             st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
         with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto")      
+            json_opt_params = {}
+            json_opt_params['CARS'] = str(with_context)
+            json_opt_params['NULLValues'] = 'True'
+            json_opt_params['init_step'] = init_step
+            path = wf.create_workflow('ReplicateDataset', json_opt_params)
+            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)     
+        null_values = st.checkbox("Replace NULL values", value=True)
+        if null_values:
+            json_opt_params = {}
+            json_opt_params['CARS'] = str(with_context)
+            json_opt_params['NULLValues'] = str(null_values)
+            json_opt_params['init_step'] = init_step
+            path = wf.create_workflow('ReplicateDataset', json_opt_params)
+            image.empty()
+            image.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)            
+        else:
+            init_step = 'False'
+            json_opt_params = {}
+            json_opt_params['CARS'] = str(with_context)
+            json_opt_params['NULLValues'] = str(null_values)
+            json_opt_params['init_step'] = init_step
+            path = wf.create_workflow('ReplicateDataset', json_opt_params)
+            image.empty()
+            image.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)  
         st.write('DOING: MC')        
     elif is_preprocess == 'Extend dataset':        
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
@@ -519,7 +558,10 @@ elif general_option == 'Pre-process a dataset':
             st.markdown("""This tool allows you to convert ratings to binary values. For example, if you have a dataset with ratings from ```1``` to ```5```, you can convert them to ```0``` and ```1```, where ```0``` represents a negative rating and ```1``` a positive one.""")
             st.markdown("""The tool will convert the ratings to binary values using a threshold. For example, if you set the threshold to ```3```, all ratings equal or greater than ```3``` will be converted to ```1```, and all ratings less than ```3``` will be converted to ```0```.""")                    
         with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/ratings_to_binary.png', use_column_width=False, output_format="auto")
+            json_opt_params = {}
+            path = wf.create_workflow('RatingsToBinary', json_opt_params)
+            st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)      
         if not rating_df.empty:            
             min_rating = rating_df['rating'].min()
             max_rating = rating_df['rating'].max()
@@ -533,18 +575,44 @@ elif general_option == 'Pre-process a dataset':
             st.warning("The rating file has not been uploaded.")
     elif is_preprocess == 'Mapping categorization':
         file_selectibox = st.selectbox(label='Files available:', options=['user', 'item', 'context'])
+        file = 'F'
+        num2cat = 'T'
+        init_step = 'True'
         if file_selectibox == 'user':
             df, _, _, _ = util.load_dataset(file_type_list=['user'])
+            file = 'U'
         elif file_selectibox == 'item':
             _, df, _, _ = util.load_dataset(file_type_list=['item'])
+            file = 'I'
         elif file_selectibox == 'context':
             _, _, df, _ = util.load_dataset(file_type_list=['context'])   
+            file = 'C'
         st.header('Apply workflow: Mapping categorization')
+        with st.expander(label='Help information'):
+            st.write('TODO')
         with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/mapping_categorization.png', use_column_width=False, output_format="auto")         
+            json_opt_params = {}
+            json_opt_params['CARS'] = str(with_context)
+            json_opt_params['Num2Cat'] = num2cat
+            json_opt_params['init_step'] = init_step
+            json_opt_params['file'] = file
+            path = wf.create_workflow('MappingToCategorization', json_opt_params)
+            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)      
         option = st.radio(options=['From numerical to categorical', 'From categorical to numerical'], label='Select an option')
         if not df.empty:
             if option == 'From numerical to categorical':
+                init_step = 'False'
+                num2cat = 'True'
+                json_opt_params = {}
+                json_opt_params['CARS'] = str(with_context)
+                json_opt_params['Num2Cat'] = num2cat
+                json_opt_params['init_step'] = init_step
+                json_opt_params['file'] = file
+                path = wf.create_workflow('MappingToCategorization', json_opt_params)
+                image.empty()
+                image.image(image=path, use_column_width=False, output_format="auto", width=600)  
+                os.remove(path)                 
                 st.header("Category Encoding")
                 with st.expander(label='Help information'):
                     st.markdown("""This workflow allows you to convert numerical values to categorical values. For example, you can convert the numerical values of a rating scale to the corresponding categories of the scale (e.g. ```1-2 -> Bad```, ```3-4 -> Average```, ```5 -> Good```).""")
@@ -577,6 +645,17 @@ elif general_option == 'Pre-process a dataset':
                     link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(categorized_df.to_csv(index=False).encode()).decode()}" download="{file_selectibox}.csv">Download</a>'
                     st.markdown(link_rating, unsafe_allow_html=True)
             else:
+                num2cat = 'False'
+                init_step = 'False'
+                json_opt_params = {}
+                json_opt_params['CARS'] = str(with_context)
+                json_opt_params['Num2Cat'] = num2cat
+                json_opt_params['init_step'] = init_step
+                json_opt_params['file'] = file
+                path = wf.create_workflow('MappingToCategorization', json_opt_params)
+                image.empty()
+                image.image(image=path, use_column_width=False, output_format="auto", width=600)  
+                os.remove(path)         
                 st.header("Label Encoding")
                 with st.expander(label='Help information'):
                     st.markdown("""This workflow allows you to convert categorical values into numerical values.""")

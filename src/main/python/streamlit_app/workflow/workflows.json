@@ -253,7 +253,7 @@
         "optional" : "False"}, 
         {"node_name": "Replace NULL Values", 
         "optional" : "True", 
-        "condition": "NULLValues"}, 
+        "condition": [["NULLValues","True"]]}, 
         {"node_name": "Generate Statistics <From original dataset>", 
         "optional" : "False"}, 
         {"node_name": "Generate User Profiles <Automatic>", 
