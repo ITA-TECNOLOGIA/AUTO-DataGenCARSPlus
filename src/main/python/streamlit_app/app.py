@@ -490,14 +490,14 @@ elif general_option == 'Pre-process a dataset':
         st.header('Apply workflow: Replicate dataset')
         with st.expander(label='Help information'):
             st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
-        # with st.expander(label='Workflow'):
-        #     json_opt_params = {}
-        #     json_opt_params['CARS'] = str(with_context)
-        #     json_opt_params['NULLValues'] = 'True'
-        #     json_opt_params['init_step'] = init_step
-        #     path = wf.create_workflow('ReplicateDataset', json_opt_params)
-        #     image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
-        #     os.remove(path)
+        with st.expander(label='Workflow'):
+            json_opt_params = {}
+            json_opt_params['CARS'] = str(with_context)
+            json_opt_params['NULLValues'] = 'True'
+            json_opt_params['init_step'] = init_step
+            path = wf.create_workflow('ReplicateDataset', json_opt_params)
+            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)
               
         tab_preprocessing, tab_user_profile, tab_replicate  = st.tabs(['Pre-processing', 'User Profile', 'Replicate'])   
         new_item_df = pd.DataFrame()
@@ -508,14 +508,14 @@ elif general_option == 'Pre-process a dataset':
             with console.st_log(output.code):
                 null_values = st.checkbox("Do you want to replace the null values?", value=True)                
                 if null_values:
-                    # json_opt_params = {}
-                    # json_opt_params['CARS'] = str(with_context)
-                    # json_opt_params['NULLValues'] = str(null_values)
-                    # json_opt_params['init_step'] = init_step
-                    # path = wf.create_workflow('ReplicateDataset', json_opt_params)
-                    # image.empty()
-                    # image.image(image=path, use_column_width=False, output_format="auto", width=650)  
-                    # os.remove(path)                    
+                    json_opt_params = {}
+                    json_opt_params['CARS'] = str(with_context)
+                    json_opt_params['NULLValues'] = str(null_values)
+                    json_opt_params['init_step'] = init_step
+                    path = wf.create_workflow('ReplicateDataset', json_opt_params)
+                    image.empty()
+                    image.image(image=path, use_column_width=False, output_format="auto", width=650)  
+                    os.remove(path)                    
                     # Pre-processs: replace null values:
                     if with_context:
                         if (not item_df.empty) and (not context_df.empty):                                        
@@ -573,16 +573,16 @@ elif general_option == 'Pre-process a dataset':
                                 st.session_state["item_df"] = new_item_df
                         else:
                             st.warning("The item file has not been uploaded.")
-                # else:
-                #     init_step = 'False'
-                #     json_opt_params = {}
-                #     json_opt_params['CARS'] = str(with_context)
-                #     json_opt_params['NULLValues'] = str(null_values)
-                #     json_opt_params['init_step'] = init_step
-                #     path = wf.create_workflow('ReplicateDataset', json_opt_params)
-                #     image.empty()
-                #     image.image(image=path, use_column_width=False, output_format="auto", width=650)
-                #     os.remove(path)                    
+                else:
+                    init_step = 'False'
+                    json_opt_params = {}
+                    json_opt_params['CARS'] = str(with_context)
+                    json_opt_params['NULLValues'] = str(null_values)
+                    json_opt_params['init_step'] = init_step
+                    path = wf.create_workflow('ReplicateDataset', json_opt_params)
+                    image.empty()
+                    image.image(image=path, use_column_width=False, output_format="auto", width=650)
+                    os.remove(path)                    
         # USER PROFILE TAB:
         with tab_user_profile:
             output = st.empty()
