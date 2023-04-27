@@ -33,8 +33,8 @@ class ExtractStatisticsRating(ExtractStatistics):
         """
         Gets the number total of contexts.
         :return: The number total of contexts.
-        """        
-        return self.df['context_id'].nunique()
+        """
+        return self.df['context_id'].nunique() if 'context_id' in self.df else 0
     
     def get_number_ratings_by_user(self):
         """
