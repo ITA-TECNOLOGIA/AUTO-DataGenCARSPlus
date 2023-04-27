@@ -616,8 +616,8 @@ elif general_option == 'Pre-process a dataset':
         with tab_replicate:
                 output = st.empty()
                 with console.st_log(output.code):
-                    if with_context:
-                        percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+                    percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+                    if with_context:                        
                         # With context:
                         if (not item_df.empty and "item_df" in st.session_state) and (not context_df.empty and "context_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):
                             if st.button(label='Replicate', key='button_replicate_cars'):
