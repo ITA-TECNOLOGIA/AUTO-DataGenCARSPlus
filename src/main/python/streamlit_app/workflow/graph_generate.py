@@ -1,11 +1,10 @@
 from graphviz import Digraph
 import json
 
-
 class Workflow:
 
-    def __init__(self):
-        self.workflow_file_description = 'src/main/python/streamlit_app/workflow/workflows.json'
+    def __init__(self,workflow_file_description ):
+        self.workflow_file_description = workflow_file_description #'src/main/python/streamlit_app/workflow/workflows.json'
         self.CARS_remove = ['C', 'CSc']
 
     def create_workflow(self, workflow_name, json_opt_params):

@@ -49,7 +49,7 @@ st.markdown("""---""")
 # Tool bar:
 general_option = st.sidebar.selectbox(label='**Options available:**', options=['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis a dataset'])
 with_context = st.sidebar.checkbox('With context', value=True)
-wf = Workflow()
+wf = Workflow( config.WORKFLOWS_DESCRIPTION)
 
 ####### Generate a synthetic dataset #######
 if general_option == 'Generate a synthetic dataset':
