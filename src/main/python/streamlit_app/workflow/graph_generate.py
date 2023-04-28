@@ -7,8 +7,7 @@ class Workflow:
         self.workflow_file_description = workflow_file_description #'src/main/python/streamlit_app/workflow/workflows.json'
         self.CARS_remove = ['C', 'CSc']
 
-    def create_workflow(self, workflow_name, json_opt_params):
-        print(json_opt_params)
+    def create_workflow(self, workflow_name, json_opt_params):        
         with open(self.workflow_file_description, 'r') as f:
             # Load the JSON data into a Python dictionary
             data = json.load(f)
@@ -32,10 +31,8 @@ class Workflow:
                                 else:
                                     g.node(node['node_name'], color = 'red', shape='rect')
                             else:
-                                draw_node = True
-                                print(node['condition'])
-                                for condition in node['condition']:
-                                    print(condition)
+                                draw_node = True                                
+                                for condition in node['condition']:                                    
                                     if json_opt_params[condition[0]] != condition[1]:
                                         draw_node = False
                                         break
