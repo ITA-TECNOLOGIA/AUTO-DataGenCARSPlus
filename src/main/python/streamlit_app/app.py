@@ -12,7 +12,7 @@ import console
 import base64
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
-from datagencars.synthetic_dataset.rating_explicit import GenerateSyntheticDatasetExplicit
+from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
 import datagencars.evaluation.sklearn_helpers as sklearn_helpers
@@ -389,7 +389,7 @@ if general_option == 'Generate a synthetic dataset':
                 button_run = st.button(label='Run', key='button_run')
             with col_stop:
                 button_stop = st.button(label='Stop', key='button_stop')        
-            generator = GenerateSyntheticDatasetExplicit(generation_config=generation_config_value)
+            generator = RatingExplicit(generation_config=generation_config_value)
             output = st.empty()
             with console.st_log(output.code):
                 if not inconsistent:
