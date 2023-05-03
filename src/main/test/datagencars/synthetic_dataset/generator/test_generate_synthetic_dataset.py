@@ -97,7 +97,6 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         # context_df:
         context_path = 'resources/data_schema/context.csv'
         context_df = pd.read_csv(context_path, encoding='utf-8', index_col=False)
-
         with_context = True
         rating_file = self.__generator.generate_rating_file(user_df, user_profile_df, item_df, item_schema, with_context, context_df, context_schema)
         logging.info(f'rating_file: {rating_file}')

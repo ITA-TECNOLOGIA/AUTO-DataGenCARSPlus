@@ -1,4 +1,15 @@
-resources/*
 *.pyc
 *.csv
 app_tmp.py
+resources/data_schema/context_schema.conf
+resources/data_schema/generation_config.conf
+resources/data_schema/item_profile.conf
+resources/data_schema/item_schema.conf
+resources/data_schema/user_schema.conf
+resources/workflows/mapping_categorization.png
+resources/workflows/ratings_to_binary.png
+resources/workflows/workflow.png
+resources/dataset_sts/README.txt
+cert/
+resources/dataset_ml_100k/README.txt
+resources/dataset_ml_27m/README.txt

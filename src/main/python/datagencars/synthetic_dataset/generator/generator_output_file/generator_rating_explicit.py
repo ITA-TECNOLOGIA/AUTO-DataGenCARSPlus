@@ -2,9 +2,10 @@ import ast
 import random
 import numpy as np
 import pandas as pd
-
+from datagencars.existing_dataset.replicate_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
 from datagencars.synthetic_dataset.generator.access_schema.access_generation_config import AccessGenerationConfig
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
+from datagencars.synthetic_dataset.generator.access_schema.access_user_profile import AccessUserProfile
 
 
 class GeneratorRatingFile:
@@ -30,8 +31,8 @@ class GeneratorRatingFile:
     '''
 
     def __init__(self, generation_config, user_df, user_profile_df, item_df, item_schema, context_df=None, context_schema=None):        
-        # User profile: user_profile.csv
-        self.user_profile_df = user_profile_df
+        # User profile access: user_profile.csv        
+        self.access_user_profile = AccessUserProfile(user_profile_df)
         # Schema access: generation_config.conf
         self.access_generation_config = AccessGenerationConfig(file_str=generation_config)
         # User file: user.csv
@@ -48,9 +49,10 @@ class GeneratorRatingFile:
             self.context_df = context_df
             # Context schema: context_schema.conf
             self.context_schema_access = AccessSchema(file_str=context_schema)
+        self.calculate_att_rating = CalculateAttributeRating()
 
     def generate_file(self, with_context=False):
-        # sourcery skip: assign-if-exp, extract-duplicate-method, hoist-statement-from-loop, low-code-quality, merge-list-append
+        # sourcery skip: assign-if-exp, extract-duplicate-method, hoist-statement-from-loop, low-code-quality, merge-list-append, pandas-avoid-inplace
         '''
         Generates the rating file.
         :param with_context: True if the file to be generated will be contextual and False in the otherwise.
@@ -174,9 +176,14 @@ class GeneratorRatingFile:
             # Inserting row into dataframe:
             rating_df.loc[len(rating_df.index)] = row_rating_list            
 
-        # Sorting and returning a rating_df by user_id and item_id, and reseting index.
-        rating_df.sort_values(by=['user_id', 'timestamp'], ascending=True, na_position='first', inplace=True)
-        rating_df.reset_index(drop=True, inplace=True)          
+        # Contexts:
+        if with_context:
+            # Sorting and returning a rating_df by user_id and item_id.
+            rating_df = rating_df.sort_values(by=['user_id', 'item_id', 'context_id'], ascending=True, na_position='first')
+        else:
+            rating_df = rating_df.sort_values(by=['user_id', 'item_id'], ascending=True, na_position='first')
+        # Reseting index.
+        rating_df.reset_index(drop=True, inplace=True)
         return rating_df
 
     def get_rating(self, user_profile_id, item_id, context_id=None):
@@ -186,13 +193,10 @@ class GeneratorRatingFile:
         :param item_id: The item ID.
         :param context_id: The context ID.
         :return: A rating value.
-        '''
-        # Getting attribute names.
-        atribute_name_list = list(self.user_profile_df.columns.values)
-        # Removing 'user_profile_id'.
-        del atribute_name_list[0]
-        # Getting the weight vector from user_profile_id.
-        weight_vector = self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == user_profile_id, atribute_name_list].values.tolist()[0]                
+        '''       
+        # Getting the attribute name list and atribute value list of the user_profile_id.
+        atribute_name_list, atribute_value_list = self.access_user_profile.get_vector_from_user_profile(user_profile_id)        
+
         # Getting the current attribute value and its possible values.
         if context_id:
             attribute_value_list, attribute_possible_value_list = self.get_attribute_value_and_possible_value_list(atribute_name_list, item_id, context_id)
@@ -202,14 +206,14 @@ class GeneratorRatingFile:
         minimum_value_rating = self.access_generation_config.get_minimum_value_rating()
         maximum_value_rating = self.access_generation_config.get_maximum_value_rating() 
         # Getting the attribute rating vector.
-        attribute_rating_vector = self.get_attribute_rating_vector(weight_vector, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list)
+        attribute_rating_vector = self.access_user_profile.get_attribute_rating_vector(atribute_value_list, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list)
 
-        if len(weight_vector) != len(attribute_rating_vector):
+        if len(atribute_value_list) != len(attribute_rating_vector):
             raise ValueError('The vectors have not the same size.')
         
         rating = 0
-        sum_weight = 0 # self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == user_profile_id, 'other'].iloc[0]        
-        for idx, weight_importance in enumerate(weight_vector):
+        sum_weight = 0 # self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == user_profile_id, 'other'].iloc[0]
+        for idx, weight_importance in enumerate(atribute_value_list):
             # Getting importance and weight values:
             weight_importance_list = str(weight_importance).split('|')
             weight = 0
@@ -219,8 +223,8 @@ class GeneratorRatingFile:
                 weight = float(weight_importance)
             sum_weight += weight
             rating += weight * attribute_rating_vector[idx]
-        if sum_weight != 1:
-            raise ValueError('The weights not sum 1. You must verify the user_profile.csv file.')
+        if sum_weight != 1:            
+            raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
         return round(rating, 2)
     
     def get_attribute_value_and_possible_value_list(self, atribute_name_list, item_id, context_id=None):
@@ -236,8 +240,8 @@ class GeneratorRatingFile:
         for attribute_name in atribute_name_list:
             # Getting values from item.csv
             if attribute_name in list(self.item_df.columns.values):
-                attribute_value = self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]
-                if (isinstance(attribute_value, (np.bool_, np.int64)) or '[' not in attribute_value):
+                attribute_value = self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]                
+                if ((isinstance(attribute_value, (np.bool_, np.int64, np.float64))) or ('[' not in attribute_value)):
                     attribute_value_list.append(attribute_value)
                 else:
                     # Ckeck if is a list as str "['a', 'b']"
@@ -251,89 +255,6 @@ class GeneratorRatingFile:
                     # Getting possible values of the current attribute:
                     possible_value_list.append(self.context_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
         return attribute_value_list, possible_value_list
-    
-    def get_attribute_rating_vector(self, weight_vector, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list):
-        '''
-        Get the attribute rating vector determined by using the user profile.
-        :param weight_vector: The weight vector specified in the user profile.
-        :param attribute_value_list: List of attribute values.
-        :param attribute_possible_value_list: List of attribute possible values.
-        :param minimum_value_rating: The minimum rating value. 
-        :param maximum_value_rating: The maximum rating value. 
-        :return: A vector of attribute ratings.
-        '''
-        attribute_rating_vector = []
-        # Determining the rating by attribute, by using he line through of the two points:
-        for idx, weight_importance in enumerate(weight_vector):
-            # Getting importance and weight values:
-            weight_importance_list = str(weight_importance).split('|')
-            importance_rank = None
-            if len(weight_importance_list) > 1:
-                importance_rank = str(weight_importance_list[0]).strip() 
-
-            # If the attribute is relevant for the user:
-            attribute_rating = 0
-            if (importance_rank is None and user_profile_attribute_list[idx] == 'other'):
-                # Rating with noise (randomly):
-                attribute_rating = random.randint(minimum_value_rating, maximum_value_rating)
-            elif importance_rank:
-                # Determining position_array: the position of "attribute_value" in "possible_value_list". For example, for: possible_value_list = ['free', '$', '$$', '$$$', '$$$$'] and attribute_value = '$', the position_array = 1
-                if isinstance(attribute_value_list[idx], list):                                
-                    # Calculating attribute_rating of "y" for two points (x,y) in the line:
-                    sum_attribute_rating = 0
-                    for att_value in attribute_value_list[idx]:
-                        position_array = attribute_possible_value_list[idx].index(att_value)
-                        attribute_rating_aux = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
-                        sum_attribute_rating += attribute_rating_aux
-                    attribute_rating = sum_attribute_rating/len(attribute_value_list[idx])
-                else:
-                    # Calculating attribute_rating of "y" for one point (x,y) in the line:                              
-                    position_array = attribute_possible_value_list[idx].index(attribute_value_list[idx])
-                    attribute_rating = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
-            else:
-                # If the attribute is not relevant for the user (weight=0 without label (+) or (-)):                            
-                attribute_rating = 0
-            attribute_rating_vector.append(attribute_rating)
-        return attribute_rating_vector
-        
-    def get_attribute_rating(self, position_array, minimum_value_rating, maximum_value_rating, possible_value_list, importance_rank):
-        # sourcery skip: move-assign, none-compare
-        '''
-        Get the rating of attribute, when the importance of the attribute is given.
-        :param position_array: The position of the attribute value in the list of attribute value possibles.
-        :param minimum_value_rating: The minimum value of the rating.
-        :param maximum_value_rating: The maximum value of the rating.
-        :param possible_value_list: The list of attribute possible values.
-        :param importance_rank: The label with the importance ranking (+) or (-).
-        :return: The rating of attribute.
-        '''
-        # Determining input_score: the x of the point <x,y> inside the line
-        input_score = position_array + 1
-        # Determining min_score_normalized: the minimum value of rating
-        min_score_normalized = minimum_value_rating
-        min_score_input = min_score_normalized
-        # Determining max_score_normalized: the maximum value of rating
-        max_score_normalized = maximum_value_rating
-        # Determining max_score_input: the number of possible values for the current attribute
-        max_score_input = len(possible_value_list)        
-        # Checking the importance ranking of the current attribute:
-        if importance_rank == '(+)':            
-            rating_attribute = self.compute_y(min_score_input, min_score_normalized, max_score_input, max_score_normalized, input_score)
-        elif importance_rank == '(-)':            
-            rating_attribute = self.compute_y(max_score_input, min_score_normalized, min_score_input, max_score_normalized, input_score)
-        return rating_attribute
-
-    def compute_y(self, x0, y0, x1, y1, x):
-        '''
-        Gets the line through of the two points. Specifically, computes the values of Y for a straight line that goes through (x0,y0) and (x1,y1).	 
-	    :param x0: The X0 value.
-	    :param y0: The Y0 value.
-	    :param x1: The X1 value.
-	 	:param y1: The Y1 value.
-	    :param x: The X value.
-	    :return: The values of y for a straight line that goes through (x0,y0) and (x1,y1).
-        '''
-        return y0 + ((y1 - y0) / (x1 - x0)) * (x - x0)
     
     def modify_rating_by_user_expectations(self, rating, k, user_rating_list, min_rating_value, max_rating_value):
         '''
