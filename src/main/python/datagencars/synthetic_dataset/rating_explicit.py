@@ -1,10 +1,8 @@
 import logging
 
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_user import GeneratorUserFile
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_item import GeneratorItemFile
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_context import GeneratorContextFile
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_rating_explicit import GeneratorRatingFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_rating_explicit import GeneratorExplicitRatingFile
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
+
 
 class RatingExplicit(GenerateSyntheticDataset):
     '''
@@ -43,5 +41,5 @@ class RatingExplicit(GenerateSyntheticDataset):
         '''
             Generating file: rating.csv
         '''
-        rating_file_generator = GeneratorRatingFile(self.generation_config, user_df, user_profile_df, item_df, item_schema, context_df, context_schema)
+        rating_file_generator = GeneratorExplicitRatingFile(self.generation_config, user_df, user_profile_df, item_df, item_schema, context_df, context_schema)
         return rating_file_generator.generate_file(with_context)

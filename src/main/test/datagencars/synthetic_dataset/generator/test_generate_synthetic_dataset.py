@@ -2,7 +2,7 @@ import logging
 import unittest
 
 import pandas as pd
-from datagencars.synthetic_dataset.rating_explicit import GenerateSyntheticDataset
+from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 
 
 class TestGeneratorSyntheticDataset(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()          
         # Item generator:        
-        self.__generator = GenerateSyntheticDataset(generation_config)
+        self.__generator = RatingExplicit(generation_config)
     
     def tearDown(self):
         del self.__generator
@@ -103,7 +103,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         self.assertEqual(rating_file.shape[0], 2000)
 
     def test_generate_rating_file_rs(self):
-        '''        
+        '''
         Generates the rating file.        
         '''
         # user_df:
@@ -118,8 +118,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         # item_schema:
         item_schema_file_path = 'resources/data_schema/item_schema.conf'
         with open(item_schema_file_path, 'r') as item_schema_file:
-            item_schema = item_schema_file.read()
-        
+            item_schema = item_schema_file.read()        
         with_context = False
         rating_file = self.__generator.generate_rating_file(user_df, user_profile_df, item_df, item_schema, with_context)        
         logging.info(f'rating_file: {rating_file}')

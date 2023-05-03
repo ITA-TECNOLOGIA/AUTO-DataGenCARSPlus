@@ -149,7 +149,7 @@ class AccessSchema(AccessData):
             if attribute_name != 'other':
                 attribute_position = self.get_position_from_attribute_name(attribute_name)
                 attribute_type = self.get_type_attribute_from_pos(position=attribute_position)
-                if attribute_type == 'String' or attribute_type == 'List':
+                if attribute_type == 'String': #or attribute_type == 'List':
                     possible_values_attribute_list = self.get_possible_values_attribute_list_from_pos(position=attribute_position)
                 elif attribute_type == 'Boolean':
                     possible_values_attribute_list = [False, True]

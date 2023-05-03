@@ -6,7 +6,7 @@ from datagencars.synthetic_dataset.generator.generator_output_file.generator_fil
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 
 
-class GeneratorRatingImplicitFile(GeneratorFile):
+class GeneratorImplicitRatingFile(GeneratorFile):
     '''
     Generates user ratings based on user behaviors and item properties.
     @author Marcos Caballero Yus
@@ -53,46 +53,7 @@ class GeneratorRatingImplicitFile(GeneratorFile):
         :return: A datetime object.
         """
         return datetime.strptime(datetime_string, '%Y-%m-%d %H:%M:%S')
-
-    # def get_rating_and_timestamp(self, row, filtered_behavior):
-    #     """
-    #     Calculates rating and timestamp for the current user behavior row.
-    #     :param row: A row from the filtered_behavior DataFrame.
-    #     :param filtered_behavior: The filtered_behavior DataFrame with 'Update' object actions removed.
-    #     :return: A tuple containing the rating and timestamp.
-    #     """
-    #     user_id = row['user_id']
-    #     item_id = row['item_id']
-    #     object_action = row['object_action']
-    #     object_type = self.item_df.loc[self.item_df['item_id'] == item_id, 'object_type'].values[0]
-
-    #     if object_action == 'Click' or object_action == 'FullScreen':
-    #         return self.max_rating_value, row['timestamp']
-    #     else:
-    #         if object_type == 'Poster' and object_action == 'Open':
-    #             open_timestamp = row['timestamp']
-    #             close_timestamp = filtered_behavior.loc[
-    #                 (filtered_behavior['user_id'] == user_id) &
-    #                 (filtered_behavior['item_id'] == item_id) &
-    #                 (filtered_behavior['object_action'] == 'Close'), 'timestamp'].values[0]
-
-    #             if 10 < (close_timestamp - open_timestamp) < 120:
-    #                 return self.max_rating_value, open_timestamp
-    #             else:
-    #                 return self.min_rating_value, open_timestamp
-    #         elif object_type == 'Screen' and object_action == 'Play':
-    #             play_timestamp = row['timestamp']
-    #             pause_timestamp = filtered_behavior.loc[
-    #                 (filtered_behavior['user_id'] == user_id) &
-    #                 (filtered_behavior['item_id'] == item_id) &
-    #                 (filtered_behavior['object_action'] == 'Pause'), 'timestamp'].values[0]
-
-    #             if 120 < (pause_timestamp - play_timestamp) < 600:
-    #                 return self.max_rating_value, play_timestamp
-    #             else:
-    #                 return self.min_rating_value, play_timestamp
-    #     return None, None
-
+    
     def get_rating_and_timestamp(self, row, filtered_behavior):
         """
         Calculates rating and timestamp for the current user behavior row.

@@ -8,7 +8,7 @@ from datagencars.synthetic_dataset.generator.access_schema.access_schema import 
 from datagencars.synthetic_dataset.generator.access_schema.access_user_profile import AccessUserProfile
 
 
-class GeneratorRatingFile:
+class GeneratorExplicitRatingFile:
     '''     
     Generates user ratings. For that purpose, it obtains random combinations
     <user, item, context> and computes the corresponding rating by applying the
@@ -80,10 +80,10 @@ class GeneratorRatingFile:
         number_rating_by_user = int(number_ratings/number_user)
 
         # Generating a timestamp list by day and in a range of years:
-        minimum_year_ts = self.access_generation_config.get_minimum_date_timestamp()
-        maximum_year_ts = self.access_generation_config.get_maximum_date_timestamp()
-        start = pd.Timestamp(f'{minimum_year_ts}-01-01').strftime('%Y-%m-%d')
-        end = pd.Timestamp(f'{maximum_year_ts}-12-31').strftime('%Y-%m-%d')
+        minimum_date_ts = self.access_generation_config.get_minimum_date_timestamp()
+        maximum_date_ts = self.access_generation_config.get_maximum_date_timestamp()
+        start = pd.Timestamp(f'{minimum_date_ts}-01-01').strftime('%Y-%m-%d')
+        end = pd.Timestamp(f'{maximum_date_ts}-12-31').strftime('%Y-%m-%d')
         timestamp_list = pd.date_range(start, end, freq='1d')
 
         # The k ratings to take in the past.
@@ -104,7 +104,7 @@ class GeneratorRatingFile:
             # Determining the initial timestamp for the current user:
             initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]     
             # Check if the initial_timestamp is near to minimum year.
-            while (initial_timestamp.year == minimum_year_ts) and (initial_timestamp.month == 12) and ((31-initial_timestamp.day) < number_rating_by_user):
+            while (initial_timestamp.year == minimum_date_ts) and (initial_timestamp.month == 12) and ((31-initial_timestamp.day) < number_rating_by_user):
                 initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]
             
             # Generating ratings for the current user:

@@ -65,10 +65,10 @@ class AccessUserProfile():
                 attribute_rating = random.randint(minimum_value_rating, maximum_value_rating)
             elif importance_rank:                
                 # Determining position_array: the position of "attribute_value" in "possible_value_list". For example, for: possible_value_list = ['free', '$', '$$', '$$$', '$$$$'] and attribute_value = '$', the position_array = 1
-                if isinstance(attribute_value_list[idx], list):                                
+                if isinstance(attribute_value_list[idx], list):
                     # Calculating attribute_rating of "y" for two points (x,y) in the line:
-                    sum_attribute_rating = 0
-                    for att_value in attribute_value_list[idx]:
+                    sum_attribute_rating = 0                                        
+                    for att_value in attribute_value_list[idx]:                        
                         position_array = attribute_possible_value_list[idx].index(att_value)
                         attribute_rating_aux = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
                         sum_attribute_rating += attribute_rating_aux
