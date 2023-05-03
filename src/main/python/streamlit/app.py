@@ -12,7 +12,7 @@ import seaborn as sns
 from pathlib import Path
 import console
 import base64
-from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
+from datagencars.synthetic_dataset.rating_explicit import GenerateSyntheticDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 sys.path.append("src/main/python")
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
@@ -286,8 +286,8 @@ if general_option == 'Generate a synthetic dataset':
             if with_timestamp_checkbox:
                 min_year_ts = st.number_input(label='From:', value=1980, key='date_min_generation_config')            
                 max_year_ts = st.number_input(label='Until:', value=2022, key='date_max_generation_config')
-                rating_value += ('minimum_year_timestamp='+str(min_year_ts)+'\n' +
-                                'maximum_year_timestamp='+str(max_year_ts)+'\n')            
+                rating_value += ('minimum_date_timestamp='+str(min_year_ts)+'\n' +
+                                'maximum_date_timestamp='+str(max_year_ts)+'\n')            
             st.markdown("""---""")
             # [item profile]
             item_profile_value = ''

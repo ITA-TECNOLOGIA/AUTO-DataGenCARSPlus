@@ -1,12 +1,12 @@
 import logging
+from abc import ABC, abstractmethod
 
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_user import GeneratorUserFile
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_item import GeneratorItemFile
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_context import GeneratorContextFile
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_rating import GeneratorRatingFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_rating_explicit import GeneratorRatingFile
 
-
-class GenerateSyntheticDataset:
+class GenerateSyntheticDataset(ABC):
     '''
     Generates a synthetic dataset.
 
@@ -59,10 +59,10 @@ class GenerateSyntheticDataset:
         '''        
         context_file_generator = GeneratorContextFile(self.generation_config, context_schema)
         return context_file_generator.generate_file()
-        
+    
+    @abstractmethod   
     def generate_rating_file(self, user_df, user_profile_df, item_df, item_schema, with_context=False, context_df=None, context_schema=None):
         '''
             Generating file: rating.csv
         '''
-        rating_file_generator = GeneratorRatingFile(self.generation_config, user_df, user_profile_df, item_df, item_schema, context_df, context_schema)          
-        return rating_file_generator.generate_file(with_context)    
+        pass

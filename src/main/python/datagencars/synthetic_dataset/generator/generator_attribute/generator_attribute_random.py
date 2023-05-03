@@ -43,7 +43,7 @@ class GeneratorAttributeRandom(GeneratorAttribute):
             minimum_value = self.schema_access.get_minimum_value_attribute_from_pos(position)
             maximum_value = self.schema_access.get_maximum_value_attribute_from_pos(position)
             attribute_value = random.random.uniform(float(minimum_value), float(maximum_value))
-        elif type_attribute == 'String':
+        elif type_attribute == 'String' or type_attribute == 'List':
             possible_values_attribute_list = self.schema_access.get_possible_values_attribute_list_from_pos(position)
             attribute_value = random.choice(possible_values_attribute_list)
         elif type_attribute == 'Boolean':

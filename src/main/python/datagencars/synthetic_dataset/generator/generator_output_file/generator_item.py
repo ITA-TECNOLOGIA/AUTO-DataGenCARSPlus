@@ -1,5 +1,3 @@
-import logging
-
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
 
@@ -12,12 +10,20 @@ class GeneratorItemFile(GeneratorFile):
     '''
 
     def __init__(self, generation_config, item_schema, item_profile):
-        super().__init__(generation_config, item_schema, item_profile)           
+        super().__init__(generation_config, item_schema, item_profile)
+
+    def update_object_action(self, df):
+        for index, row in df.iterrows():
+            object_type = row['object_type']
+            object_action = row['object_action_types']
+            df.at[index, 'object_action_types'] = object_action[object_type]
+
+        return df
 
     def generate_file(self, with_correlation):
         '''
         Generates the item file.        
-        :return: A dataframe with item information.         
+        :return: A dataframe with item information.
         '''
         instance_generator = None
         # Number of items to be generated.
@@ -49,6 +55,14 @@ class GeneratorItemFile(GeneratorFile):
                 self.file_df.loc[len(self.file_df.index)] = attribute_list            
 
         # Adding item_id column:
-        item_id_list = list(range(1, number_item+1))        
+        item_id_list = list(range(1, number_item+1))
         self.file_df.insert(loc=0, column='item_id', value=item_id_list)
+
+        if 'object_type' in self.file_df.columns:
+            self.file_df = self.update_object_action(self.file_df)
+        
+        if 'object_position' in self.file_df.columns:
+            #Extract the 4th element from the object_position list and insert it into a new room_id column
+            self.file_df['room_id'] = self.file_df['object_position'].apply(lambda x: x.pop(3))
+
         return self.file_df.copy()

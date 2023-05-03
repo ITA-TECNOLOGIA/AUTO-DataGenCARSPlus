@@ -28,6 +28,8 @@ class GeneratorAttributeFixed(GeneratorAttribute):
         attribute_name = self.schema_access.get_attribute_name_from_pos(position)
         if attribute_name == 'user_profile_id':
             print('TODO')
-        else:   
+        else:
             attribute_value = self.schema_access.get_input_parameter_attribute_from_pos(position)
+            if attribute_value is None: #SE QUE NO ES LA OPCION MAS ELEGANTE PERO LUEGO LO MEJORAMOS
+                attribute_value = self.schema_access.get_subattribute_input_parameters_dict_from_pos(position)
         return attribute_name, attribute_value

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-
 import pandas as pd
 
 from datagencars.synthetic_dataset.generator.access_schema.access_generation_config import AccessGenerationConfig
@@ -24,4 +23,3 @@ class GeneratorFile(ABC):
     @abstractmethod
     def generate_file(self):
         pass
-
