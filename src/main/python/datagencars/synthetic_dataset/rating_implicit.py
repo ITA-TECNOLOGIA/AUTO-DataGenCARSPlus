@@ -1,4 +1,4 @@
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_rating_implicit import GeneratorRatingImplicitFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_rating_implicit import GeneratorImplicitRatingFile
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 
 class RatingImplicit(GenerateSyntheticDataset):
@@ -38,12 +38,5 @@ class RatingImplicit(GenerateSyntheticDataset):
         '''
             Generating file: rating.csv
         '''
-        rating_file_generator = GeneratorRatingImplicitFile(self.generation_config, item_df, behavior_df, context_df=None)
+        rating_file_generator = GeneratorImplicitRatingFile(self.generation_config, item_df, behavior_df, context_df=None)
         return rating_file_generator.generate_file(with_context)
-
-    # def generate_behavior_file(self, self.generation_config, item_df, behavior_df, context_df=None):
-    #     '''
-    #         Generating file: behavior.csv
-    #     '''
-    #     # TODO: pending to implement
-    #     return None
