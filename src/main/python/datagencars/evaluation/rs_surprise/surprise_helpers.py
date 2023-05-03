@@ -80,7 +80,7 @@ def convert_to_surprise_dataset(df):
     """
     if "timestamp" in df.columns:
         df = df.drop("timestamp", axis=1)
-    elif "context_id" in df.columns:
-        df = df.drop("context_id", axis=1)    
+    if "context_id" in df.columns:
+        df = df.drop("context_id", axis=1)
     reader = Reader(rating_scale=(df["rating"].min(), df["rating"].max()))
     return Dataset.load_from_df(df, reader)

@@ -12,7 +12,7 @@ import console
 import base64
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
-from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
+from datagencars.synthetic_dataset.rating_explicit import GenerateSyntheticDatasetExplicit
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
 import datagencars.evaluation.sklearn_helpers as sklearn_helpers
@@ -63,7 +63,7 @@ if general_option == 'Generate a synthetic dataset':
             json_opt_params['CARS'] = str(with_context)
             json_opt_params['UP'] = 'Manual'
             json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('GenerateSyntheticDataset(Explicit_ratings)', json_opt_params)
+            path = wf.create_workflow('GenerateSyntheticDatasetExplicit(Explicit_ratings)', json_opt_params)
             st.image(image=path, use_column_width=False, output_format="auto", width=650)  
             os.remove(path)      
         inconsistent = False
@@ -122,8 +122,8 @@ if general_option == 'Generate a synthetic dataset':
                 if with_timestamp_checkbox:
                     min_year_ts = st.number_input(label='From:', value=1980, key='date_min_generation_config')            
                     max_year_ts = st.number_input(label='Until:', value=2022, key='date_max_generation_config')
-                    rating_value += ('minimum_year_timestamp='+str(min_year_ts)+'\n' +
-                                    'maximum_year_timestamp='+str(max_year_ts)+'\n')            
+                    rating_value += ('minimum_date_timestamp='+str(min_year_ts)+'\n' +
+                                    'maximum_date_timestamp='+str(max_year_ts)+'\n')            
                 st.markdown("""---""")
                 # [item profile]
                 item_profile_value = ''
@@ -389,7 +389,7 @@ if general_option == 'Generate a synthetic dataset':
                 button_run = st.button(label='Run', key='button_run')
             with col_stop:
                 button_stop = st.button(label='Stop', key='button_stop')        
-            generator = GenerateSyntheticDataset(generation_config=generation_config_value)
+            generator = GenerateSyntheticDatasetExplicit(generation_config=generation_config_value)
             output = st.empty()
             with console.st_log(output.code):
                 if not inconsistent:

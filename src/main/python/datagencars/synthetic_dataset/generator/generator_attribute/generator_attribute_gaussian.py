@@ -53,7 +53,7 @@ class GeneratorAttributeGaussian(GeneratorAttribute):
                 mean = np.mean(array_np)
                 standard_deviation = np.std(array_np)
                 attribute_value = int(random.gauss(mu=mean, sigma=standard_deviation))                 
-            elif type_attribute == 'String':            
+            elif type_attribute == 'String' or type_attribute == 'List':            
                 possible_values_attribute_list = self.schema_access.get_possible_values_attribute_list_from_pos(position)
                 # Selecting one element from a str list following the normal (gauss) distribution.
                 attribute_value = self.normal_choice(lst=possible_values_attribute_list)            

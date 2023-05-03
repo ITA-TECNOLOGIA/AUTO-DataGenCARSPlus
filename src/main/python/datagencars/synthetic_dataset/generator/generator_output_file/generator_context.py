@@ -1,5 +1,3 @@
-import logging
-
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
 
@@ -12,7 +10,7 @@ class GeneratorContextFile(GeneratorFile):
     '''
 
     def __init__(self, generation_config, context_schema):
-        super().__init__(generation_config, context_schema)        
+        super().__init__(generation_config, context_schema)
 
     def generate_file(self):
         '''
@@ -33,4 +31,5 @@ class GeneratorContextFile(GeneratorFile):
         # Adding context_id column:
         context_id_list = list(range(1, number_context+1))
         self.file_df.insert(loc=0, column='context_id', value=context_id_list)
+        
         return self.file_df.copy()
