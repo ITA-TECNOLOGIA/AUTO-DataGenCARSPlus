@@ -102,7 +102,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         logging.info(f'rating_file: {rating_file}')
         self.assertEqual(rating_file.shape[0], 2000)
 
-    def test_generate_rating_file(self):
+    def test_generate_rating_file_rs(self):
         '''        
         Generates the rating file.        
         '''
