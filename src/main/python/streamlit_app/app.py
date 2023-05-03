@@ -1,30 +1,31 @@
-import io
-import sys
-import streamlit as st
-import config
-import pandas as pd
-import altair as alt
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from pathlib import Path
-import console
 import base64
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
-from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
-from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
-from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
+import io
+import os
+import sys
+
+import altair as alt
+import config
+import console
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
 import datagencars.evaluation.sklearn_helpers as sklearn_helpers
-from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
-from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
+import datagencars.existing_dataset.binary_ratings as binary_ratings
 import datagencars.existing_dataset.label_encoding as label_encoding
 import datagencars.existing_dataset.mapping_categorization as mapping_categorization
-import datagencars.existing_dataset.binary_ratings as binary_ratings
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import streamlit as st
+from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
+from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
+from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
+from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
+from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
+from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from streamlit_app import util
 from workflow.graph_generate import Workflow
-import os
-sys.path.append("src/main/python")
+
+# sys.path.append("src/main/python")
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -63,7 +64,7 @@ if general_option == 'Generate a synthetic dataset':
             json_opt_params['CARS'] = str(with_context)
             json_opt_params['UP'] = 'Manual'
             json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('GenerateSyntheticDatasetExplicit(Explicit_ratings)', json_opt_params)
+            path = wf.create_workflow('GenerateSyntheticDataset(Explicit_ratings)', json_opt_params)            
             st.image(image=path, use_column_width=False, output_format="auto", width=650)  
             os.remove(path)      
         inconsistent = False
