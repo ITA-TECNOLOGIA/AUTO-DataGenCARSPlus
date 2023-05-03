@@ -11,6 +11,19 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Python: streamlit",
+            "type": "python",
+            "request": "launch",          
+            "module": "streamlit",
+            "args": ["run","${workspaceFolder}/src/main/python/streamlit_app/app.py"],
+            "console": "integratedTerminal", 
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "CUDA_VISIBLE_DEVICES":"-1",
+                "PYTHONPATH":"./src/main/python/",
+                "API-REST":"localhost"}
         }
     ]
 }

@@ -4,7 +4,7 @@ AUTO_DATAGENCARS_ICON = 'resources/icons/logo-datagencars.jpg'
 USER_PROFILE = 'resources/icons/user_profile.png'
 
 # JSON files:
-WORKFLOWS_DESCRIPTION = 'streamlit_app/workflow/workflows.json'
+WORKFLOWS_DESCRIPTION = 'resources/workflows.json' #'streamlit_app/workflow/workflows.json'
 
 # Graphs:
 PLOTS_FONT = {'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12}
