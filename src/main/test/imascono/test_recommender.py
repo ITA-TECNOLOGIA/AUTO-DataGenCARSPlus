@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
-from imascono.recommender_system.recommender import Recommender
+from imascono.recommender import Recommender
 
 class TestRecommender(unittest.TestCase):
 

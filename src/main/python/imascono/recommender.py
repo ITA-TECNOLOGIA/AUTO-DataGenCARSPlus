@@ -3,48 +3,27 @@ import warnings
 from collections import defaultdict
 import pandas as pd
 from scipy.spatial.distance import euclidean
-from surprise import Dataset, Reader, NormalPredictor, KNNBasic, KNNWithMeans, KNNWithZScore, KNNBaseline
-from surprise.model_selection import train_test_split
+from surprise import NormalPredictor, KNNBasic, KNNWithMeans, KNNWithZScore, KNNBaseline
+import datagencars.evaluation.rs_surprise.evaluation as evaluation
+import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
 warnings.filterwarnings('ignore')
 
 
 class Recommender:
 
-    def __init__(self):
+    def __init__(self, df_item, df_context, df_rating, df_behavior):
         try:
-            # Generating recommendation dataset from virtual_space='Spaceship':
-            logging.info('Generating recommendation dataset from virtual_space=Spaceship.')
-            # USER: df_user
-            self.df_user = pd.read_csv(r'resources\data_schema_imascono\user.csv')
-            # ITEM: df_item
-            self.df_item = pd.read_csv(r'resources\data_schema_imascono\item.csv')
-            # CONTEXT: df_context
-            self.df_context = pd.read_csv(r'resources\data_schema_imascono\context.csv')
-            # RATING: df_rating
-            self.df_rating = pd.read_csv(r'resources\data_schema_imascono\rating.csv')
-            # BEHAVIOR: df_behavior
-            self.df_behavior = pd.read_csv(r'resources\data_schema_imascono\behavior.csv')
+            self.df_item = df_item
+            self.df_context = df_context
+            self.df_rating = df_rating
+            self.df_behavior = df_behavior
 
-            # Remove users with no ratings
+            logging.info('Creating auxiliary data structures...')
             user_counts = self.df_rating['user_id'].value_counts()
             users_with_ratings = user_counts[user_counts > 0].index
-            self.df_rating = self.df_rating[self.df_rating['user_id'].isin(users_with_ratings)]
-
-            # Loading dataset from a df of ratings:
-            logging.info('Reading df_rating.')
-            if "timestamp" in self.df_rating.columns:
-                self.df_rating = self.df_rating.drop("timestamp", axis=1)
-            if "context_id" in self.df_rating.columns:
-                self.df_rating = self.df_rating.drop("context_id", axis=1)
-            reader = Reader(rating_scale=(self.df_rating["rating"].min(), self.df_rating["rating"].max())) #line_format='user item rating', sep=',',
-            dataset = Dataset.load_from_df(self.df_rating, reader=reader)
-
-            # Generating trainset with the whole dataset:
-            logging.info('Generating trainset and item list.')
-            self.trainset = dataset.build_full_trainset()
-            self.item_list = self.df_item['item_id'].tolist()
-
+            self.df_rating = self.df_rating[self.df_rating['user_id'].isin(users_with_ratings)] # Remove users with no ratings
             self.target_user_list = self.df_rating['user_id'].tolist()
+            self.item_list = self.df_item['item_id'].tolist()
 
         except Exception as e:
             logging.error(e)
@@ -79,7 +58,7 @@ class Recommender:
             top_n[uid] = user_ratings[:n]
         return top_n
 
-    def get_user_based_recommendation(self, k_recommendations, k_max_neighbours, k_min_neighbours):
+    def get_user_based_recommendation(self, algorithm, trainset, testset, k_recommendations):
         """
         KNN algorithms for user-based collaborative filtering.
         :param k_recommendations: K items to recommend to the user.
@@ -87,31 +66,34 @@ class Recommender:
         :param k_min_neighbours: K minimum number of neighbours.
         :return: K candidate items to be recommended to users.
         """
-        # Parameter settings of the KNN algorithms.
-        sim_options = {'user_based': True}  # compute similarities between users
-        algorithms = [
-            KNNBasic(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options, verbose=False),
-            KNNWithMeans(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options, verbose=False),
-            KNNWithZScore(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options, verbose=False),
-            KNNBaseline(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options, verbose=False)
-        ]
+        # NO SÉ SI ES MEJOR EXTENDER LOS RESULTADOS DE TODOS LOS ALGORITMOS EN UNA SOLA LISTA O SOLAMENTE DE UN ALGORITMO
+        # # Parameter settings of the KNN algorithms.
+        # sim_options = {'user_based': True}  # compute similarities between users
+        # algorithms = [
+        #     KNNBasic(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
+        #     KNNWithMeans(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
+        #     KNNWithZScore(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
+        #     KNNBaseline(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options)
+        # ]
 
-        all_predictions = []
+        # all_predictions = []
+        # for algorithm in algorithms:
+        #     # Fitting the algorithm.
+        #     algorithm.fit(trainset)
 
-        for algorithm in algorithms:
-            # Building the algorithm.
-            algorithm.fit(self.trainset)
+        #     # Predicting ratings for all pairs (u,i) that are NOT in the training set.
+        #     predictions = algorithm.test(testset)
+        #     all_predictions.extend(predictions)
 
-            # Getting all pairs (u,i) that are NOT in the training set.
-            testset = self.trainset.build_anti_testset()
-            # Predicting ratings for all pairs (u,i) that are NOT in the training set.
-            predictions = algorithm.test(testset)
+        # Fitting the algorithm.
+        algorithm.fit(trainset)
 
+        # Predicting ratings for all pairs (u,i) that are NOT in the training set.
+        predictions = algorithm.test(testset)
 
-        return self.get_top_n(all_predictions, n=k_recommendations)
+        return self.get_top_n(predictions, n=k_recommendations)
 
-    #TODO: esto no es NPOI, esto es aleatorio. Implementar NPOI de verdad.
-    def get_random_recommendation(self, k_recommendations, cold_start_user_list):
+    def get_random_recommendation(self, k_recommendations, cold_start_user_list, trainset):
         '''
         NormalPredictor: it is an algorithm predicts a random rating based on the distribution
         of the training set, which is assumed to be normal. This is one of the most basic
@@ -122,9 +104,9 @@ class Recommender:
         '''
         # Building the Random algorithm.
         recommender = NormalPredictor()
-        recommender.fit(self.trainset)
+        recommender.fit(trainset)
         # Getting all pairs (u,i) that are NOT in the training set.
-        fill = self.trainset.global_mean
+        fill = trainset.global_mean
         testset = []
         for user in cold_start_user_list:
             for item in self.item_list:
@@ -224,21 +206,25 @@ class Recommender:
 
         return filtered_candidates
 
-    def dynamic_recommendation_pipeline(self, k_recommendations, k_max_neighbours, k_min_neighbours, apply_social_distancing, min_social_distance):
+    def dynamic_recommendation_pipeline(self, dataset, algorithm, k_recommendations, side_lars, min_social_distance):
         '''
         Dynamic recommendation pipeline.
         :param k_recommendations: K items to recommend to the user.
-        :param k_max_neighbours: K maximum number of neighbours.
-        :param k_min_neighbours: K minimum number of neighbours.
         :return: Dictionaries resulting from user-based and random recommendations.
         '''
+        # Generating trainset and testset with the whole dataset:
+        logging.info('Generating trainset with the whole dataset...')
+        trainset = dataset.build_full_trainset()
+        # Getting all pairs (u,i) that are NOT in the training set.
+        testset = trainset.build_anti_testset()
+
         # Getting candidate user-based recommendation list:
-        candidate_ub_recommendation_list = self.get_user_based_recommendation(k_recommendations, k_max_neighbours, k_min_neighbours)
+        candidate_ub_recommendation_list = self.get_user_based_recommendation(algorithm, trainset, testset, k_recommendations)
         # Sorting recommended items by distance between current user location and recommended item locations:
         ub_recommendation_json = self.get_trajectory(candidate_ub_recommendation_list)
-        if apply_social_distancing:
+        if side_lars:
             candidate_ub_recommendation_list = self.apply_social_distance(candidate_ub_recommendation_list, min_social_distance)
-            candidate_random_recommendation_list = self.apply_social_distance(candidate_random_recommendation_list, min_social_distance)
+            # candidate_random_recommendation_list = self.apply_social_distance(candidate_random_recommendation_list, min_social_distance)
         # Filtering recommendation dictionary for target users:
         target_user_cold_start_list = []
         filtered_ub_recommendation_json = {}
@@ -252,16 +238,34 @@ class Recommender:
         candidate_random_recommendation_list = self.get_npoi_recommendation(k_recommendations, target_user_cold_start_list)
         # Sorting recommended items by distance between current user location and recommended item locations:
         random_recommendation_json = self.get_trajectory(candidate_random_recommendation_list)
-        if apply_social_distancing:
+        if side_lars:
             candidate_ub_recommendation_list = self.apply_social_distance(candidate_ub_recommendation_list, min_social_distance)
-            candidate_random_recommendation_list = self.apply_social_distance(candidate_random_recommendation_list, min_social_distance)
+            # candidate_random_recommendation_list = self.apply_social_distance(candidate_random_recommendation_list, min_social_distance)
         return filtered_ub_recommendation_json, random_recommendation_json
 
 def main():
-    recommender = Recommender()
-    filtered_ub_recommendation_json, random_recommendation_json = recommender.dynamic_recommendation_pipeline(k_recommendations=3, k_max_neighbours=40, 
-                                                                                                              k_min_neighbours=1, apply_social_distancing=False, 
-                                                                                                              min_social_distance=2.0)
+    df_item = pd.read_csv(r'resources\data_schema_imascono\item.csv')
+    df_context = pd.read_csv(r'resources\data_schema_imascono\context.csv')
+    df_rating = pd.read_csv(r'resources\data_schema_imascono\rating.csv')
+    df_behavior = pd.read_csv(r'resources\data_schema_imascono\behavior.csv')
+    dataset = surprise_helpers.convert_to_surprise_dataset(df_rating)
+    
+    recommender = Recommender(df_item, df_context, df_rating, df_behavior)
+
+    # Parameter settings of the KNN algorithms.
+    k_max_neighbours = 40 # K maximum number of neighbours.
+    k_min_neighbours = 1 # K minimum number of neighbours.
+    sim_options = {'user_based': True}  # Compute similarities between users
+    algorithms = [
+        KNNBasic(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
+        KNNWithMeans(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
+        KNNWithZScore(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
+        KNNBaseline(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options)
+    ]
+
+    for algorithm in algorithms:
+        filtered_ub_recommendation_json, random_recommendation_json = recommender.dynamic_recommendation_pipeline(dataset, algorithm, k_recommendations=3, 
+                                                                                                                  side_lars=True, min_social_distance=2.0)
 
 if __name__ == '__main__':
     main()

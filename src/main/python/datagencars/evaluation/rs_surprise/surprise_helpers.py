@@ -1,5 +1,3 @@
-from collections import defaultdict
-import math
 from surprise import (
     BaselineOnly,
     CoClustering,
@@ -7,6 +5,7 @@ from surprise import (
     KNNBasic,
     KNNWithMeans,
     NMF,
+    KNNWithZScore,
     NormalPredictor,
     SlopeOne,
     SVD,
@@ -31,18 +30,20 @@ def create_algorithm(algo_name, params=None):
         return NMF(**params)
     elif algo_name == "SlopeOne":
         return SlopeOne()
-    elif algo_name == "KNNBasic":
-        return KNNBasic()
-    elif algo_name == "KNNWithMeans":
-        return KNNWithMeans()
-    elif algo_name == "KNNBaseline":
-        return KNNBaseline()
     elif algo_name == "CoClustering":
         return CoClustering(**params)
     elif algo_name == "BaselineOnly":
         return BaselineOnly()
     elif algo_name == "NormalPredictor":
         return NormalPredictor()
+    elif algo_name == "KNNBasic":
+        return KNNBasic(**params)
+    elif algo_name == "KNNWithMeans":
+        return KNNWithMeans(**params)
+    elif algo_name == "KNNWithZScore":
+        return KNNWithZScore(**params)
+    elif algo_name == "KNNBaseline":
+        return KNNBaseline(**params)
     else:
         raise ValueError("Invalid algorithm name")
 
