@@ -259,6 +259,8 @@
         {"node_name": "Generate User Profiles <Automatic>", 
         "optional" : "False"}, 
         {"node_name": "Generate Synthetic Dataset <From original dataset>", 
+        "optional" : "False"},
+        {"node_name": "END", 
         "optional" : "False"}
     ], 
     "gateways":[
@@ -371,7 +373,22 @@
         "condition": [["init_step", "False"], ["NULLValues", "True"]]}
     ],
     "legend":["I", "C", "R", "RSt", "UP"]
-   }
+   }, 
+   {"workflow_name": "ReplaceNULLValues", 
+    "nodes" : [
+       {"node_name": "BEGIN", 
+        "optional" : "False"}, 
+        {"node_name": "END", 
+        "optional" : "False"}
+    ], 
+    "arrows" : [
+        {"init_node": "BEGIN", 
+         "end_node": "END", 
+         "label": "", 
+         "optional": "False"}
+     ],
+     "legend":[]
+    }
 ],
 "legend": {
     "GC": "generation_config.conf",

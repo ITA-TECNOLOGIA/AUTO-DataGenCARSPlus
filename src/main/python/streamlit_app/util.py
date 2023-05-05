@@ -347,6 +347,57 @@ def generate_up(generate_up):
 # Extend dataset:
 # Recalculate ratings:
 # Replace NULL values:
+def infer_schema(df):
+    """
+    :param df: original dataset
+    :return: A dataframe with schema information
+    """
+    possible_types = {'int':'Integer', 'float':'Float', 'bool':'Boolean', 'str':'String'}
+    def infer(type,items):
+        try:
+            items = list(map(float,items))
+            return possible_types[type]
+        except:
+            return 'Unknown'
+        
+    schema = pd.DataFrame()
+
+    attributes = df.columns[1:]
+    schema['Attribute'] = attributes
+    types = list()
+    generator = list()
+    min_vals = list()
+    max_vals = list()
+    for attribute in attributes:
+        items = list(set(df[attribute].drop_duplicates().dropna()))
+        if 'NaN' in items:
+            print('removing nans')
+            items = list(set(df[attribute])).remove(np.nan).remove('nan').remove('').remove('NaN')
+        # Infer types
+        item_type = 'Unknown'
+        for type in possible_types.keys():
+            if item_type == 'Unknown':
+                item_type = infer(type, items)
+        # Infer rest of info
+        if item_type == 'Integer':
+            if len(items) >= 2:
+                item_generator = 'Integer/Float/String/Boolean (following a distribution)'
+                min_val = min(items)
+                max_val = max(items)
+            else:
+                item_generator = 'Fixed'
+                min_val = items[0]
+                max_val = items[0]
+        types.append(item_type)
+        generator.append(item_generator)
+        min_vals.append(min_val)
+        max_vals.append(max_val)
+    schema['TypeAttribute'] = types
+    schema['GeneratorType'] = generator
+    schema['Min_val'] = min_vals
+    schema['Max_val'] = max_vals
+    return schema
+    #return schema
 # Generate user profile:
 # Ratings to binary:
 def ratings_to_binary(df, threshold=3):

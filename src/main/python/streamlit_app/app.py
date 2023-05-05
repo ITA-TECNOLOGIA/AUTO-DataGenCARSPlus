@@ -12,6 +12,7 @@ import console
 import base64
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
+from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
@@ -490,14 +491,14 @@ elif general_option == 'Pre-process a dataset':
         st.header('Apply workflow: Replicate dataset')
         with st.expander(label='Help information'):
             st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
-        # with st.expander(label='Workflow'):
-        #     json_opt_params = {}
-        #     json_opt_params['CARS'] = str(with_context)
-        #     json_opt_params['NULLValues'] = 'True'
-        #     json_opt_params['init_step'] = init_step
-        #     path = wf.create_workflow('ReplicateDataset', json_opt_params)
-        #     image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
-        #     os.remove(path)
+        with st.expander(label='Workflow'):
+            json_opt_params = {}
+            json_opt_params['CARS'] = str(with_context)
+            json_opt_params['NULLValues'] = 'True'
+            json_opt_params['init_step'] = init_step
+            path = wf.create_workflow('ReplicateDataset', json_opt_params)
+            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)
               
         tab_preprocessing, tab_user_profile, tab_replicate  = st.tabs(['Pre-processing', 'User Profile', 'Replicate'])   
         new_item_df = pd.DataFrame()
@@ -508,14 +509,15 @@ elif general_option == 'Pre-process a dataset':
             with console.st_log(output.code):
                 null_values = st.checkbox("Do you want to replace the null values?", value=True)                
                 if null_values:
-                    # json_opt_params = {}
-                    # json_opt_params['CARS'] = str(with_context)
-                    # json_opt_params['NULLValues'] = str(null_values)
-                    # json_opt_params['init_step'] = init_step
-                    # path = wf.create_workflow('ReplicateDataset', json_opt_params)
-                    # image.empty()
-                    # image.image(image=path, use_column_width=False, output_format="auto", width=650)  
-                    # os.remove(path)                    
+                    json_opt_params = {}
+                    json_opt_params['CARS'] = str(with_context)
+                    json_opt_params['NULLValues'] = str(null_values)
+                    json_opt_params['init_step'] = init_step
+                    path = wf.create_workflow('ReplicateDataset', json_opt_params)
+                    image.empty()
+                    image.image(image=path, use_column_width=False, output_format="auto", width=650)  
+                    os.remove(path)                    
+            
                     # Pre-processs: replace null values:
                     if with_context:
                         if (not item_df.empty) and (not context_df.empty):                                        
@@ -573,16 +575,16 @@ elif general_option == 'Pre-process a dataset':
                                 st.session_state["item_df"] = new_item_df
                         else:
                             st.warning("The item file has not been uploaded.")
-                # else:
-                #     init_step = 'False'
-                #     json_opt_params = {}
-                #     json_opt_params['CARS'] = str(with_context)
-                #     json_opt_params['NULLValues'] = str(null_values)
-                #     json_opt_params['init_step'] = init_step
-                #     path = wf.create_workflow('ReplicateDataset', json_opt_params)
-                #     image.empty()
-                #     image.image(image=path, use_column_width=False, output_format="auto", width=650)
-                #     os.remove(path)                    
+                else:
+                    init_step = 'False'
+                    json_opt_params = {}
+                    json_opt_params['CARS'] = str(with_context)
+                    json_opt_params['NULLValues'] = str(null_values)
+                    json_opt_params['init_step'] = init_step
+                    path = wf.create_workflow('ReplicateDataset', json_opt_params)
+                    image.empty()
+                    image.image(image=path, use_column_width=False, output_format="auto", width=650)
+                    os.remove(path)                    
         # USER PROFILE TAB:
         with tab_user_profile:
             output = st.empty()
@@ -616,8 +618,8 @@ elif general_option == 'Pre-process a dataset':
         with tab_replicate:
                 output = st.empty()
                 with console.st_log(output.code):
+                    percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
                     if with_context:
-                        percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
                         # With context:
                         if (not item_df.empty and "item_df" in st.session_state) and (not context_df.empty and "context_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):
                             if st.button(label='Replicate', key='button_replicate_cars'):
@@ -666,7 +668,11 @@ elif general_option == 'Pre-process a dataset':
             st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto") 
         st.write('TODO')        
     elif is_preprocess == 'Replace NULL values':
-        file_selectibox = st.selectbox(label='Files available:', options=['item', 'context'])
+        if with_context:
+            file_selectibox = st.selectbox(label='Files available:', options=['item', 'context'])
+        else:
+            file_selectibox = st.selectbox(label='Files available:', options=['item'])
+
         if file_selectibox == 'item':
             _, df, _, _ = util.load_dataset(file_type_list=['item'])
         elif file_selectibox == 'context':
@@ -675,8 +681,39 @@ elif general_option == 'Pre-process a dataset':
         with st.expander(label='Help information'):
             st.markdown("""Workflow to complete unknown contextual information.""")
         with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto") 
-        st.write('TODO')
+            json_opt_params = {}
+            path = wf.create_workflow('ReplaceNULLValues', json_opt_params)
+            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)
+        if not df.empty:
+            atr_opts = ['Integer', 'Float', 'String', 'Boolean']
+            generators_opt = ['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList']
+            df_schema = util.infer_schema(df)
+            schema = ''
+            for row in df_schema.iterrows():
+                attribute = row[1]['Attribute']
+                st.write(f'[{attribute}]')
+                atrib_generator = st.selectbox(label='Generator type:', options=generators_opt, key = attribute+'generator', index=generators_opt.index(row[1]['GeneratorType']))
+                atrib_type = st.selectbox(label='Attribute type:', options=atr_opts, key=attribute+'_attribute_type_', index=atr_opts.index(row[1]['TypeAttribute']))
+                if atrib_type == 'Integer':
+                    if atrib_generator == 'Fixed':
+                        fixed_val = st.number_input(label='Fixed value of the attribute', value=row[1]['Min_val'], key=attribute+'_fixed_val')
+                    else:
+                        integer_min = st.number_input(label='Minimum value of the attribute', value=row[1]['Min_val'], key=attribute+'_integer_min')
+                        integer_max = st.number_input(label='Maximum value of the attribute', value=row[1]['Max_val'], key=attribute+'_integer_max')
+                st.markdown("""---""")
+            
+            if st.button(label='Replace NULL Values', key='button_replace_nulls'):
+                print('Replacing NULL Values')
+                replacenulls = ReplaceNullValues(df)
+                if file_selectibox == 'item':
+                    new_df = replacenulls.regenerate_item_file(schema)
+                elif file_selectibox == 'context':
+                    new_df = replacenulls.regenerate_context_file(schema)
+                print(new_df)
+        else:
+            st.warning("The item file or context file have not been uploaded.")
+        
     elif is_preprocess == 'Generate user profile':
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
