@@ -12,7 +12,7 @@ services:
     ports:
       - "443:443"
     depends_on:
-      - streamlit
+      - conda
     logging: &logging
       driver: journald
       options:
@@ -30,12 +30,13 @@ services:
       retries: 3
       start_period: 2s
 
-  streamlit:
-    container_name: streamlit
-    image: streamlit
+ 
+  conda:
+    container_name: conda
+    image: conda
     build:
       context: ./
-      dockerfile: ./src/main/docker/streamlit.dockerfile
+      dockerfile: ./src/main/docker/conda.dockerfile
     environment: 
       - TZ=Europe/Madrid
       - LOGLEVEL=DEBUG

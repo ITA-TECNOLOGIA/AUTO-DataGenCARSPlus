@@ -4,12 +4,17 @@ import json
 
 class Workflow:
 
-    def __init__(self):
-        self.workflow_file_description = 'src/main/python/streamlit_app/workflow/workflows.json'
+    def __init__(self, workflow_file_description):        
+        self.workflow_file_description = workflow_file_description
         self.CARS_remove = ['C', 'CSc']
 
     def create_workflow(self, workflow_name, json_opt_params):
-        print(json_opt_params)
+        """
+        Creates a specific workflow.
+        :param workflow_name: The workflow name.
+        :param json_opt_params: A JSON with parameter values.
+        :return: The generated workflow image path.        
+        """
         with open(self.workflow_file_description, 'r') as f:
             # Load the JSON data into a Python dictionary
             data = json.load(f)
@@ -33,10 +38,8 @@ class Workflow:
                                 else:
                                     g.node(node['node_name'], color = 'red', shape='rect')
                             else:
-                                draw_node = True
-                                print(node['condition'])
-                                for condition in node['condition']:
-                                    print(condition)
+                                draw_node = True                                
+                                for condition in node['condition']:                                    
                                     if json_opt_params[condition[0]] != condition[1]:
                                         draw_node = False
                                         break
@@ -111,10 +114,9 @@ class Workflow:
 
                 # Save the graph as a PNG file
                 path = g.render(filename='src/main/python/streamlit_app/workflow/'+workflow['workflow_name'], format='png', cleanup=True)
-                
-                return path
-        
+                return path        
         return 'Workflow not found'
+
 
 if __name__ == "__main__":
     wf = Workflow()

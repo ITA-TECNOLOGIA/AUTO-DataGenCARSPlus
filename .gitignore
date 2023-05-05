@@ -11,3 +11,5 @@ resources/workflows/ratings_to_binary.png
 resources/workflows/workflow.png
 resources/dataset_sts/README.txt
 cert/
+resources/dataset_ml_100k/README.txt
+resources/dataset_ml_27m/README.txt

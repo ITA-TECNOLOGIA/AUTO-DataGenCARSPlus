@@ -21,7 +21,7 @@ class AccessGenerationConfig(AccessData):
         number_user = None
         try:
             number_user = self.file_parser.getint(section='dimension', option='number_user')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return number_user
 
@@ -35,7 +35,7 @@ class AccessGenerationConfig(AccessData):
             number_item = self.file_parser.getint(section='dimension', option='number_item')
         except (NoOptionError, NoSectionError) as e:            
             logging.error(e)
-        return number_item 
+        return number_item
 
     def get_number_context(self):
         '''
@@ -97,6 +97,102 @@ class AccessGenerationConfig(AccessData):
             logging.error(e)
         return percentage_rating_variation
     
+    def get_number_behavior(self):
+        '''
+        Gets the number of behaviors to generate in the dataset.
+        :return: The number of behaviors to generate in the dataset.
+        '''
+        number_behavior = None
+        try:
+            number_behavior = self.file_parser.getint(section='behavior', option='number_behavior')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return number_behavior
+    
+    def get_session_time(self):
+        '''
+        Gets the session time to generate in the dataset.
+        :return: The session time to generate in the dataset.
+        '''
+        session_time = None
+        try:
+            session_time = self.file_parser.getint(section='behavior', option='session_time')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return session_time
+    
+    def get_minimum_interval_behavior(self):
+        '''
+        Gets the minimum interval of time between two behaviors.
+        :return: The minimum interval of time between two behaviors.
+        '''
+        minimum_interval_behavior = None
+        try:
+            minimum_interval_behavior = self.file_parser.getint(section='behavior', option='minimum_interval_behavior')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return minimum_interval_behavior
+    
+    def get_maximum_interval_behavior(self):
+        '''
+        Gets the maximum interval of time between two behaviors.
+        :return: The maximum interval of time between two behaviors.
+        '''
+        maximum_interval_behavior = None
+        try:
+            maximum_interval_behavior = self.file_parser.getint(section='behavior', option='maximum_interval_behavior')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return maximum_interval_behavior
+    
+    def get_initial_position(self):
+        '''
+        Gets the x, y, z coordinates with the initial position (door) to generate in the virtual 3D world.
+        :return: The list with the initial position
+        '''
+        initial_position = None
+        try:
+            initial_position = eval(self.file_parser.get(section='behavior', option='door'))
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return initial_position
+    
+    def get_minimum_radius(self):
+        '''
+        Gets the minimum radius of the interaction area.
+        :return: The minimum radius of the interaction area.
+        '''
+        minimum_radius = None
+        try:
+            minimum_radius = self.file_parser.getint(section='behavior', option='minimum_radius')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return minimum_radius
+    
+    def get_maximum_radius(self):
+        '''
+        Gets the maximum radius of the interaction area.
+        :return: The maximum radius of the interaction area.
+        '''
+        maximum_radius = None
+        try:
+            maximum_radius = self.file_parser.getint(section='behavior', option='maximum_radius')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return maximum_radius
+    
+    def get_interaction_threshold(self):
+        '''
+        Gets the interaction threshold.
+        :return: The interaction threshold.
+        '''
+        interaction_threshold = None
+        try:
+            interaction_threshold = self.file_parser.getfloat(section='behavior', option='interaction_threshold')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return interaction_threshold
+    
     def get_k_rating_past(self):
         '''
         Gets the k ratings to consider from a user's past to modify a specific rating.
@@ -121,26 +217,26 @@ class AccessGenerationConfig(AccessData):
             logging.error(e)
         return is_gaussian_distribution
     
-    def get_minimum_year_timestamp(self):
+    def get_minimum_date_timestamp(self):
         '''
-        Gets the minimum year to generate the timestamp in the rating file.
-        :return: The minimum year to generate the timestamp.
+        Gets the minimum date to generate the timestamp in the rating file.
+        :return: The minimum date to generate the timestamp.
         '''
         minimum_value_rating = None
         try:
-            minimum_value_rating = self.file_parser.getint(section='rating', option='minimum_year_timestamp')
+            minimum_value_rating = self.file_parser.get(section='rating', option='minimum_date_timestamp')
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
         return minimum_value_rating
     
-    def get_maximum_year_timestamp(self):
+    def get_maximum_date_timestamp(self):
         '''
-        Gets the maximum year to generate the timestamp in the rating file.
-        :return: The maximum year to generate the timestamp.
+        Gets the maximum date to generate the timestamp in the rating file.
+        :return: The maximum date to generate the timestamp.
         '''
         maximum_value_rating = None
         try:
-            maximum_value_rating = self.file_parser.getint(section='rating', option='maximum_year_timestamp')
+            maximum_value_rating = self.file_parser.get(section='rating', option='maximum_date_timestamp')
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
         return maximum_value_rating

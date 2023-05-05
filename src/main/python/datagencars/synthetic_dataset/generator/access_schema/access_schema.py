@@ -1,6 +1,6 @@
 import logging
 from configparser import NoOptionError, NoSectionError
-import pandas as pd
+import ast
 import numpy as np
 
 from datagencars.synthetic_dataset.generator.access_schema.access_data import AccessData
@@ -23,7 +23,7 @@ class AccessSchema(AccessData):
         file_type = None
         try:
             file_type = self.file_parser.get(section='global', option='type')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return file_type 
 
@@ -35,7 +35,7 @@ class AccessSchema(AccessData):
         number_attributes = None
         try:
             number_attributes = self.file_parser.getint(section='global', option='number_attributes')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return number_attributes 
     
@@ -63,7 +63,7 @@ class AccessSchema(AccessData):
         attribute_name = None
         try:        
             attribute_name = self.file_parser.get(section=f'attribute{str(position)}', option=f'name_attribute_{str(position)}')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return attribute_name
     
@@ -91,7 +91,7 @@ class AccessSchema(AccessData):
         type_attribute = None
         try:
             type_attribute = self.file_parser.get(section=f'attribute{str(position)}', option=f'type_attribute_{str(position)}')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return type_attribute
     
@@ -104,7 +104,7 @@ class AccessSchema(AccessData):
         generator_type_attribute = None
         try:        
             generator_type_attribute = self.file_parser.get(section=f'attribute{str(position)}', option=f'generator_type_attribute_{str(position)}')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return generator_type_attribute
 
@@ -117,7 +117,7 @@ class AccessSchema(AccessData):
         number_posible_values_attribute = None
         try:        
             number_posible_values_attribute = self.file_parser.getint(section=f'attribute{str(position)}', option=f'number_posible_values_attribute_{str(position)}')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return number_posible_values_attribute
 
@@ -134,7 +134,7 @@ class AccessSchema(AccessData):
             if number_posible_values_attribute:
                 for number in range(1, number_posible_values_attribute+1):
                     possible_values_attribute_list.append(self.file_parser.get(section=f'attribute{str(position)}', option=f'posible_value_{str(number)}_attribute_{str(position)}'))
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return possible_values_attribute_list
     
@@ -149,7 +149,7 @@ class AccessSchema(AccessData):
             if attribute_name != 'other':
                 attribute_position = self.get_position_from_attribute_name(attribute_name)
                 attribute_type = self.get_type_attribute_from_pos(position=attribute_position)
-                if attribute_type == 'String':
+                if attribute_type == 'String': #or attribute_type == 'List':
                     possible_values_attribute_list = self.get_possible_values_attribute_list_from_pos(position=attribute_position)
                 elif attribute_type == 'Boolean':
                     possible_values_attribute_list = [False, True]
@@ -175,12 +175,112 @@ class AccessSchema(AccessData):
         :return: The input parameter given the position of an attribute.
         '''
         input_parameter_attribute = None
-        try:        
+        try:
             input_parameter_attribute = self.file_parser.get(section=f'attribute{str(position)}', option=f'input_parameter_attribute_{str(position)}')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
+            # logging.error(e)
+            pass
+        return input_parameter_attribute
+    
+    def get_input_parameter_subattribute_from_pos(self, position_attribute, position_subattribute):
+        '''
+        Gets the input parameter given the position of a subattribute.
+        :param position_attribute: The position of an attribute.
+        :param position_subattribute: The position of a subattribute.
+        :return: The input parameter given the position of a subattribute.
+        '''
+        try:
+            input_parameter_attribute = self.file_parser.get(section=f'attribute{str(position_attribute)}', option=f'input_parameter_subattribute_{str(position_subattribute)}_attribute_{str(position_attribute)}')
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return input_parameter_attribute
+        
+    def get_subattribute_input_parameters_dict_from_pos(self, position_attribute):
+        '''
+        Gets a dictionary of input parameters for subattributes given the position of an attribute.
+
+        :param position_attribute: The position of an attribute.
+        :return: A dictionary with subattribute names as keys and input parameters as values.
+        '''
+        input_parameters_dict = {}
+        number_maximum_subattributes = self.get_number_maximum_subattribute_from_pos(position_attribute)
+
+        for position_subattribute in range(1, number_maximum_subattributes + 1):
+            subattribute_name = self.get_name_subattribute_from_pos(position_attribute, position_subattribute)
+            input_parameter = self.get_input_parameter_subattribute_from_pos(position_attribute, position_subattribute)
+
+            # Check if the input_parameter is a string representation of a list
+            if input_parameter and input_parameter.startswith('[') and input_parameter.endswith(']'):
+                input_parameter = eval(input_parameter)
+
+            input_parameters_dict[subattribute_name] = input_parameter
+
+        return input_parameters_dict
+    
+    def get_subattribute_input_parameters_dict_from_name_attribute(self, name_attribute):
+        """
+        Gets a list of dictionaries with input parameters based on the attribute name.
+        :param name_attribute: The name of the attribute.
+        :return: A list of dictionaries with input parameters.
+        """
+        input_parameters_list = []
+        number_attributes = self.get_number_attributes()
+        position_attribute = None
+
+        for pos in range(1, number_attributes + 1):
+            if self.get_attribute_name_from_pos(pos) == name_attribute:
+                position_attribute = pos
+                break
+
+        if position_attribute:
+            input_parameters_string = self.file_parser.get(section=f"attribute{str(position_attribute)}", option=f"input_parameter_attribute_{str(position_attribute)}")
             
+            if input_parameters_string:
+                input_parameters_list = eval(input_parameters_string)
+
+        return input_parameters_list
+    
+    def get_number_implicit_rating_rules(self):
+        '''
+        Gets the number of implicit rating rules.
+        :return: The number of implicit rating rules.
+        '''
+        number_implicit_rating_rules = 0
+        try:
+            while True:
+                self.file_parser.get(section='implicit_rating_rules', option=f'rule_{number_implicit_rating_rules + 1}')
+                number_implicit_rating_rules += 1
+        except (NoOptionError, NoSectionError) as e:
+            logging.debug(f'Number of implicit rating rules found: {number_implicit_rating_rules}')
+        return number_implicit_rating_rules
+
+    def get_implicit_rating_rule_from_pos(self, position):
+        '''
+        Gets the details of a specific implicit rating rule.
+        :param position: The position of the implicit rating rule.
+        :return: The details of a specific implicit rating rule as a dictionary.
+        '''
+        implicit_rating_rule = None
+        try:
+            implicit_rating_rule_str = self.file_parser.get(section='implicit_rating_rules', option=f'rule_{position}')
+            implicit_rating_rule = ast.literal_eval(implicit_rating_rule_str)
+        except (NoOptionError, NoSectionError, ValueError) as e:
+            logging.error(e)
+        return implicit_rating_rule
+
+    def get_all_implicit_rating_rules(self):
+        '''
+        Gets a list of all the implicit rating rules.
+        :return: A list of dictionaries containing the details of all implicit rating rules.
+        '''
+        implicit_rating_rules = []
+        number_implicit_rating_rules = self.get_number_implicit_rating_rules()
+        for position in range(1, number_implicit_rating_rules + 1):
+            implicit_rating_rule = self.get_implicit_rating_rule_from_pos(position)
+            if implicit_rating_rule:
+                implicit_rating_rules.append(implicit_rating_rule)
+        return implicit_rating_rules
+
     def get_minimum_value_attribute_from_pos(self, position):
         '''
         Gets the minimum value of an attribute.
@@ -190,7 +290,7 @@ class AccessSchema(AccessData):
         minimum_value_attribute = None
         try:        
             minimum_value_attribute = self.file_parser.get(section=f'attribute{str(position)}', option=f'minimum_value_attribute_{str(position)}')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return minimum_value_attribute
     
@@ -203,7 +303,7 @@ class AccessSchema(AccessData):
         maximum_value_attribute = None
         try:        
             maximum_value_attribute = self.file_parser.get(section=f'attribute{str(position)}', option=f'maximum_value_attribute_{str(position)}')
-        except (NoOptionError, NoSectionError) as e:            
+        except (NoOptionError, NoSectionError) as e:
             logging.error(e)
         return maximum_value_attribute
     
@@ -278,7 +378,7 @@ class AccessSchema(AccessData):
                     name_subattribute.append(self.file_parser.get(section=f'attribute{str(position)}', option=f'name_subattribute_{str(number)}_attribute_{str(position)}'))
         except (NoOptionError, NoSectionError) as e:
             logging.error(e)
-        return name_subattribute   
+        return name_subattribute
 
     def get_name_subattribute_from_pos(self, position_attribute, position_subattribute):
         '''

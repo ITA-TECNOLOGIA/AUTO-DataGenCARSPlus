@@ -65,7 +65,7 @@ class GeneratorAttributeCorrelation(GeneratorAttribute):
                 else:                   
                     raise Exception(f'The schema file has no ranking_order_by_attribute_{str(position_attribute)} property.')
                 attribute_value = self.get_attribute_value_for_numeric_str(possible_values_attribute_list, ranking_order, with_noise, name_profile)                
-            elif type_attribute == 'String':                
+            elif type_attribute == 'String' or type_attribute == 'List':                
                 possible_values_attribute_list = self.schema_access.get_possible_values_attribute_list_from_pos(position_attribute)
                 ranking_order = self.schema_access.get_ranking_order_by_attribute_from_pos(position_attribute)
                 attribute_value = self.get_attribute_value_for_numeric_str(possible_values_attribute_list, ranking_order, with_noise, name_profile)
