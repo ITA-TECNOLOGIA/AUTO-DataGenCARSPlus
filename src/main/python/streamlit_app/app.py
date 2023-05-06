@@ -1100,45 +1100,46 @@ elif general_option == 'Analysis a dataset':
                     item_statistics_dict['percentage repeated items'] = [percentage_repeated_items]
                     item_statistics_df = pd.DataFrame(item_statistics_dict)
                     st.dataframe(item_statistics_df)   
-                    # Contexts per user:                    
-                    st.markdown("*Contexts*")
-                    # Statistics of contexts:
-                    context_statistics_dict = {}         
-                    # Number of contexts by user:           
-                    number_contexts_df = extract_statistics_rating.get_number_ratings_by_user()
-                    number_contexts = number_contexts_df.loc[number_contexts_df['user_id'] == selected_user, 'count_ratings'].iloc[0]
-                    # Percentage of contexts by user:
-                    percentage_contexts_df = extract_statistics_rating.get_percentage_ratings_by_user()
-                    percentage_contexts = percentage_contexts_df.loc[percentage_contexts_df['user_id'] == selected_user, 'percentage_ratings'].iloc[0]
-                    # Average of contexts by user:    
-                    avg_contexts_df = extract_statistics_rating.get_avg_contexts_by_user()
-                    avg_contexts = avg_contexts_df.loc[avg_contexts_df['user_id'] == selected_user, 'avg_contexts'].iloc[0]
-                    # Variance of contexts by user:
-                    variance_contexts_df = extract_statistics_rating.get_variance_contexts_by_user()
-                    variance_contexts = variance_contexts_df.loc[variance_contexts_df['user_id'] == selected_user, 'variance_contexts'].iloc[0]
-                    # Standard deviation of contexts by user:
-                    sd_contexts_df = extract_statistics_rating.get_sd_contexts_by_user()                    
-                    sd_contexts = sd_contexts_df.loc[sd_contexts_df['user_id'] == selected_user, 'sd_contexts'].iloc[0]                    
-                    # Number of not repeated contexts by user:                    
-                    number_not_repeated_contexts_df = extract_statistics_rating.get_number_not_repeated_contexts_by_user()
-                    number_not_repeated_contexts = number_not_repeated_contexts_df.loc[number_not_repeated_contexts_df['user_id'] == selected_user, 'not_repeated_contexts'].iloc[0]
-                    # Percentage of not repeated contexts by user:                    
-                    percentage_not_repeated_contexts_df = extract_statistics_rating.get_percentage_not_repeated_contexts_by_user()
-                    percentage_not_repeated_contexts = percentage_not_repeated_contexts_df.loc[percentage_not_repeated_contexts_df['user_id'] == selected_user, 'percentage_not_repeated_contexts'].iloc[0]
-                    # Percentage of not repeated contexts by user:                    
-                    percentage_repeated_contexts_df = extract_statistics_rating.get_percentage_repeated_contexts_by_user()
-                    percentage_repeated_contexts = percentage_repeated_contexts_df.loc[percentage_repeated_contexts_df['user_id'] == selected_user, 'porcentage_repeated_contexts'].iloc[0]
-                    context_statistics_dict['user_id'] = [selected_user]
-                    context_statistics_dict['count'] = [number_contexts]
-                    context_statistics_dict['percentage'] = [percentage_contexts]
-                    context_statistics_dict['average'] = [avg_contexts]                  
-                    context_statistics_dict['variance'] = [variance_contexts]                  
-                    context_statistics_dict['standard deviation'] = [sd_contexts] 
-                    context_statistics_dict['not repeated contexts'] = [number_not_repeated_contexts]
-                    context_statistics_dict['percentage not repeated contexts'] = [percentage_not_repeated_contexts]
-                    context_statistics_dict['percentage repeated contexts'] = [percentage_repeated_contexts]     
-                    context_statistics_df = pd.DataFrame(context_statistics_dict)
-                    st.dataframe(context_statistics_df)    
+                    if with_context:
+                        # Contexts per user:                    
+                        st.markdown("*Contexts*")
+                        # Statistics of contexts:
+                        context_statistics_dict = {}         
+                        # Number of contexts by user:           
+                        number_contexts_df = extract_statistics_rating.get_number_ratings_by_user()
+                        number_contexts = number_contexts_df.loc[number_contexts_df['user_id'] == selected_user, 'count_ratings'].iloc[0]
+                        # Percentage of contexts by user:
+                        percentage_contexts_df = extract_statistics_rating.get_percentage_ratings_by_user()
+                        percentage_contexts = percentage_contexts_df.loc[percentage_contexts_df['user_id'] == selected_user, 'percentage_ratings'].iloc[0]
+                        # Average of contexts by user:    
+                        avg_contexts_df = extract_statistics_rating.get_avg_contexts_by_user()
+                        avg_contexts = avg_contexts_df.loc[avg_contexts_df['user_id'] == selected_user, 'avg_contexts'].iloc[0]
+                        # Variance of contexts by user:
+                        variance_contexts_df = extract_statistics_rating.get_variance_contexts_by_user()
+                        variance_contexts = variance_contexts_df.loc[variance_contexts_df['user_id'] == selected_user, 'variance_contexts'].iloc[0]
+                        # Standard deviation of contexts by user:
+                        sd_contexts_df = extract_statistics_rating.get_sd_contexts_by_user()                    
+                        sd_contexts = sd_contexts_df.loc[sd_contexts_df['user_id'] == selected_user, 'sd_contexts'].iloc[0]                    
+                        # Number of not repeated contexts by user:                    
+                        number_not_repeated_contexts_df = extract_statistics_rating.get_number_not_repeated_contexts_by_user()
+                        number_not_repeated_contexts = number_not_repeated_contexts_df.loc[number_not_repeated_contexts_df['user_id'] == selected_user, 'not_repeated_contexts'].iloc[0]
+                        # Percentage of not repeated contexts by user:                    
+                        percentage_not_repeated_contexts_df = extract_statistics_rating.get_percentage_not_repeated_contexts_by_user()
+                        percentage_not_repeated_contexts = percentage_not_repeated_contexts_df.loc[percentage_not_repeated_contexts_df['user_id'] == selected_user, 'percentage_not_repeated_contexts'].iloc[0]
+                        # Percentage of not repeated contexts by user:                    
+                        percentage_repeated_contexts_df = extract_statistics_rating.get_percentage_repeated_contexts_by_user()
+                        percentage_repeated_contexts = percentage_repeated_contexts_df.loc[percentage_repeated_contexts_df['user_id'] == selected_user, 'porcentage_repeated_contexts'].iloc[0]
+                        context_statistics_dict['user_id'] = [selected_user]
+                        context_statistics_dict['count'] = [number_contexts]
+                        context_statistics_dict['percentage'] = [percentage_contexts]
+                        context_statistics_dict['average'] = [avg_contexts]                  
+                        context_statistics_dict['variance'] = [variance_contexts]                  
+                        context_statistics_dict['standard deviation'] = [sd_contexts] 
+                        context_statistics_dict['not repeated contexts'] = [number_not_repeated_contexts]
+                        context_statistics_dict['percentage not repeated contexts'] = [percentage_not_repeated_contexts]
+                        context_statistics_dict['percentage repeated contexts'] = [percentage_repeated_contexts]     
+                        context_statistics_df = pd.DataFrame(context_statistics_dict)
+                        st.dataframe(context_statistics_df)    
                     # Ratings per user:                    
                     st.markdown("*Ratings*")                  
                     rating_statistics_dict = {}         
