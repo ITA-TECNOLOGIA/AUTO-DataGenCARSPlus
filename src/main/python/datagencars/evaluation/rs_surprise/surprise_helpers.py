@@ -6,6 +6,7 @@ from surprise import (
     KNNBaseline,
     KNNBasic,
     KNNWithMeans,
+    KNNWithZScore,
     NMF,
     NormalPredictor,
     SlopeOne,
@@ -37,6 +38,8 @@ def create_algorithm(algo_name, params=None):
         return KNNWithMeans()
     elif algo_name == "KNNBaseline":
         return KNNBaseline()
+    elif algo_name == 'KNNWithZScore':
+        return KNNWithZScore()
     elif algo_name == "CoClustering":
         return CoClustering(**params)
     elif algo_name == "BaselineOnly":
@@ -56,19 +59,19 @@ def create_split_strategy(strategy, params):
     if strategy == "KFold":
         return ms.KFold(n_splits=params["n_splits"], shuffle=params["shuffle"])
     elif strategy == "RepeatedKFold":
-        return ms.RepeatedKFold(n_splits=params["n_splits"], n_repeats=params["n_repeats"], shuffle=params["shuffle"])
+        return ms.RepeatedKFold(n_splits=params["n_splits"], n_repeats=params["n_repeats"])
     elif strategy == "ShuffleSplit":
-        return ms.ShuffleSplit(n_splits=params["n_splits"], test_size=params["test_size"], random_state=params["random_state"])
+        return ms.ShuffleSplit(n_splits=params["n_splits"], test_size=params["test_size"], shuffle=params["shuffle"])
     elif strategy == "LeaveOneOut":
-        return ms.LeaveOneOut()
-    elif strategy == "PredefinedKFold":
-        folds = []
-        with open(params["folds_file"]) as f:
-            for line in f:
-                folds.append(list(map(int, line.split())))
-        return ms.PredefinedKFold(folds)
-    elif strategy == "train_test_split":
-        return ms.train_test_split(test_size=params["test_size"], random_state=params["random_state"])
+        return ms.LeaveOneOut(n_splits=params["n_splits"], min_n_ratings=params["min_n_ratings"])
+    # elif strategy == "PredefinedKFold":
+    #     folds = []
+    #     with open(params["folds_file"]) as f:
+    #         for line in f:
+    #             folds.append(list(map(int, line.split())))
+    #     return ms.PredefinedKFold(folds)
+    # elif strategy == "train_test_split":
+    #     return ms.train_test_split(test_size=params["test_size"], random_state=params["random_state"])
     else:
         raise ValueError('Invalid split strategy')
 
