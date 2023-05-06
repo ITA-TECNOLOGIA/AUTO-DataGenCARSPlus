@@ -13,7 +13,7 @@ class Workflow:
         Creates a specific workflow.
         :param workflow_name: The workflow name.
         :param json_opt_params: A JSON with parameter values.
-        :return: The generated workflow image path.        
+        :return: The generated workflow image path.
         """
         with open(self.workflow_file_description, 'r') as f:
             # Load the JSON data into a Python dictionary
