@@ -73,7 +73,7 @@ class AccessUserProfile():
                         attribute_rating_aux = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
                         sum_attribute_rating += attribute_rating_aux
                     attribute_rating = sum_attribute_rating/len(attribute_value_list[idx])
-                elif attribute_value_list[idx]: # and not np.isnan(attribute_value_list[idx]):
+                elif attribute_value_list[idx] and not pd.isna(attribute_value_list[idx]):
                     # Calculating attribute_rating of "y" for one point (x,y) in the line:                              
                     position_array = attribute_possible_value_list[idx].index(attribute_value_list[idx])
                     attribute_rating = self.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_possible_value_list[idx], importance_rank)
