@@ -653,8 +653,8 @@ elif general_option == 'Pre-process a dataset':
         st.header('Apply workflow: Extend dataset')
         with st.expander(label='Help information'):
             st.markdown("""Workflow to generate a dataset of ratings incrementally.""")
-        with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto")
+        with st.expander(label='Workflow'):            
+            st.write('TODO')
         st.write('TODO')
     elif is_preprocess == 'Recalculate ratings':          
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
@@ -662,7 +662,7 @@ elif general_option == 'Pre-process a dataset':
         with st.expander(label='Help information'):
             st.markdown("""TODO""")
         with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto") 
+            st.write('TODO')
         st.write('TODO')        
     elif is_preprocess == 'Replace NULL values':
         file_selectibox = st.selectbox(label='Files available:', options=['item', 'context'])
@@ -674,7 +674,7 @@ elif general_option == 'Pre-process a dataset':
         with st.expander(label='Help information'):
             st.markdown("""Workflow to complete unknown contextual information.""")
         with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto") 
+            st.write('TODO')
         st.write('TODO')
     elif is_preprocess == 'Generate user profile':
         if with_context:
@@ -685,7 +685,7 @@ elif general_option == 'Pre-process a dataset':
         with st.expander(label='Help information'):
             st.markdown("""TODO""")
         with st.expander(label='Workflow'):
-            st.image(image='resources/workflows/workflow.png', use_column_width=False, output_format="auto") 
+            st.write('TODO')
         st.write('TODO')
     elif is_preprocess == 'Ratings to binary':        
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
