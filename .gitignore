@@ -7,4 +7,9 @@ resources/workflows/mapping_categorization.png
 resources/workflows/ratings_to_binary.png
 resources/workflows/workflow.png
 resources/dataset_sts/README.txt
+resources/data_schema/*
+resources/dataset_sts*
+resources/dataset_ml_100k/*
+resources/dataset_ml_27m/*
+resources/data_schema_imascono/*
 cert/

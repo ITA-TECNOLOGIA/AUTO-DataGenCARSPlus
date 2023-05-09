@@ -433,18 +433,22 @@ def select_params(algorithm):
     :return: A dictionary with parameter values.
     """
     if algorithm == "SVD":
+        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
         return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_svd'),
                 "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svd'),
                 "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.00, value=0.005, step=0.0001, key='lr_all_svd'),
                 "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.00, value=0.02, key='reg_all_svd')}
     if algorithm == "BaselineOnly":
+        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
         return {"bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_baselineonly'),
                                 "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_i_baselineonly'),
                                 "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_u_baselineonly')}}
     if algorithm == "CoClustering":
+        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
         return {"n_cltr_u": st.sidebar.number_input("Number of clusters for users", min_value=1, max_value=1000, value=5),
                 "n_cltr_i": st.sidebar.number_input("Number of clusters for items", min_value=1, max_value=1000, value=5)}
     if algorithm == "NMF":
+        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
         return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_nmf'),
                 "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_nmf'),
                 "reg_pu": st.sidebar.number_input("Regularization term for user factors", min_value=0.0001, max_value=1.0, value=0.02),
@@ -454,6 +458,7 @@ def select_params(algorithm):
     if algorithm == "SlopeOne":
         return {}
     if algorithm == "SVDpp":
+        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
         return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_svdpp'),
                 "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svdpp'),
                 "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005, key='lr_all_svdpp'),
@@ -550,23 +555,22 @@ def select_split_strategy(strategy):
     :return: A dictionary with parameter values. 
     """
     if strategy == "KFold":
-        return {"n_splits": st.sidebar.number_input("Number of splits", min_value=2, max_value=10, value=5),
+        st.sidebar.markdown("""A basic cross-validation iterator. Each fold is used once as a testset while the k - 1 remaining folds are used for training.""")
+        return {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
                 "shuffle": st.sidebar.checkbox("Shuffle?")}
     elif strategy == "RepeatedKFold":
-        return {"n_splits": st.sidebar.number_input("Number of splits", min_value=2, max_value=10, value=5),
-                "n_repeats": st.sidebar.number_input("Number of repeats", min_value=1, max_value=10, value=1),
-                "shuffle": st.sidebar.checkbox("Shuffle?")}
+        st.sidebar.markdown("""Repeats KFold n times with different randomization in each repetition.""")
+        return {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
+                "n_repeats": st.sidebar.number_input("Number of repeats", min_value=1, max_value=10, value=1)}
     elif strategy == "ShuffleSplit":
-        return {"n_splits": st.sidebar.number_input("Number of splits", min_value=2, max_value=10, value=5),
+        st.sidebar.markdown("""A basic cross-validation iterator with random trainsets and testsets. Contrary to other cross-validation strategies, random splits do not guarantee that all folds will be different, although this is still very likely for sizeable datasets.""")
+        return {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
                 "test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
-                "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
+                "shuffle": st.sidebar.checkbox("Shuffle?")}
     elif strategy == "LeaveOneOut":
-        return {}
-    elif strategy == "PredefinedKFold":
-        return {"folds_file": st.sidebar.file_uploader("Upload folds file")}
-    elif strategy == "train_test_split":
-        return {"test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
-                "random_state": st.sidebar.number_input("Random state", min_value=0, max_value=100, value=42)}
+        st.sidebar.markdown("""Cross-validation iterator where each user has exactly one rating in the testset. Contrary to other cross-validation strategies, LeaveOneOut does not guarantee that all folds will be different, although this is still very likely for sizeable datasets.""")
+        return {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
+                "min_n_ratings": st.sidebar.number_input("Minimum number of ratings for each user (trainset)", min_value=0, max_value=10000, value=0)}
     
 def select_split_strategy_contextual(strategy):
     """
@@ -576,24 +580,15 @@ def select_split_strategy_contextual(strategy):
     """
     if strategy == "ShuffleSplit":
         n_splits = st.sidebar.number_input("Number of splits", 2, 100, 10)
-        train_size = st.sidebar.slider("Train set size (0.0 to 1.0)", 0.01, 1.0, 0.2, step=0.01)
-        random_state = st.sidebar.number_input("Random state", 0, 100, 42)
-        return {"n_splits": n_splits, "train_size": train_size, "random_state": random_state}
+        train_size = st.sidebar.slider("Train set size (0.0 to 1.0)", 0.01, 1.0, 0.2, step=0.01)        
+        return {"n_splits": n_splits, "train_size": train_size}
     elif strategy == "KFold":
-        n_splits = st.sidebar.number_input("Number of folds", 2, 100, 5)
-        random_state = st.sidebar.number_input("Random state (KFold)", 0, 100, 42)
-        return {"n_splits": n_splits, "random_state": random_state}
+        n_splits = st.sidebar.number_input("Number of folds", 2, 100, 5)             
+        return {"n_splits": n_splits, "shuffle": st.sidebar.checkbox("Shuffle?")}
     elif strategy == "LeaveOneOut":
-        return {}
-    elif strategy == "RepeatedKFold":
-        n_splits = st.sidebar.number_input("Number of folds (RepeatedKFold)", 2, 100, 5)
-        n_repeats = st.sidebar.number_input("Number of repetitions", 1, 100, 10)
-        random_state = st.sidebar.number_input("Random state (RepeatedKFold)", 0, 100, 42)
-        return {"n_splits": n_splits, "n_repeats": n_repeats, "random_state": random_state}
-    elif strategy == "train_test_split":
-        test_size = st.sidebar.slider("Test set size (train_test_split, 0.0 to 1.0)", 0.01, 1.0, 0.2, step=0.01)
-        random_state = st.sidebar.number_input("Random state (train_test_split)", 0, 100, 42)
-        return {"test_size": test_size, "random_state": random_state}
+        st.sidebar.markdown("""Cross-validation iterator where each user has exactly one rating in the testset. Contrary to other cross-validation strategies, LeaveOneOut does not guarantee that all folds will be different, although this is still very likely for sizeable datasets.""")
+        return {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
+                "min_n_ratings": st.sidebar.number_input("Minimum number of ratings for each user (trainset)", min_value=0, max_value=10000, value=0)}
 
 def evaluate_algo(algo_list, strategy_instance, metrics, data):
     """
@@ -645,48 +640,34 @@ def evaluate_algo(algo_list, strategy_instance, metrics, data):
     df = df[cols]
     return df
 
-def visualize_results_algo(df, algorithm):
+def visualize_graph_mean_rs(df, increment_yaxis):
     """
-    Visualize results of the evaluation of recommendation algorithms.    
-    :param df: A dataframe with evaluation results.
-    :param algorithm: Recommendation algorithms.    
+    Visualize mean results of the evaluation of recommendation algorithms.   
+    :param df: A dataframe with evaluation mean results.
+    :param increment_yaxis: A float value to increase the maximum value of the Y-axis.    
     """
-    # Show the mean of the metrics for the chosen algorithm
-    df_algo = df[df["Algorithm"] == algorithm].drop(["Algorithm", "Fold"], axis=1)
-    st.write(f"**{algorithm}** mean")
-    st.write(df_algo.mean())
-
-    # Filter the dataframe for the chosen algorithm
-    filtered_df = df[df["Algorithm"] == algorithm]
-
-    # Create the line chart
+    # Create trace for each column:
     fig = go.Figure()
-    for metric in [col for col in df.columns if col not in ["Algorithm", "Fold", "Time (train)", "Time (test)"]]:
-        # Create a trace for the current metric
-        fig.add_trace(go.Scatter(
-            x=filtered_df["Fold"],
-            y=filtered_df[metric],
-            name=metric
-        ))
-
-    fig.update_layout(
-        xaxis_title="Fold",
-        yaxis_title="Value",
-        legend=dict(title="Metrics")
-    )
+    for column in df.columns[1:]:
+        fig.add_trace(go.Bar(x=df['Algorithm'], y=df[column], name=column))      
+    # Create figure:
+    selected_metric_list = df.columns[1:].tolist()
+    fig.update_layout(title='Performance Comparison of Recommendation Algorithms',
+                      xaxis_title='Recommendation Algorithm',
+                      yaxis_title='Performance',
+                      legend=dict(title="Metrics"),
+                      barmode='group',
+                      yaxis_range=[0, df[selected_metric_list].max().max()+increment_yaxis])
+    # Show plot:                        
     st.plotly_chart(fig, use_container_width=True)
 
-def visualize_results_metric(df, metric):
+def visualize_graph_fold_rs(df, metric, increment_yaxis):
     """
-    Visualize evaluation results by metric.    
-    :param df: A dataframe with evaluation results.
-    :param metric: The metric.
+    Visualize fold results by metric of the evaluation of recommendation algorithms.   
+    :param df: A dataframe with evaluation results by fold.
+    :param metric: The metric measure.
+    :param increment_yaxis: A float value to increase the maximum value of the Y-axis.    
     """
-    # Show the mean of the metrics for each algorithm
-    df_metric = df.pivot(index="Fold", columns="Algorithm", values=metric)
-    st.write(f"**{metric} mean**")
-    st.write(df_metric.mean())
-
     algorithms = df["Algorithm"].unique()
     fig = go.Figure()
     for algorithm in algorithms:
@@ -701,12 +682,13 @@ def visualize_results_metric(df, metric):
         ))
     fig.update_layout(
         xaxis_title="Fold",
-        yaxis_title="Value",
-        legend=dict(title="Algorithms")
+        yaxis_title="Performance",
+        legend=dict(title="Recommendation algorithms"),
+        yaxis_range=[0, df[metric].max().max()+increment_yaxis]
     )
     st.plotly_chart(fig, use_container_width=True)
 
-def visualize_results_combined(df, algorithms, metrics, selected_users):
+def visualize_graph_fold_cars(df, algorithms, metrics, selected_users, increment_yaxis):
     """
     Visualize a line graphic with evaluation results considering different algorithms, metrics and users.
     :param df: A dataframe with evaluation results.
@@ -742,17 +724,14 @@ def visualize_results_combined(df, algorithms, metrics, selected_users):
                         mode="markers+lines"
                     ))
     fig.update_layout(
-        xaxis=dict(
-            title="Fold",
-            dtick=1,
-            tickmode='linear'
-        ),
+        xaxis=dict(title="Fold", dtick=1, tickmode='linear'),
         yaxis_title="Performance",
-        legend=dict(title="Measures of performance")
+        legend=dict(title="Measures of performance"),
+        yaxis_range=[0, df[metrics].max().max()+increment_yaxis]
     )
     st.plotly_chart(fig, use_container_width=True)
 
-def visualize_mean_evaluation_bar(df, algorithms, metrics, selected_users):
+def visualize_graph_mean_cars(df, algorithms, metrics, selected_users, increment_yaxis):
     """
     Visualize a bar graphic with evaluation results considering different algorithms, metrics and users.
     :param df: A dataframe with evaluation results.
@@ -789,21 +768,22 @@ def visualize_mean_evaluation_bar(df, algorithms, metrics, selected_users):
         xaxis_title="Measures of performance",
         yaxis_title="Performance",
         legend=dict(title="Algorithms & Users"),
-        barmode='group'
+        barmode='group',
+        yaxis_range=[0, df[metrics].max().max()+increment_yaxis]
     )
     st.plotly_chart(fig, use_container_width=True)
 
-def select_columns(df, label):
+def select_contextual_features(df, label):
     """
-    TODO
-    :param df: TODO
-    :param label: TODO
-    ;return: TODO
+    Gets a sub-dataframe with the user-selected item or context features (from item_df or context_df, respectively).
+    :param df: The item or context dataframe.
+    :param label: The item or context label ("item" or "context").
+    ;return: A sub-dataframe with the user-selected item or context features.
     """
-    column_names = df.columns.tolist()
-    selected_columns = st.sidebar.multiselect(f'Select features ({label}):', column_names, column_names)
+    column_names = df.columns[1:].tolist() # Excluding the item_id or context_id.    
+    selected_columns = st.sidebar.multiselect(label=f'Select {label} features:', options=column_names, default=column_names)
     if selected_columns:
-        return df[selected_columns]
+        return df[[label+'_id']+selected_columns]
     
 def replace_with_none(params):
     """
