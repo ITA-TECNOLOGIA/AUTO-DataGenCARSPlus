@@ -7,6 +7,7 @@ import datagencars.evaluation.rs_surprise.evaluation as evaluation
 import base64
 import io
 import requests
+import config as cf
 
 
 ####### Generate a synthetic dataset #######
@@ -352,11 +353,10 @@ def infer_schema(df):
     :param df: original dataset
     :return: A dataframe with schema information
     """
-    possible_types = {'int':'Integer', 'float':'Float', 'bool':'Boolean', 'str':'String'}
-    def infer(type,items):
+    possible_types = {int:'Integer', float:'Float', bool:'Boolean', str:'String'}
+    def infer(items):
         try:
-            items = list(map(float,items))
-            return possible_types[type]
+            return possible_types[type(items[0])]
         except:
             return 'Unknown'
         
@@ -370,16 +370,10 @@ def infer_schema(df):
     max_vals = list()
     for attribute in attributes:
         items = list(set(df[attribute].drop_duplicates().dropna()))
-        if 'NaN' in items:
-            print('removing nans')
-            items = list(set(df[attribute])).remove(np.nan).remove('nan').remove('').remove('NaN')
         # Infer types
-        item_type = 'Unknown'
-        for type in possible_types.keys():
-            if item_type == 'Unknown':
-                item_type = infer(type, items)
+        item_type = infer(items)
         # Infer rest of info
-        if item_type == 'Integer':
+        if item_type == 'Integer' or item_type == 'Float':
             if len(items) >= 2:
                 item_generator = 'Integer/Float/String/Boolean (following a distribution)'
                 min_val = min(items)
@@ -396,8 +390,31 @@ def infer_schema(df):
     schema['GeneratorType'] = generator
     schema['Min_val'] = min_vals
     schema['Max_val'] = max_vals
-    return schema
-    #return schema
+
+    schema_str = '[global] \ntype=context \nnumber_attributes=' + str(len(schema)) +'\n'
+    for index, row in schema.iterrows():
+        schema_str = schema_str + '[attribute' + str(int(index+1)) + ']\n'
+        attribute = row['Attribute']
+        schema_str = schema_str + 'name_attribute_' + str(int(index+1)) + '=' + attribute + '\n'
+        st.write(f'[{attribute}]')
+        atrib_generator = st.selectbox(label='Generator type:', options=cf.GENERATOR_OPTS, key = attribute+'generator', index=cf.GENERATOR_OPTS.index(row['GeneratorType']))
+        atrib_type = st.selectbox(label='Attribute type:', options=cf.ATR_OPTS, key=attribute+'_attribute_type_', index=cf.ATR_OPTS.index(row['TypeAttribute']))
+        schema_str = schema_str + 'type_attribute_' + str(int(index+1)) + '=' + atrib_type + '\n'
+        if atrib_type == 'Integer' or atrib_type == 'Float':
+            if atrib_generator == 'Fixed':
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=FixedAttributeGenerator\n'
+                fixed_val = st.number_input(label='Fixed value of the attribute', value=row['Min_val'], key=attribute+'_fixed_val')
+                schema_str = schema_str + 'input_parameter_attribute_' + str((index+1)) + '=' + str(fixed_val) + '\n'
+            else:
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
+                integer_min = st.number_input(label='Minimum value of the attribute', value=row['Min_val'], key=attribute+'_integer_min')
+                integer_max = st.number_input(label='Maximum value of the attribute', value=row['Max_val'], key=attribute+'_integer_max')
+                schema_str = schema_str + 'minimum_value_attribute_' + str((index+1)) + '=' + str((integer_min)) + '\n'
+                schema_str = schema_str + 'maximum_value_attribute_' + str((index+1)) + '=' + str((integer_max)) + '\n'
+        st.markdown("""---""")
+        schema_str = schema_str + '\n'
+    return schema_str
+
 # Generate user profile:
 # Ratings to binary:
 def ratings_to_binary(df, threshold=3):

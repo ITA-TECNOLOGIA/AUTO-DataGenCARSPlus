@@ -12,3 +12,7 @@ PLOTS_GRID = {'visible':True, 'color':'gray', 'linestyle':'-.', 'linewidth':0.5}
 
 # Metrics:
 SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', "MAE", "MSE", "RMSE"]
+
+# App Constants
+ATR_OPTS = ['Integer', 'Float', 'String', 'Boolean']
+GENERATOR_OPTS = ['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList']

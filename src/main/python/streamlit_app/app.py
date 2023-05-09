@@ -688,22 +688,7 @@ elif general_option == 'Pre-process a dataset':
             image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
             os.remove(path)
         if not df.empty:
-            atr_opts = ['Integer', 'Float', 'String', 'Boolean']
-            generators_opt = ['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList']
-            df_schema = util.infer_schema(df)
-            schema = ''
-            for row in df_schema.iterrows():
-                attribute = row[1]['Attribute']
-                st.write(f'[{attribute}]')
-                atrib_generator = st.selectbox(label='Generator type:', options=generators_opt, key = attribute+'generator', index=generators_opt.index(row[1]['GeneratorType']))
-                atrib_type = st.selectbox(label='Attribute type:', options=atr_opts, key=attribute+'_attribute_type_', index=atr_opts.index(row[1]['TypeAttribute']))
-                if atrib_type == 'Integer':
-                    if atrib_generator == 'Fixed':
-                        fixed_val = st.number_input(label='Fixed value of the attribute', value=row[1]['Min_val'], key=attribute+'_fixed_val')
-                    else:
-                        integer_min = st.number_input(label='Minimum value of the attribute', value=row[1]['Min_val'], key=attribute+'_integer_min')
-                        integer_max = st.number_input(label='Maximum value of the attribute', value=row[1]['Max_val'], key=attribute+'_integer_max')
-                st.markdown("""---""")
+            schema = util.infer_schema(df)
             
             if st.button(label='Replace NULL Values', key='button_replace_nulls'):
                 print('Replacing NULL Values')
@@ -712,7 +697,8 @@ elif general_option == 'Pre-process a dataset':
                     new_df = replacenulls.regenerate_item_file(schema)
                 elif file_selectibox == 'context':
                     new_df = replacenulls.regenerate_context_file(schema)
-                print(new_df)
+                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_df.to_csv(index=False).encode()).decode()}" download="{file_selectibox}.csv">Download {file_selectibox} CSV</a>'
+                st.markdown(link_rating, unsafe_allow_html=True)
         else:
             st.warning("The item file or context file have not been uploaded.")
         
