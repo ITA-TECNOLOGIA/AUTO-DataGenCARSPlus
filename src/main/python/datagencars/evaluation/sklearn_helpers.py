@@ -61,20 +61,12 @@ def create_split_strategy(strategy, strategy_params):
     """
     if strategy == "ShuffleSplit":
         return ShuffleSplit(n_splits=strategy_params['n_splits'],
-                             train_size=strategy_params['train_size'],
-                             random_state=strategy_params['random_state'])
+                             train_size=strategy_params['train_size'])
     elif strategy == "KFold":
-        return KFold(n_splits=strategy_params['n_splits'],
-                     random_state=strategy_params['random_state'],
+        return KFold(n_splits=strategy_params['n_splits'],                    
                      shuffle=strategy_params['shuffle'])
     elif strategy == "LeaveOneOut":
         return LeaveOneOut()
-    elif strategy == "RepeatedKFold":
-        return RepeatedKFold(n_splits=strategy_params['n_splits'],
-                             n_repeats=strategy_params['n_repeats'],
-                             random_state=strategy_params['random_state'])
-    elif strategy == "train_test_split":
-        return train_test_split # Note that train_test_split is a function and not a class, so it doesn't need instantiation.
     else:
         raise ValueError(f"Unsupported split strategy: {strategy}")
 
@@ -100,6 +92,7 @@ def preprocess_missing_values(df, strategy='mean'):
     return pd.DataFrame(imputed_data, columns=df.columns)
 
 def evaluate(merged_df, algo_list, strategy_instance, metrics, user_ids):
+    # sourcery skip: low-code-quality
     """
     Evaluates a list of algorithms using a given split strategy
     :param merged_df: the dataframe to use
@@ -115,11 +108,9 @@ def evaluate(merged_df, algo_list, strategy_instance, metrics, user_ids):
     data = preprocess_missing_values(dummies_df, strategy='mean')
     if user_ids is None:
         user_ids = merged_df['user_id'].unique()
-
     # Prepare the input for the evaluation
     X = data.drop(columns=["user_id", "item_id", "rating"])
     y = data["rating"]
-
     # Prepare the dictionary for the metrics
     scoring = {}
     for metric in metrics:
@@ -137,7 +128,6 @@ def evaluate(merged_df, algo_list, strategy_instance, metrics, user_ids):
             scoring["mse"] = make_scorer(mean_squared_error)
         elif metric == "RMSE":
             scoring["rmse"] = make_scorer(mean_squared_error, squared=False)
-
     results = []
     for user_id in user_ids:
         user_data = data[data['user_id'] == user_id]
@@ -165,8 +155,7 @@ def evaluate(merged_df, algo_list, strategy_instance, metrics, user_ids):
                     elif metric.startswith("fit_time"):
                         fold_results["Time (train)"] = score[fold_idx]
                     elif metric.startswith("score_time"):
-                        fold_results["Time (test)"] = score[fold_idx]
-                    
+                        fold_results["Time (test)"] = score[fold_idx]                    
                     elif metric.startswith("test_fcp"):
                         fold_results["FCP"] = score[fold_idx]
                     elif metric.startswith("test_map"):
@@ -174,9 +163,7 @@ def evaluate(merged_df, algo_list, strategy_instance, metrics, user_ids):
                     elif metric.startswith("test_ndcg"):
                         fold_results["NDCG"] = score[fold_idx]
                 results.append(fold_results)
-
     results_df = pd.DataFrame(results)
-
     available_columns = results_df.columns.tolist()
     column_order = ['User', 'Fold', 'Algorithm']
     for metric in config.SCIKIT_LEARN_METRICS:
@@ -184,5 +171,4 @@ def evaluate(merged_df, algo_list, strategy_instance, metrics, user_ids):
             column_order.append(metric)
     column_order.extend(['Time (train)', 'Time (test)'])
     results_df = results_df[column_order]
-
     return results_df
