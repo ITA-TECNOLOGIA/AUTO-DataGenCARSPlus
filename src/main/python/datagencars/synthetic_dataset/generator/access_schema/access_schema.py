@@ -1,6 +1,5 @@
 import logging
 from configparser import NoOptionError, NoSectionError
-import ast
 import numpy as np
 
 from datagencars.synthetic_dataset.generator.access_schema.access_data import AccessData
@@ -239,47 +238,6 @@ class AccessSchema(AccessData):
                 input_parameters_list = eval(input_parameters_string)
 
         return input_parameters_list
-    
-    def get_number_implicit_rating_rules(self):
-        '''
-        Gets the number of implicit rating rules.
-        :return: The number of implicit rating rules.
-        '''
-        number_implicit_rating_rules = 0
-        try:
-            while True:
-                self.file_parser.get(section='implicit_rating_rules', option=f'rule_{number_implicit_rating_rules + 1}')
-                number_implicit_rating_rules += 1
-        except (NoOptionError, NoSectionError) as e:
-            logging.debug(f'Number of implicit rating rules found: {number_implicit_rating_rules}')
-        return number_implicit_rating_rules
-
-    def get_implicit_rating_rule_from_pos(self, position):
-        '''
-        Gets the details of a specific implicit rating rule.
-        :param position: The position of the implicit rating rule.
-        :return: The details of a specific implicit rating rule as a dictionary.
-        '''
-        implicit_rating_rule = None
-        try:
-            implicit_rating_rule_str = self.file_parser.get(section='implicit_rating_rules', option=f'rule_{position}')
-            implicit_rating_rule = ast.literal_eval(implicit_rating_rule_str)
-        except (NoOptionError, NoSectionError, ValueError) as e:
-            logging.error(e)
-        return implicit_rating_rule
-
-    def get_all_implicit_rating_rules(self):
-        '''
-        Gets a list of all the implicit rating rules.
-        :return: A list of dictionaries containing the details of all implicit rating rules.
-        '''
-        implicit_rating_rules = []
-        number_implicit_rating_rules = self.get_number_implicit_rating_rules()
-        for position in range(1, number_implicit_rating_rules + 1):
-            implicit_rating_rule = self.get_implicit_rating_rule_from_pos(position)
-            if implicit_rating_rule:
-                implicit_rating_rules.append(implicit_rating_rule)
-        return implicit_rating_rules
 
     def get_minimum_value_attribute_from_pos(self, position):
         '''
