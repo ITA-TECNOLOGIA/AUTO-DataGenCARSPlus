@@ -25,7 +25,7 @@ import math
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-def rmse(predictions, verbose=True):
+def rmse(predictions, verbose=False):
     """Compute RMSE (Root Mean Squared Error).
 
     .. math::
@@ -61,7 +61,7 @@ def rmse(predictions, verbose=True):
     return rmse_
 
 
-def mse(predictions, verbose=True):
+def mse(predictions, verbose=False):
     """Compute MSE (Mean Squared Error).
 
     .. math::
@@ -96,7 +96,7 @@ def mse(predictions, verbose=True):
     return mse_
 
 
-def mae(predictions, verbose=True):
+def mae(predictions, verbose=False):
     """Compute MAE (Mean Absolute Error).
 
     .. math::
@@ -129,7 +129,7 @@ def mae(predictions, verbose=True):
     return mae_
 
 
-def fcp(predictions, verbose=True):
+def fcp(predictions, verbose=False):
     """Compute FCP (Fraction of Concordant Pairs).
 
     Computed as described in paper `Collaborative Filtering on Ordinal User
@@ -270,7 +270,7 @@ def init_n_rel_and_rec_k(user_ratings):
     
     return n_rel, n_rec_k, n_rel_and_rec_k
 
-def precision(predictions, verbose=True):
+def precision(predictions, verbose=False):
     """
     Compute precision at k metric for each user
     """
@@ -290,7 +290,7 @@ def precision(predictions, verbose=True):
         print(f"Precision: {precision:1.4f}")
     return precision
 
-def recall(predictions, verbose=True):
+def recall(predictions, verbose=False):
     """
     Compute recall at k metric for each user
     """
@@ -310,7 +310,7 @@ def recall(predictions, verbose=True):
         print(f"Recalls: {recall:1.4f}")
     return recall
 
-def f1_score(predictions, verbose=True):
+def f1_score(predictions, verbose=False):
     """
     Compute F1 Score at k metric for each user
     """
@@ -331,7 +331,7 @@ def f1_score(predictions, verbose=True):
         print(f"F1_Score: {f1_score:1.4f}")
     return f1_score
 
-def map(predictions, verbose=True):
+def map(predictions, verbose=False):
     """
     Compute Mean Average Precision (MAP) at k metric for each user
     """    
@@ -356,7 +356,7 @@ def map(predictions, verbose=True):
         print(f"MAP: {map_value:1.4f}")
     return map_value
 
-def ndcg(predictions, verbose=True):
+def ndcg(predictions, verbose=False):
     """
     Compute Normalized Discounted Cumulative Gain (NDCG) at k for each user
     """
@@ -378,7 +378,7 @@ def ndcg(predictions, verbose=True):
         print(f"NDCG: {ndcg:1.4f}")
     return ndcg
 
-def auc_roc(predictions, verbose=True):
+def auc_roc(predictions, verbose=False):
     """
     Compute AUC-ROC (Area Under the Receiver Operating Characteristic curve).
     """
