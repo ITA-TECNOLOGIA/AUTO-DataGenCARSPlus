@@ -9,8 +9,19 @@ warnings.filterwarnings('ignore')
 
 
 class RecommenderSIDELARS:
+    """
+    Class for the Side-LARS (SocIal-Distance prEserving Location-Aware Recommender System). This class handles the creation, 
+    management, and updating of recommendations for a user in a virtual world context. The recommendations are trajectory-based, 
+    taking into account the user's location, preferences, and contextual variables.
+    """
 
     def __init__(self, df_item, df_context, df_rating, df_behavior):
+        """
+        :param df_item: Dataframe containing item information.
+        :param df_context: Dataframe containing context information.
+        :param df_rating: Dataframe containing user rating information.
+        :param df_behavior: Dataframe containing user behavior information.
+        """
         try:
             self.df_item = df_item
             self.df_context = df_context
@@ -29,6 +40,11 @@ class RecommenderSIDELARS:
 
     #TODO: Poner esta funcion fuera de la clase de Recommender
     def get_last_position_for_user(self, user_id):
+        """
+        Retrieves the latest position of the user based on behavior data.
+        :param user_id: The ID of the user.
+        :return: A list representing the last position of the user or None if no data is available.
+        """
         user_data = self.df_behavior[self.df_behavior["user_id"] == user_id]
         user_data = user_data[user_data["object_action"] == "Update"]
         user_data = user_data.sort_values(by="timestamp", ascending=False)
@@ -42,9 +58,9 @@ class RecommenderSIDELARS:
 
     def get_top_n(self, predictions, n=10):
         """
-        Get the top-N recommendation for each user from a set of predictions.
-        :param predictions(list of Prediction objects): The list of predictions, as returned by the test method of an algorithm.
-        :param n(int): The number of recommendation to output for each user. Default is 10.
+        Returns the top-N recommendation for each user from a set of predictions.
+        :param predictions: The list of predictions, as returned by the test method of an algorithm.
+        :param n: The number of recommendations to output for each user. Default is 10.
         :return: A dict where keys are user (raw) ids and values are lists of tuples [(raw item id, rating estimation), ...] of size n.
         """
         # First map the predictions to each user.
@@ -59,11 +75,12 @@ class RecommenderSIDELARS:
 
     def get_user_based_recommendation(self, algorithm, trainset, testset, k_recommendations):
         """
-        KNN algorithms for user-based collaborative filtering.
-        :param k_recommendations: K items to recommend to the user.
-        :param k_max_neighbours: K maximum number of neighbours.
-        :param k_min_neighbours: K minimum number of neighbours.
-        :return: K candidate items to be recommended to users.
+        Applies KNN algorithms for user-based collaborative filtering.
+        :param algorithm: The KNN algorithm to be used for recommendation.
+        :param trainset: The training set.
+        :param testset: The test set.
+        :param k_recommendations: The number of items to recommend to the user.
+        :return: Top k candidate items to be recommended to users.
         """
         # NO SÉ SI ES MEJOR EXTENDER LOS RESULTADOS DE TODOS LOS ALGORITMOS EN UNA SOLA LISTA O SOLAMENTE DE UN ALGORITMO
         # # Parameter settings of the KNN algorithms.
@@ -93,14 +110,13 @@ class RecommenderSIDELARS:
         return self.get_top_n(predictions, n=k_recommendations)
 
     def get_random_recommendation(self, k_recommendations, cold_start_user_list, trainset):
-        '''
-        NormalPredictor: it is an algorithm predicts a random rating based on the distribution
-        of the training set, which is assumed to be normal. This is one of the most basic
-        algorithms that do not do much work.
-        :param k_recommendations: K items to recommend to the user.
+        """
+        Provides recommendations using a random prediction algorithm.
+        :param k_recommendations: The number of items to recommend to the user.
         :param cold_start_user_list: A list of users with a cold start.
-        :return: K candidate items to be recommended to cold start users.
-        '''
+        :param trainset: The training set.
+        :return: Top k candidate items to be recommended to cold start users.
+        """
         # Building the Random algorithm.
         recommender = NormalPredictor()
         recommender.fit(trainset)
@@ -117,9 +133,9 @@ class RecommenderSIDELARS:
     def get_npoi_recommendation(self, k_recommendations, cold_start_user_list):
         """
         Nearest Point of Interest (NPOI) algorithm for cold start users.
-        :param k_recommendations: K items to recommend to the user.
+        :param k_recommendations: The number of items to recommend to the user.
         :param cold_start_user_list: A list of users with a cold start.
-        :return: K candidate items to be recommended to cold start users.
+        :return: Top k candidate items to be recommended to cold start users.
         """
         recommendations = defaultdict(list)
 
@@ -145,6 +161,12 @@ class RecommenderSIDELARS:
         return recommendations
 
     def apply_social_distance(self, candidate_recommendation_list, min_social_distance):
+        """
+        Filters recommendation candidates based on a minimum social distance criteria.
+        :param candidate_recommendation_list: The candidate list of recommendations.
+        :param min_social_distance: The minimum social distance to be maintained.
+        :return: A filtered list of recommendations.
+        """
         filtered_candidates = {}
 
         for uid, user_ratings in candidate_recommendation_list.items():
@@ -172,10 +194,10 @@ class RecommenderSIDELARS:
 
     def get_trajectory(self, candidate_recommendation_list, apply_social_distancing=False, min_social_distance=2.0):
         """
-        Sorting the recommendation list by trajectory, by considering the distance between target user and recommended items.
-        :param candidate_recommendation_list: Candidate recommendation list.
-        :param apply_social_distancing: Whether to apply social distancing in recommendations.
-        :param min_social_distance: Minimum social distance to be maintained.
+        Sorts the recommendation list by trajectory, considering the distance between target user and recommended items.
+        :param candidate_recommendation_list: The candidate list of recommendations.
+        :param apply_social_distancing: Whether to apply social distancing in recommendations. Default is False.
+        :param min_social_distance: The minimum social distance to be maintained. Default is 2.0.
         :return: A dictionary with items to recommend per user (sorted by trajectory and social distancing applied).
         """
         recommendation_dict = {}
@@ -209,11 +231,15 @@ class RecommenderSIDELARS:
         return recommendation_dict
 
     def dynamic_recommendation_pipeline(self, dataset, algorithm, k_recommendations, side_lars, min_social_distance):
-        '''
-        Dynamic recommendation pipeline.
-        :param k_recommendations: K items to recommend to the user.
-        :return: Dictionaries resulting from user-based and random recommendations.
-        '''
+        """
+        The main pipeline function for dynamic recommendation.
+        :param dataset: The dataset to be used for recommendation.
+        :param algorithm: The algorithm to be used for recommendation.
+        :param k_recommendations: The number of items to recommend to the user.
+        :param apply_social_distancing: Whether to apply social distancing in recommendations. Default is False.
+        :param min_social_distance: The minimum social distance to be maintained. Default is 2.0.
+        :return: A dictionary with items to recommend per user.
+        """
         # Generating trainset and testset with the whole dataset:
         logging.info('Generating trainset with the whole dataset...')
         trainset = dataset.build_full_trainset()
@@ -248,7 +274,7 @@ def main():
     df_behavior = pd.read_csv(r'resources\data_schema_imascono\behavior.csv')
     dataset = surprise_helpers.convert_to_surprise_dataset(df_rating)
     
-    recommender = Recommender(df_item, df_context, df_rating, df_behavior)
+    recommender = RecommenderSIDELARS(df_item, df_context, df_rating, df_behavior)
 
     # Parameter settings of the KNN algorithms.
     k_max_neighbours = 40 # K maximum number of neighbours.
