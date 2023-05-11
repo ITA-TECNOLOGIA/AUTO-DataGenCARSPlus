@@ -15,12 +15,8 @@ class TestGeneratorItem(unittest.TestCase):
         generation_config_file_path = 'resources/data_schema_imascono/generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()  
-        # item_profile.conf
-        item_profile_path = 'resources/data_schema_imascono/item_profile.conf'
-        with open(item_profile_path, 'r') as item_profile_file:            
-            item_profile = item_profile_file.read()  
         # Item generator:        
-        self.__generator = GeneratorItemFile(generation_config, item_schema, item_profile)
+        self.__generator = GeneratorItemFile(generation_config, item_schema, item_profile=None)
     
     def tearDown(self):
         del self.__generator
