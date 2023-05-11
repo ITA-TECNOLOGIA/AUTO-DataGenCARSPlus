@@ -127,7 +127,7 @@ class Recommender:
         for user in cold_start_user_list:
             user_location = self.get_last_position_for_user(user)
 
-            if user_location is None:
+            if user_location is None or len(user_location) != 3:
                 continue
 
             distances = []
@@ -137,49 +137,14 @@ class Recommender:
                 if not df_item_current.empty:
                     item_location = df_item_current['object_position'].iloc[0]
                     item_location = [float(x) for x in item_location[1:-1].split(',')]
-                    distance = euclidean(user_location, item_location)
-                    distances.append((item, distance))
+                    if len(item_location) == 3:
+                        distance = euclidean(user_location, item_location)
+                        distances.append((item, distance))
 
             distances.sort(key=lambda x: x[1])
             recommendations[user] = [(item, None) for item, _ in distances[:k_recommendations]]
-
         return recommendations
 
-    def get_trajectory(self, candidate_recommendation_list):
-        """
-        Sorting the recommendation list by trajectory, by considering the distance between target user and recommended items.
-        :param candidate_recommendation_list: Candidate recommendation list.
-        :return: A dictionary with items to recommend per user (sorted by trajectory).
-        """
-        recommendation_dict = {}
-        # Print the recommended items for each user
-        for uid, user_ratings in candidate_recommendation_list.items():
-            current_user_location = self.get_last_position_for_user(uid)
-            if current_user_location is None:
-                continue  # skip this user if their location is not available
-            recommended_item_list = []
-            for item, rating in user_ratings:
-                # Item location:
-                # df_room_current = self.df_room.loc[self.df_room['item_id'] == item]
-                df_item_current = self.df_item.loc[self.df_item['item_id'] == item]
-                if not df_item_current.empty:
-                    item_location = df_item_current['object_position'].iloc[0]
-                    item_location = [float(x) for x in item_location[1:-1].split(',')] # Converting item_location string to a list of float values
-                    object_type = df_item_current['object_type'].iloc[0]
-                    room_id = df_item_current['room_id'].iloc[0]
-                    distance = euclidean([current_user_location[0], current_user_location[2]], [item_location[0], item_location[2]])
-                    # Adding in dictionary:
-                    recommended_item_dict = {}
-                    recommended_item_dict['object_id'] = item
-                    recommended_item_dict['object_position'] = item_location
-                    recommended_item_dict['object_type'] = object_type
-                    recommended_item_dict['distance'] = distance
-                    recommended_item_dict['room_id'] = room_id
-                    recommended_item_list.append(recommended_item_dict)
-            sorted_recommended_item_list = sorted(recommended_item_list, key=lambda x: x['distance'])
-            recommendation_dict[str(uid)] = sorted_recommended_item_list
-        return recommendation_dict
-        
     def apply_social_distance(self, candidate_recommendation_list, min_social_distance):
         filtered_candidates = {}
 
@@ -206,6 +171,44 @@ class Recommender:
 
         return filtered_candidates
 
+    def get_trajectory(self, candidate_recommendation_list, apply_social_distancing=False, min_social_distance=2.0):
+        """
+        Sorting the recommendation list by trajectory, by considering the distance between target user and recommended items.
+        :param candidate_recommendation_list: Candidate recommendation list.
+        :param apply_social_distancing: Whether to apply social distancing in recommendations.
+        :param min_social_distance: Minimum social distance to be maintained.
+        :return: A dictionary with items to recommend per user (sorted by trajectory and social distancing applied).
+        """
+        recommendation_dict = {}
+        # Print the recommended items for each user
+        for uid, user_ratings in candidate_recommendation_list.items():
+            current_user_location = self.get_last_position_for_user(uid)
+            if current_user_location is None:
+                continue  # skip this user if their location is not available
+            recommended_item_list = []
+            for item, rating in user_ratings:
+                # Item location:
+                df_item_current = self.df_item.loc[self.df_item['item_id'] == item]
+                if not df_item_current.empty:
+                    item_location = df_item_current['object_position'].iloc[0]
+                    item_location = [float(x) for x in item_location[1:-1].split(',')] # Converting item_location string to a list of float values
+                    object_type = df_item_current['object_type'].iloc[0]
+                    room_id = df_item_current['room_id'].iloc[0]
+                    distance = euclidean([current_user_location[0], current_user_location[2]], [item_location[0], item_location[2]])
+                    # Adding in dictionary:
+                    recommended_item_dict = {}
+                    recommended_item_dict['object_id'] = item
+                    recommended_item_dict['object_position'] = item_location
+                    recommended_item_dict['object_type'] = object_type
+                    recommended_item_dict['distance'] = distance
+                    recommended_item_dict['room_id'] = room_id
+                    recommended_item_list.append(recommended_item_dict)
+            sorted_recommended_item_list = sorted(recommended_item_list, key=lambda x: x['distance'])
+            recommendation_dict[uid] = sorted_recommended_item_list
+        if apply_social_distancing:
+            recommendation_dict = self.apply_social_distance(recommendation_dict, min_social_distance)
+        return recommendation_dict
+
     def dynamic_recommendation_pipeline(self, dataset, algorithm, k_recommendations, side_lars, min_social_distance):
         '''
         Dynamic recommendation pipeline.
@@ -221,10 +224,8 @@ class Recommender:
         # Getting candidate user-based recommendation list:
         candidate_ub_recommendation_list = self.get_user_based_recommendation(algorithm, trainset, testset, k_recommendations)
         # Sorting recommended items by distance between current user location and recommended item locations:
-        ub_recommendation_json = self.get_trajectory(candidate_ub_recommendation_list)
-        if side_lars:
-            candidate_ub_recommendation_list = self.apply_social_distance(candidate_ub_recommendation_list, min_social_distance)
-            # candidate_random_recommendation_list = self.apply_social_distance(candidate_random_recommendation_list, min_social_distance)
+        ub_recommendation_json = self.get_trajectory(candidate_ub_recommendation_list, side_lars, min_social_distance)
+        
         # Filtering recommendation dictionary for target users:
         target_user_cold_start_list = []
         filtered_ub_recommendation_json = {}
@@ -237,10 +238,8 @@ class Recommender:
         # candidate_random_recommendation_list = self.get_random_recommendation(k_recommendations, target_user_cold_start_list)
         candidate_random_recommendation_list = self.get_npoi_recommendation(k_recommendations, target_user_cold_start_list)
         # Sorting recommended items by distance between current user location and recommended item locations:
-        random_recommendation_json = self.get_trajectory(candidate_random_recommendation_list)
-        if side_lars:
-            candidate_ub_recommendation_list = self.apply_social_distance(candidate_ub_recommendation_list, min_social_distance)
-            # candidate_random_recommendation_list = self.apply_social_distance(candidate_random_recommendation_list, min_social_distance)
+        random_recommendation_json = self.get_trajectory(candidate_random_recommendation_list, side_lars, min_social_distance)
+        
         return filtered_ub_recommendation_json, random_recommendation_json
 
 def main():
@@ -266,6 +265,8 @@ def main():
     for algorithm in algorithms:
         filtered_ub_recommendation_json, random_recommendation_json = recommender.dynamic_recommendation_pipeline(dataset, algorithm, k_recommendations=3, 
                                                                                                                   side_lars=True, min_social_distance=2.0)
+        # print("User-based recommendation json:", filtered_ub_recommendation_json)
+        # print("Random recommendation json:", random_recommendation_json)
 
 if __name__ == '__main__':
     main()
