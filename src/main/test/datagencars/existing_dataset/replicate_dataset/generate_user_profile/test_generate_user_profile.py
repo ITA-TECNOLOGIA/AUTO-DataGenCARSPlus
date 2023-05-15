@@ -2,7 +2,7 @@ import logging
 import unittest
 
 import pandas as pd
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
+from datagencars.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 
 
 class TestAccessUser(unittest.TestCase):
@@ -21,9 +21,9 @@ class TestAccessUser(unittest.TestCase):
         rating_df = pd.read_csv(rating_file_path, encoding='utf-8', index_col=False, sep=';')
              
         # Generate User Profile, including context:
-        self.__generate_cars = GenerateUserProfile(rating_df, item_df, context_df)
+        self.__generate_cars = GenerateUserProfileDataset(rating_df, item_df, context_df)
         # Generate User Profile, without context:
-        self.__generate_rs = GenerateUserProfile(rating_df, item_df)
+        self.__generate_rs = GenerateUserProfileDataset(rating_df, item_df)
     
     def tearDown(self):
         del self.__generate_cars

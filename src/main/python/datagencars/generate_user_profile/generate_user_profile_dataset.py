@@ -6,12 +6,12 @@ import pandas as pd
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_rating import AccessRating
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
+from datagencars.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
 from scipy.sparse.linalg import lsmr
 import math
 
 
-class GenerateUserProfile:
+class GenerateUserProfileDataset:
 
     '''
     Generates a user profile automatically from the original dataset. 
@@ -19,9 +19,11 @@ class GenerateUserProfile:
     was used. [https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.lsmr.html]
 
     Input:
-        [I] item.csv
-        [C] context.csv
-        [R] ratings.csv
+        item.csv
+        context.csv
+        ratings.csv
+    Output:
+        user_profile.csv
     '''
 
     def __init__(self, rating_df, item_df, context_df=None):        

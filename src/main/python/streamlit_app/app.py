@@ -17,7 +17,7 @@ import seaborn as sns
 import streamlit as st
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
+from datagencars.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
@@ -594,7 +594,7 @@ elif general_option == 'Pre-process a dataset':
                     if (not item_df.empty and "item_df" in st.session_state) and (not context_df.empty and "context_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):
                         if st.button(label='Generate', key='button_generate_up_cars'):
                             print('Automatically generating user profiles.')
-                            generate_up = GenerateUserProfile(st.session_state["rating_df"], st.session_state["item_df"], st.session_state["context_df"])
+                            generate_up = GenerateUserProfileDataset(st.session_state["rating_df"], st.session_state["item_df"], st.session_state["context_df"])
                             user_profile_df = util.generate_up(generate_up)
                             st.session_state["user_profile_df"] = user_profile_df
                             print('The user profile has been generated.')                                                    
@@ -605,7 +605,7 @@ elif general_option == 'Pre-process a dataset':
                     if (not item_df.empty and "item_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state): 
                         if st.button(label='Generate', key='button_generate_up_rs'):
                             print('Automatically generating user profiles.')
-                            generate_up = GenerateUserProfile(st.session_state["rating_df"], st.session_state["item_df"])
+                            generate_up = GenerateUserProfileDataset(st.session_state["rating_df"], st.session_state["item_df"])
                             user_profile_df = util.generate_up(generate_up)
                             st.session_state["user_profile_df"] = user_profile_df
                             print('The user profile has been generated.')                               
