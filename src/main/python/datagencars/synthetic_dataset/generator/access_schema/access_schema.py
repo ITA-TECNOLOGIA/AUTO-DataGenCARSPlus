@@ -36,6 +36,7 @@ class AccessSchema(AccessData):
             number_attributes = self.file_parser.getint(section='global', option='number_attributes')
         except (NoOptionError, NoSectionError) as e:
             logging.error(e)
+        
         return number_attributes 
     
     def get_attribute_name_list(self):

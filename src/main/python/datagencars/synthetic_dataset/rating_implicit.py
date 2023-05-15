@@ -38,5 +38,5 @@ class RatingImplicit(GenerateSyntheticDataset):
         '''
             Generating file: rating.csv
         '''
-        rating_file_generator = GeneratorImplicitRatingFile(self.generation_config, item_df, behavior_df, context_df=None)
+        rating_file_generator = GeneratorImplicitRatingFile(self.generation_config, item_df, behavior_df, context_df)
         return rating_file_generator.generate_file(with_context)

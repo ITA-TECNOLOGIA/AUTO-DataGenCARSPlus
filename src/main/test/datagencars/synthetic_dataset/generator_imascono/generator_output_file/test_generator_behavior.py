@@ -36,7 +36,8 @@ class TestGeneratorBehavior(unittest.TestCase):
         behavior_file = self.__generator.generate_file()
         logging.info(f'behavior_file: {behavior_file}')
         behavior_file.to_csv('behavior.csv', index=False)
-        self.assertEqual(behavior_file.shape[0], 100)
+        # If, for instance, the last action generated is Play, a Pause action will be generated
+        self.assertAlmostEqual(behavior_file.shape[0], 1000, delta=1)
 
 if __name__ == '__main__':
     unittest.main()

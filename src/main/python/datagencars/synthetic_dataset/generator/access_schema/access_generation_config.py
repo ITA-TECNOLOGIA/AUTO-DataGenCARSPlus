@@ -104,12 +104,10 @@ class AccessGenerationConfig(AccessData):
         '''
         implicit_rating_rules = []
         number_maximum_rules = self.get_number_maximum_rules()
-        print(f"Number of implicit rating rules: {number_maximum_rules}")  # Added print statement for debugging
         for position in range(1, number_maximum_rules + 1):
             implicit_rating_rule = self.get_implicit_rating_rule_from_pos(position)
             if implicit_rating_rule:
                 implicit_rating_rules.append(implicit_rating_rule)
-        print(f"Implicit rating rules found: {implicit_rating_rules}")  # Added print statement for debugging
         return implicit_rating_rules
     
     def get_number_maximum_rules(self):
@@ -133,7 +131,6 @@ class AccessGenerationConfig(AccessData):
         implicit_rating_rule = None
         try:
             implicit_rating_rule_str = self.file_parser.get(section='rating', option=f'rule_{position}')
-            print(f"Implicit rating rule string: {implicit_rating_rule_str}")  # Added print statement for debugging
             implicit_rating_rule = ast.literal_eval(implicit_rating_rule_str)
         except (NoOptionError, NoSectionError, ValueError) as e:
             logging.error(e)

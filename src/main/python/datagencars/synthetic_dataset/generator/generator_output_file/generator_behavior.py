@@ -37,6 +37,13 @@ class GeneratorBehaviorFile(GeneratorFile):
         self.rooms = item_schema_access.get_subattribute_input_parameters_dict_from_name_attribute('object_position')
         
         self.item_df = item_df
+        if 'object_position' in self.item_df.columns and 'object_action_types' in self.item_df.columns:
+            try:
+                self.item_df['object_position'] = self.item_df['object_position'].apply(lambda x: str(x))
+                self.item_df['object_action_types'] = self.item_df['object_action_types'].apply(lambda x: str(x))
+            except:
+                pass
+
         self.file_df = pd.DataFrame({'user_id': [], 'object_action': [], 'user_position': [], 'behavior_id': [], 'item_id': [], 'context_id': [], 'timestamp': []})
         self.behavior_id = 1
         self.z = 5 # Fixed value of z for this scenario

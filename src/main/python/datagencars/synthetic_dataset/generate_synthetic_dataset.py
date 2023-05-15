@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_user import GeneratorUserFile
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_item import GeneratorItemFile
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_context import GeneratorContextFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_behavior import GeneratorBehaviorFile
 
 
 class GenerateSyntheticDataset(ABC):
@@ -60,7 +61,14 @@ class GenerateSyntheticDataset(ABC):
         context_file_generator = GeneratorContextFile(self.generation_config, context_schema)
         return context_file_generator.generate_file()
     
-    @abstractmethod   
+    def generate_behavior_file(self, behavior_schema, item_df, item_schema):
+        '''
+            Generating file (for CARS): behavior.csv
+        '''        
+        behavior_file_generator = GeneratorBehaviorFile(self.generation_config, behavior_schema, item_df, item_schema)
+        return behavior_file_generator.generate_file()
+    
+    @abstractmethod
     def generate_rating_file(self, user_df, user_profile_df, item_df, item_schema, with_context=False, context_df=None, context_schema=None):
         '''
             Generating file: rating.csv

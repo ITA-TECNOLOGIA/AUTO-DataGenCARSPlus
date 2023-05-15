@@ -18,12 +18,11 @@ class GeneratorContextFile(GeneratorFile):
         :return: A dataframe with context information.         
         '''
         # Instance generator.
-        instance_generator = GeneratorInstance(schema_access=self.schema_access)        
-        
+        instance_generator = GeneratorInstance(schema_access=self.schema_access)
         # Number of contexts to be generated.
         number_context = self.access_generation_config.get_number_context()
         print(f'Total of contexts to generate: {number_context}')
-        print('Generating instances by context.')  
+        print('Generating instances by context.')
         for _ in range(number_context):
             attribute_list = instance_generator.generate_instance()
             self.file_df.loc[len(self.file_df.index)] = attribute_list

@@ -20,6 +20,7 @@ from datagencars.existing_dataset.replicate_dataset.generate_user_profile.genera
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
+from datagencars.synthetic_dataset.rating_implicit import RatingImplicit
 from streamlit_app import util
 from workflow.graph_generate import Workflow
 
@@ -150,7 +151,7 @@ if general_option == 'Generate a synthetic dataset':
                 else:               
                     config_file_text_area = st.text_area(label='Current file:', value=generation_config_value, height=500, disabled=True)    
             link_generation_config = f'<a href="data:text/plain;base64,{base64.b64encode(config_file_text_area.encode()).decode()}" download="generation_config.conf">Download</a>'
-            st.markdown(link_generation_config, unsafe_allow_html=True)                                
+            st.markdown(link_generation_config, unsafe_allow_html=True)
         # USER TAB:
         with tab_user:        
             st.header('Users')
@@ -488,8 +489,8 @@ if general_option == 'Generate a synthetic dataset':
             json_opt_params['CARS'] = str(with_context)
             json_opt_params['UP'] = 'Manual'
             json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('GenerateSyntheticDataset(Implicit_ratings)', json_opt_params)            
-            st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            path = wf.create_workflow('GenerateSyntheticDataset(Implicit_ratings)', json_opt_params)
+            st.image(image=path, use_column_width=False, output_format="auto", width=650)
             os.remove(path)      
         inconsistent = False
         # AVAILABLE TABS:
@@ -498,93 +499,7 @@ if general_option == 'Generate a synthetic dataset':
             tab_generation, tab_user, tab_item, tab_context, tab_behavior, tab_run  = st.tabs(['Generation', 'Users', 'Items', 'Contexts', 'Behavior', 'Run'])
             # GENERATION SETTING TAB:
             generation_config_value = util.generation_settings(tab_generation)
-            # with_correlation_checkbox = False
-            # with tab_generation:
-            #     st.header('Generation')
-            #     # Uploading the file: "generation_config.conf"
-            #     generation_config_value = ''
-            #     if is_upload_generation := st.checkbox('Upload the data generation configuration file', value=True, key='is_upload_generation'):    
-            #         with st.expander(f"Upload generation_config.conf"):
-            #             if generation_config_file := st.file_uploader(label='Choose the file:', key='generation_config_file'):
-            #                 generation_config_value = generation_config_file.getvalue().decode("utf-8")
-            #     else:
-            #         # Generating the file: "generation_config.conf"
-            #         # [dimension]
-            #         st.write('General configuration')
-            #         dimension_value = '[dimension] \n'
-            #         user_count = st.number_input(label='Number of users to generate:', value=0)
-            #         item_count = st.number_input(label='Number of items to generate:', value=0)
-            #         context_count = st.number_input(label='Number of contexts to generate:', value=0)
-
-            #         dimension_value += ('number_user=' + str(user_count) + '\n' +
-            #                             'number_item=' + str(item_count) + '\n' +
-            #                             'number_context=' + str(context_count) + '\n')
-            #         st.markdown("""---""")
-
-            #         # [behavior]
-            #         st.write('Behavior configuration')
-            #         behavior_value = '[behavior] \n'
-            #         number_behavior = st.number_input(label='Number of behaviors:', value=0)
-            #         session_time = st.number_input(label='Session time (seconds):', value=3600)
-            #         min_interval_behavior = st.number_input(label='Minimum interval between behaviors (seconds):', value=1)
-            #         max_interval_behavior = st.number_input(label='Maximum interval between behaviors (seconds):', value=300)
-            #         min_radius = st.number_input(label='Minimum radius:', value=1)
-            #         max_radius = st.number_input(label='Maximum radius:', value=5)
-            #         door = st.text_input(label='Door:', value='0, 5, 5')
-            #         interaction_threshold = st.number_input(label='Interaction threshold:', value=2.5)
-
-            #         behavior_value += ('number_behavior=' + str(number_behavior) + '\n' +
-            #                         'session_time=' + str(session_time) + '\n' +
-            #                         'minimum_interval_behavior=' + str(min_interval_behavior) + '\n' +
-            #                         'maximum_interval_behavior=' + str(max_interval_behavior) + '\n' +
-            #                         'minimum_radius=' + str(min_radius) + '\n' +
-            #                         'maximum_radius=' + str(max_radius) + '\n' +
-            #                         'door=[' + door + ']\n' +
-            #                         'interaction_threshold=' + str(interaction_threshold) + '\n')
-            #         st.markdown("""---""")
-
-            #         # [rating]
-            #         st.write('Rating configuration')
-            #         rating_value = '[rating] \n'
-            #         rating_min = st.number_input(label='Minimum value of the ratings:', value=0)
-            #         rating_max = st.number_input(label='Maximum value of the ratings:', value=1)
-            #         min_year_ts = st.date_input(label='From:', value=date(2023, 1, 1))
-            #         max_year_ts = st.date_input(label='Until:', value=date(2023, 4, 1))
-
-            #         rating_value += ('minimum_value_rating=' + str(rating_min) + '\n' +
-            #                         'maximum_value_rating=' + str(rating_max) + '\n' +
-            #                         'minimum_date_timestamp=' + str(min_year_ts) + '\n' +
-            #                         'maximum_date_timestamp=' + str(max_year_ts) + '\n')
-            #         st.markdown("""---""")
-
-            #         # [item profile]
-            #         st.write('Item profile configuration')
-            #         item_profile_value = '[item profile] \n'
-            #         probability_percentage_profile_1 = st.number_input(label='Profile probability percentage 1:', value=10)
-            #         probability_percentage_profile_2 = st.number_input(label='Profile probability percentage 2:', value=30)
-            #         probability_percentage_profile_3 = st.number_input(label='Profile probability percentage 3:', value=60)
-            #         noise_percentage_profile_1 = st.number_input(label='Profile noise percentage 1:', value=20)
-            #         noise_percentage_profile_2 = st.number_input(label='Profile noise percentage2:', value=20)
-            #         noise_percentage_profile_3 = st.number_input(label='Profile noise percentage 3:', value=20)
-
-            #         item_profile_value += ('probability_percentage_profile_1=' + str(probability_percentage_profile_1) + '\n' +
-            #         'probability_percentage_profile_2=' + str(probability_percentage_profile_2) + '\n' +
-            #         'probability_percentage_profile_3=' + str(probability_percentage_profile_3) + '\n' +
-            #         'noise_percentage_profile_1=' + str(noise_percentage_profile_1) + '\n' +
-            #         'noise_percentage_profile_2=' + str(noise_percentage_profile_2) + '\n' +
-            #         'noise_percentage_profile_3=' + str(noise_percentage_profile_3) + '\n')
-            #         st.markdown("""---""")
-
-            #         # Generate the configuration file
-            #         generation_config_value = dimension_value + '\n' + behavior_value + '\n' + rating_value + '\n' + item_profile_value
-            #     # Edit file:
-            #     with st.expander(f"Show generation_config.conf"):
-            #         if edit_config_file := st.checkbox(label='Edit file?', key='edit_config_file'):
-            #             config_file_text_area = st.text_area(label='Current file:', value=generation_config_value, height=500)
-            #         else:               
-            #             config_file_text_area = st.text_area(label='Current file:', value=generation_config_value, height=500, disabled=True)    
-            #     link_generation_config = f'<a href="data:text/plain;base64,{base64.b64encode(config_file_text_area.encode()).decode()}" download="generation_config.conf">Download</a>'
-            #     st.markdown(link_generation_config, unsafe_allow_html=True)
+            with_correlation_checkbox = False
             # USER TAB:
             with tab_user:        
                 st.header('Users')
@@ -678,7 +593,7 @@ if general_option == 'Generate a synthetic dataset':
             with tab_behavior:
                 st.header('Behaviors')
                 schema_type = 'behavior'
-                context_schema_value = util.generate_schema_file(schema_type) 
+                behavior_schema_value = util.generate_schema_file(schema_type) 
             # RUN TAB:
             with tab_run:                   
                 col_run, col_stop = st.columns(2)        
@@ -686,13 +601,15 @@ if general_option == 'Generate a synthetic dataset':
                     button_run = st.button(label='Run', key='button_run')
                 with col_stop:
                     button_stop = st.button(label='Stop', key='button_stop')        
-                generator = RatingExplicit(generation_config=generation_config_value)
+                generator = RatingImplicit(generation_config=generation_config_value)
                 output = st.empty()
                 with console.st_log(output.code):
                     if not inconsistent:
                         if button_run:
                             if context:
                                 steps = 4
+                                if side_lars:
+                                    steps = 5
                             else: 
                                 steps = 3
                             current_step = 0
@@ -720,7 +637,7 @@ if general_option == 'Generate a synthetic dataset':
                                     st.write('item.csv')
                                     print('Generating item.csv')                    
                                     item_file_df = generator.generate_item_file(item_schema=item_schema_value, item_profile=item_profile_value, with_correlation=with_correlation_checkbox)
-                                    st.dataframe(item_file_df)   
+                                    st.dataframe(item_file_df)
                                     link_item = f'<a href="data:file/csv;base64,{base64.b64encode(item_file_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download item CSV</a>'
                                     st.markdown(link_item, unsafe_allow_html=True)
                                     current_step = current_step + 1
@@ -741,24 +658,38 @@ if general_option == 'Generate a synthetic dataset':
                                             st.markdown(link_context, unsafe_allow_html=True)
                                             current_step = current_step + 1
                                         else:
-                                            st.warning('The context schema file (context_schema.conf) is required.')               
+                                            st.warning('The context schema file (context_schema.conf) is required.')
                                     # Checking the existence of the file: "generation_config.conf" 
                                     my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
                                     if button_stop:
                                         st.experimental_rerun()
                                     else:
-                                        if config_file_text_area:
-                                            st.write('rating.csv')
-                                            print('Generating rating.csv')           
-                                            if with_context:
-                                                rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value, with_context=with_context, context_df=context_file_df, context_schema=context_schema_value)        
+                                        if behavior_schema_value:
+                                            st.write('behavior.csv')
+                                            print('Generating behavior.csv')
+                                            behavior_file_df = generator.generate_behavior_file(behavior_schema=behavior_schema_value, item_df=item_file_df, item_schema=item_schema_value)
+                                            st.dataframe(behavior_file_df)
+                                            link_behavior = f'<a href="data:file/csv;base64,{base64.b64encode(behavior_file_df.to_csv(index=False).encode()).decode()}" download="behavior.csv">Download behavior CSV</a>'
+                                            st.markdown(link_behavior, unsafe_allow_html=True)
+                                            current_step = current_step + 1
+                                            my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
+                                            if button_stop:
+                                                st.experimental_rerun()
                                             else:
-                                                rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value)
-                                            st.dataframe(rating_file_df)
-                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
-                                            st.markdown(link_rating, unsafe_allow_html=True)
+                                                if generation_config_value:
+                                                    st.write('rating.csv')
+                                                    print('Generating rating.csv')           
+                                                    if with_context:
+                                                        rating_file_df = generator.generate_rating_file(item_df=item_file_df, behavior_df=behavior_file_df, with_context=with_context, context_df=context_file_df)  
+                                                    else:
+                                                        rating_file_df = generator.generate_rating_file(item_df=item_file_df, behavior_df=behavior_file_df, with_context=with_context, context_df=None)
+                                                    st.dataframe(rating_file_df)
+                                                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
+                                                    st.markdown(link_rating, unsafe_allow_html=True)
+                                                else:
+                                                    st.warning('The configuration file (generation_config.conf) is required.')
                                         else:
-                                            st.warning('The configuration file (generation_config.conf) is required.')
+                                            st.warning('The behavior schema file (behavior_schema.conf) is required.')
                                         print('Synthetic data generation has finished.')   
                                         my_bar.progress(100, 'Synthetic data generation has finished.')    
                     else:

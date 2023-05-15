@@ -28,7 +28,7 @@ class TestGeneratorItem(unittest.TestCase):
         item_file = self.__generator.generate_file(with_correlation=False)        
         logging.info(f'item_file: {item_file}')
         item_file.to_csv('item.csv', index=False)
-        self.assertEqual(item_file.shape[0], 36)
+        self.assertEqual(item_file.shape[0], 100)
 
     
 if __name__ == '__main__':

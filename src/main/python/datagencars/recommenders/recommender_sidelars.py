@@ -290,8 +290,8 @@ def main():
     for algorithm in algorithms:
         filtered_ub_recommendation_json, random_recommendation_json = recommender.dynamic_recommendation_pipeline(dataset, algorithm, k_recommendations=3, 
                                                                                                                   side_lars=True, min_social_distance=2.0)
-        # print("User-based recommendation json:", filtered_ub_recommendation_json)
-        # print("Random recommendation json:", random_recommendation_json)
+        print("User-based recommendation json:", filtered_ub_recommendation_json)
+        print("Random recommendation json:", random_recommendation_json)
 
 if __name__ == '__main__':
     main()
