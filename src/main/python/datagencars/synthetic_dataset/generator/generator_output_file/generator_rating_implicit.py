@@ -12,7 +12,7 @@ class GeneratorImplicitRatingFile(GeneratorFile):
     @author Marcos Caballero Yus
     '''
 
-    def __init__(self, generation_config, item_df, behavior_df, rating_schema, context_df=None):
+    def __init__(self, generation_config, item_df, behavior_df, context_df=None):
         """
         Initializes the GeneratorRatingImplicitFile with required DataFrames and configuration.
         :param generation_config: Configuration string for generating the rating file.
@@ -20,15 +20,12 @@ class GeneratorImplicitRatingFile(GeneratorFile):
         :param behavior_df: DataFrame containing the user behavior information.
         :param context_df: (Optional) DataFrame containing the context information.
         """
-        # super().__init__(generation_config, rating_schema)
         self.access_generation_config = AccessGenerationConfig(file_str=generation_config)
         self.min_rating_value = self.access_generation_config.get_minimum_value_rating()
         self.max_rating_value = self.access_generation_config.get_maximum_value_rating()
-
-        # Rating implicit schema: rating_implicit_schema.conf
-        rating_schema_access = AccessSchema(file_str=rating_schema)
-        self.rules = rating_schema_access.get_all_implicit_rating_rules()
-
+        self.rules = self.access_generation_config.get_all_implicit_rating_rules()
+        number_maximum_rules = self.access_generation_config.get_number_maximum_rules()
+        print('number_maximum_rules', number_maximum_rules)
         self.behavior_df = behavior_df
         self.item_df = item_df
 

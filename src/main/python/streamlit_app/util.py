@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import numpy as np
+from datetime import date
 import plotly.graph_objs as go
 import datagencars.evaluation.rs_surprise.evaluation as evaluation
 import base64
@@ -9,7 +10,7 @@ import io
 import requests
 
 
-####### Generate a synthetic dataset #######
+####### Generate a synthetic dataset ######
 def generate_schema_file(schema_type):
     """
     Generates schema files from streamlit.
@@ -17,17 +18,17 @@ def generate_schema_file(schema_type):
     :return: A text area with the generated schema.
     """
     value = ''
-    schema_text_area = ''     
+    schema_text_area = ''
     attribute_name = ''   
-    if is_upload_schema := st.checkbox(f'Upload the {schema_type} schema file', value=True, key='is_upload_schema_'+schema_type):
+    if is_upload_schema := st.checkbox(f'Upload the {schema_type} schema file', value=True, key='is_upload_schema_'+schema_type): 
         with st.expander(f"Upload {schema_type}_schema.conf"):
-            if schema_file := st.file_uploader(label='Choose the file:', key=schema_type+'_schema_file'):
+            if schema_file := st.file_uploader(label='Choose the file:', key=schema_type+'_schema_file'): 
                 value = schema_file.getvalue().decode("utf-8")        
     else:
         # [global]   
         value = '[global]'+'\n'
         value += 'type='+schema_type+'\n'
-        number_attribute = st.number_input(label='Number of attributes to generate:', value=1, key='number_attribute_'+schema_type)
+        number_attribute = st.number_input(label='Number of attributes to generate:', value=1, key='number_attribute_'+schema_type) 
         value += 'number_attributes='+str(number_attribute)+'\n'
         value += '\n'
         st.markdown("""---""")       
@@ -37,28 +38,63 @@ def generate_schema_file(schema_type):
             st.write('__[attribute'+str(position)+']__')
             value += '[attribute'+str(position)+']'+'\n'
             # name_attribute:     
-            attribute_name = st.text_input(label="Attribute's name:", key=schema_type+'_attribute_name_'+str(position))
+            attribute_name = st.text_input(label="Attribute's name:", key=schema_type+'_attribute_name_'+str(position)) 
             value += 'name_attribute_'+str(position)+'='+attribute_name+'\n'
             # generator_type_attribute:
-            generator_type = st.selectbox(label='Generator type:', options=['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList'],  key=schema_type+'_generator_type_'+str(position))                
+            generator_type = st.selectbox(label='Generator type:', options=['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'RandomAttributeGenerator', 'FixedAttributeGenerator', 'ObjectPositionAttributeGenerator'],  key=schema_type+'_generator_type_'+str(position))            
             # type_attribute:
             attribute_type = None
-            if generator_type == 'Integer/Float/String/Boolean (following a distribution)':
+            if generator_type=='RandomAttributeGenerator' or generator_type=='FixedAttributeGenerator' or generator_type=='ObjectPositionAttributeGenerator':
+                attribute_type = st.selectbox(label='Attribute type:', options=['String', 'List', 'AttributeComposite'], key=schema_type+'_attribute_type_'+str(position)) 
+                if attribute_type == 'String' and generator_type == 'RandomAttributeGenerator':
+                    value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
+                    str_text_area = st.empty()                        
+                    string_text_area = str_text_area.text_area(label='Introduce new values to the list (split by comma): Poster, Sphere, Screen, NPC, Button', key='string_text_area_'+str(position))                                                            
+                    str_possible_value_list = string_text_area.split(',')
+                    number_possible_value = len(str_possible_value_list)
+                    value += 'number_posible_values_attribute_'+str(position)+'='+str(number_possible_value)+'\n'
+                    for i in range(number_possible_value):
+                        value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(str_possible_value_list[i]).strip()+'\n'
+                elif attribute_type == 'List' and generator_type == 'FixedAttributeGenerator':
+                    value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
+                    number_maximum_subattribute = st.number_input(label='Number of subattributes to generate:', value=5, key='number_maximum_subattribute_'+schema_type+'_'+str(position))
+                    value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
+                    for subattribute in range(1, number_maximum_subattribute+1):
+                        subattribute_name = st.text_input(label="Subattribute's name:", key=schema_type+'_subattribute_name_'+str(position)+'_'+str(subattribute)) 
+                        value += 'name_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_name+'\n'
+                        subattribute_type = st.selectbox(label='Subattribute type:', options=['String'], key=schema_type+'_subattribute_type_'+str(position)+'_'+str(subattribute)) 
+                        value += 'type_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_type+'\n'
+                        subattribute_input = st.text_area(label="Subattribute's input parameter:", key=schema_type+'_subattribute_input_'+str(position)+'_'+str(subattribute)) 
+                        value += 'input_parameter_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_input+'\n'
+                elif attribute_type == 'AttributeComposite' and generator_type == 'ObjectPositionAttributeGenerator':
+                    value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
+                    number_maximum_subattribute = st.number_input(label='Number of subattributes to generate:', value=3, key='number_maximum_subattribute_'+schema_type+'_'+str(position))
+                    value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
+                    for subattribute in range(1, number_maximum_subattribute+1):
+                        subattribute_name = st.text_input(label="Subattribute's name:", key=schema_type+'_subattribute_name_'+str(position)+'_'+str(subattribute)) 
+                        value += 'name_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_name+'\n'
+                        subattribute_type = st.selectbox(label='Subattribute type:', options=['float'], key=schema_type+'_subattribute_type_'+str(position)+'_'+str(subattribute)) 
+                        value += 'type_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_type+'\n'
+                    input_parameter = st.text_area(label="Attribute's input parameter:", key=schema_type+'_input_parameter_'+str(position)) 
+                    value += 'input_parameter_attribute_'+str(position)+'='+input_parameter+'\n'
+                else:
+                    st.write('This combination of generator type and attribute type is not supported in this script.')
+            elif generator_type == 'Integer/Float/String/Boolean (following a distribution)':
                 distribution_type = ''             
-                distribution_type = st.selectbox(label='Distribution type:', options=['Random', 'Gaussian'],  key=schema_type+'_distribution_type_'+str(position))
+                distribution_type = st.selectbox(label='Distribution type:', options=['Random', 'Gaussian'],  key=schema_type+'_distribution_type_'+str(position)) 
                 value += 'generator_type_attribute_'+str(position)+'='+distribution_type+'AttributeGenerator'+'\n'                              
-                attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'Float', 'String', 'Boolean'], key=schema_type+'_attribute_type_'+str(position))
+                attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'Float', 'String', 'Boolean'], key=schema_type+'_attribute_type_'+str(position)) 
                 if attribute_type == 'Integer':
                     # Integer:
-                    integer_min = st.number_input(label='Minimum value of the attribute', value=0, key=schema_type+'_integer_min_'+str(position))
+                    integer_min = st.number_input(label='Minimum value of the attribute', value=0, key=schema_type+'_integer_min_'+str(position)) 
                     value += 'minimum_value_attribute_'+str(position)+'='+str(integer_min)+'\n'
-                    integer_max = st.number_input(label='Maximum value of the ratings', value=0, key=schema_type+'_integer_max_'+str(position))
+                    integer_max = st.number_input(label='Maximum value of the ratings', value=0, key=schema_type+'_integer_max_'+str(position)) 
                     value += 'maximum_value_attribute_'+str(position)+'='+str(integer_max)+'\n'
                 elif attribute_type == 'Float':
                     # Float:
-                    float_min = float(st.number_input(label='Minimum value of the attribute', value=0.0, key=schema_type+'_float_min_'+str(position)))
+                    float_min = float(st.number_input(label='Minimum value of the attribute', value=0.0, key=schema_type+'_float_min_'+str(position))) 
                     value += 'minimum_value_attribute_'+str(position)+'='+str(float_min)+'\n'
-                    float_max = float(st.number_input(label='Maximum value of the ratings', value=0.0, key=schema_type+'_float_max_'+str(position)))
+                    float_max = float(st.number_input(label='Maximum value of the ratings', value=0.0, key=schema_type+'_float_max_'+str(position))) 
                     value += 'maximum_value_attribute_'+str(position)+'='+str(float_max)+'\n'
                 elif attribute_type == 'String':
                     # String:                        
@@ -86,6 +122,23 @@ def generate_schema_file(schema_type):
                 attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'String', 'Boolean'], key='attribute_type_'+str(position)+'_'+generator_type)
                 fixed_input = st.text_input(label='Imput the fixed value:', key='fixed_input_'+str(position))
                 value += 'input_parameter_attribute_'+str(position)+'='+str(fixed_input)+'\n'
+            elif generator_type == 'Date':                    
+                attribute_type = st.selectbox(label='Attribute type:', options=['Integer'], key='attribute_type_'+str(position)+'_'+generator_type)
+                st.write('Imput the range of dates (years only):')
+                date_min = st.number_input(label='From:', value=1980, key='date_min_'+str(position))
+                value += 'minimum_value_attribute_'+str(position)+'='+str(date_min)+'\n'
+                date_max = st.number_input(label='Until:', value=2020, key='date_max_'+str(position))
+                value += 'maximum_value_attribute_'+str(position)+'='+str(date_max)+'\n'
+            elif generator_type == 'BooleanList':       
+                value += 'generator_type_attribute_'+str(position)+'=BooleanListAttributeGenerator'+'\n'              
+                attribute_type = st.selectbox(label='Attribute type:', options=['List'], key='attribute_type_'+str(position)+'_'+generator_type)
+                component_list = st.text_area(label='Introduce component values to the list (split by comma): monday, tuesday, wednesday, thursday, friday', key='component_list_'+str(position)).split(',')
+                value += 'number_maximum_component_attribute_'+str(position)+'='+str(len(component_list))+'\n'
+                value += 'type_component_attribute_'+str(position)+'=Boolean'+'\n'
+                for idx, component in enumerate(component_list):
+                    value += 'component_'+str(idx+1)+'_attribute_'+str(position)+'='+str(component).strip()+'\n'
+                component_input_parameter = st.number_input(label='Number of boolean values to generate for these components:', value=1, key='component_input_parameter_'+str(position))
+                value += 'input_parameter_attribute_'+str(position)+'='+str(component_input_parameter)+'\n'
             elif generator_type == 'URL':    
                 value += 'generator_type_attribute_'+str(position)+'=URLAttributeGenerator'+'\n'                  
                 attribute_type = st.selectbox(label='Attribute type:', options=['AttributeComposite'], key='attribute_type_'+str(position)+'_'+generator_type)  
@@ -225,27 +278,9 @@ def generate_schema_file(schema_type):
                             st.warning('The file to be exported must not be empty.')
                         else:
                             st.success('The file has been saved with the name: '+file_name)
-            elif generator_type == 'Date':                    
-                attribute_type = st.selectbox(label='Attribute type:', options=['Integer'], key='attribute_type_'+str(position)+'_'+generator_type)
-                st.write('Imput the range of dates (years only):')
-                date_min = st.number_input(label='From:', value=1980, key='date_min_'+str(position))
-                value += 'minimum_value_attribute_'+str(position)+'='+str(date_min)+'\n'
-                date_max = st.number_input(label='Until:', value=2020, key='date_max_'+str(position))
-                value += 'maximum_value_attribute_'+str(position)+'='+str(date_max)+'\n'
-            elif generator_type == 'BooleanList':       
-                value += 'generator_type_attribute_'+str(position)+'=BooleanListAttributeGenerator'+'\n'              
-                attribute_type = st.selectbox(label='Attribute type:', options=['List'], key='attribute_type_'+str(position)+'_'+generator_type)
-                component_list = st.text_area(label='Introduce component values to the list (split by comma): monday, tuesday, wednesday, thursday, friday', key='component_list_'+str(position)).split(',')
-                value += 'number_maximum_component_attribute_'+str(position)+'='+str(len(component_list))+'\n'
-                value += 'type_component_attribute_'+str(position)+'=Boolean'+'\n'
-                for idx, component in enumerate(component_list):
-                    value += 'component_'+str(idx+1)+'_attribute_'+str(position)+'='+str(component).strip()+'\n'
-                component_input_parameter = st.number_input(label='Number of boolean values to generate for these components:', value=1, key='component_input_parameter_'+str(position))
-                value += 'input_parameter_attribute_'+str(position)+'='+str(component_input_parameter)+'\n'
-
             value += 'type_attribute_'+str(position)+'='+str(attribute_type)+'\n'
             # Important attributes:                
-            is_important_attribute = st.checkbox(label=f'Is {attribute_name} an important attribute to include in the user profile?', value=False, key=schema_type+'_is_important_attribute_'+str(position))
+            is_important_attribute = st.checkbox(label=f'Is {attribute_name} an important attribute to include in the user profile?', value=False, key=schema_type+'_is_important_attribute_'+str(position)) 
             value += 'important_weight_attribute_'+str(position)+'='+str(is_important_attribute)+'\n'
             if is_important_attribute:
                 # Ranking order:
@@ -265,13 +300,112 @@ def generate_schema_file(schema_type):
     # Show generated schema file:
     with st.expander(f"Show {schema_type}_schema.conf"):
         sch_text_area = st.empty()
-        if st.checkbox(label='Edit file?', key='edit_schema_'+schema_type):
-            schema_text_area = sch_text_area.text_area(label='Current file:', value=value, height=500, key=schema_type+'_schema_text_area')
+        if st.checkbox(label='Edit file?', key='edit_schema_'+schema_type): 
+            schema_text_area = sch_text_area.text_area(label='Current file:', value=value, height=500, key=schema_type+'_schema_text_area') 
         else:
-            schema_text_area = sch_text_area.text_area(label='Current file:', value=value, height=500, disabled=True, key=schema_type+'_schema_text_area')
+            schema_text_area = sch_text_area.text_area(label='Current file:', value=value, height=500, disabled=True, key=schema_type+'_schema_text_area') 
     link_schema_file = f'<a href="data:text/plain;base64,{base64.b64encode(schema_text_area.encode()).decode()}" download="{schema_type}_schema.conf">Download</a>'
-    st.markdown(link_schema_file, unsafe_allow_html=True) 
+    st.markdown(link_schema_file, unsafe_allow_html=True)
     return schema_text_area
+
+def generation_settings(tab_generation):
+    # GENERATION SETTING TAB:
+    with tab_generation:
+        st.header('Generation')
+        # Uploading the file: "generation_config.conf"
+        generation_config_value = ''
+        if is_upload_generation := st.checkbox('Upload the data generation configuration file', value=True, key='is_upload_generation'):    
+            with st.expander(f"Upload generation_config.conf"):
+                if generation_config_file := st.file_uploader(label='Choose the file:', key='generation_config_file'):
+                    generation_config_value = generation_config_file.getvalue().decode("utf-8")
+        else:
+            # Generating the file: "generation_config.conf"
+            # [dimension]
+            st.write('General configuration')
+            dimension_value = '[dimension] \n'
+            user_count = st.number_input(label='Number of users to generate:', value=250)
+            item_count = st.number_input(label='Number of items to generate:', value=100)
+            context_count = st.number_input(label='Number of contexts to generate:', value=10)
+
+            dimension_value += ('number_user=' + str(user_count) + '\n' +
+                                'number_item=' + str(item_count) + '\n' +
+                                'number_context=' + str(context_count) + '\n')
+            st.markdown("""---""")
+
+            # [behavior]
+            st.write('Behavior configuration')
+            behavior_value = '[behavior] \n'
+            number_behavior = st.number_input(label='Number of behaviors:', value=1000)
+            session_time = st.number_input(label='Session time (seconds):', value=3600)
+            min_interval_behavior = st.number_input(label='Minimum interval between behaviors (seconds):', value=1)
+            max_interval_behavior = st.number_input(label='Maximum interval between behaviors (seconds):', value=300)
+            min_radius = st.number_input(label='Minimum radius:', value=1)
+            max_radius = st.number_input(label='Maximum radius:', value=5)
+            door = st.text_input(label='Door: (format exaple: x, y, z)', value='0, 5, 5')
+            interaction_threshold = st.number_input(label='Interaction threshold:', value=2.5)
+
+            behavior_value += ('number_behavior=' + str(number_behavior) + '\n' +
+                            'session_time=' + str(session_time) + '\n' +
+                            'minimum_interval_behavior=' + str(min_interval_behavior) + '\n' +
+                            'maximum_interval_behavior=' + str(max_interval_behavior) + '\n' +
+                            'minimum_radius=' + str(min_radius) + '\n' +
+                            'maximum_radius=' + str(max_radius) + '\n' +
+                            'door=[' + door + ']\n' +
+                            'interaction_threshold=' + str(interaction_threshold) + '\n')
+            st.markdown("""---""")
+
+            # [rating]
+            st.write('Rating configuration')
+            rating_value = '[rating] \n'
+            rating_min = st.number_input(label='Minimum value of the ratings:', value=0)
+            rating_max = st.number_input(label='Maximum value of the ratings:', value=1)
+            min_year_ts = st.date_input(label='From:', value=date(2023, 1, 1))
+            max_year_ts = st.date_input(label='Until:', value=date(2023, 4, 1))
+            rating_value += ('minimum_value_rating=' + str(rating_min) + '\n' +
+                            'maximum_value_rating=' + str(rating_max) + '\n' +
+                            'minimum_date_timestamp=' + str(min_year_ts) + '\n' +
+                            'maximum_date_timestamp=' + str(max_year_ts) + '\n')
+            # Rules
+            st.write('Rules configuration')
+            num_rules = st.number_input(label="Number of rules (format example: {'action': 'Click', 'rating': 1}):", min_value=0, value=0)
+            rules = []
+            for i in range(num_rules):
+                rule = st.text_input(label=f"Rule {i + 1}:", value="")
+                rules.append(rule)
+            for i, rule in enumerate(rules):
+                rating_value += f'rule_{i + 1}=' + rule + '\n'
+            st.markdown("""---""")
+
+            # [item profile]
+            st.write('Item profile configuration')
+            item_profile_value = '[item profile] \n'
+            probability_percentage_profile_1 = st.number_input(label='Profile probability percentage 1:', value=10)
+            probability_percentage_profile_2 = st.number_input(label='Profile probability percentage 2:', value=30)
+            probability_percentage_profile_3 = st.number_input(label='Profile probability percentage 3:', value=60)
+            noise_percentage_profile_1 = st.number_input(label='Profile noise percentage 1:', value=20)
+            noise_percentage_profile_2 = st.number_input(label='Profile noise percentage2:', value=20)
+            noise_percentage_profile_3 = st.number_input(label='Profile noise percentage 3:', value=20)
+
+            item_profile_value += ('probability_percentage_profile_1=' + str(probability_percentage_profile_1) + '\n' +
+            'probability_percentage_profile_2=' + str(probability_percentage_profile_2) + '\n' +
+            'probability_percentage_profile_3=' + str(probability_percentage_profile_3) + '\n' +
+            'noise_percentage_profile_1=' + str(noise_percentage_profile_1) + '\n' +
+            'noise_percentage_profile_2=' + str(noise_percentage_profile_2) + '\n' +
+            'noise_percentage_profile_3=' + str(noise_percentage_profile_3) + '\n')
+            st.markdown("""---""")
+
+            # Generate the configuration file
+            generation_config_value = dimension_value + '\n' + behavior_value + '\n' + rating_value + '\n' + item_profile_value
+        # Edit file:
+        with st.expander(f"Show generation_config.conf"):
+            if edit_config_file := st.checkbox(label='Edit file?', key='edit_config_file'):
+                config_file_text_area = st.text_area(label='Current file:', value=generation_config_value, height=500)
+            else:               
+                config_file_text_area = st.text_area(label='Current file:', value=generation_config_value, height=500, disabled=True)    
+        link_generation_config = f'<a href="data:text/plain;base64,{base64.b64encode(config_file_text_area.encode()).decode()}" download="generation_config.conf">Download</a>'
+        st.markdown(link_generation_config, unsafe_allow_html=True)
+
+        return generation_config_value
 
 ####### Pre-process a dataset #######
 # LOAD DATASET:
@@ -284,7 +418,7 @@ def load_dataset(file_type_list):
     user_df = pd.DataFrame()
     item_df = pd.DataFrame()
     context_df = pd.DataFrame()
-    rating_df = pd.DataFrame()    
+    rating_df = pd.DataFrame()
     # Uploading a dataset:
     if 'user' in file_type_list:
         user_df = load_one_file(file_type='user')
@@ -294,7 +428,7 @@ def load_dataset(file_type_list):
         context_df = load_one_file(file_type='context')   
     if 'rating' in file_type_list:
         rating_df = load_one_file(file_type='rating')
-    return user_df, item_df, context_df, rating_df        
+    return user_df, item_df, context_df, rating_df
 
 def load_one_file(file_type):
     """
@@ -438,11 +572,6 @@ def select_params(algorithm):
                 "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svd'),
                 "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.00, value=0.005, step=0.0001, key='lr_all_svd'),
                 "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.00, value=0.02, key='reg_all_svd')}
-    if algorithm == "KNNBasic":
-        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
-        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbasic'),
-                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnbasic'),
-                                "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnbasic')}}
     if algorithm == "BaselineOnly":
         st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
         return {"bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_baselineonly'),
@@ -452,24 +581,6 @@ def select_params(algorithm):
         st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
         return {"n_cltr_u": st.sidebar.number_input("Number of clusters for users", min_value=1, max_value=1000, value=5),
                 "n_cltr_i": st.sidebar.number_input("Number of clusters for items", min_value=1, max_value=1000, value=5)}
-    if algorithm == "KNNBaseline":
-        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
-        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbaseline'),
-                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnbaseline'),
-                                "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnbaseline')},
-                "bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_knnbaseline'),
-                                "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_i_knnbaseline'),
-                                "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_u_knnbaseline')}}
-    if algorithm == "KNNWithMeans":
-        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
-        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithmeans'),
-                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnwithmeans'),
-                                "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnwithmeans')}}
-    if algorithm == "KNNWithZScore":
-        st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
-        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithzscore'),
-                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["cosine", "msd", "pearson"], key='sim_options_knnwithmeans'),
-                                "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnwithmeans')}}    
     if algorithm == "NMF":
         st.sidebar.markdown(f'**{algorithm} parameter settings:**')          
         return {"n_factors": st.sidebar.number_input("Number of factors", min_value=1, max_value=1000, value=100, key='n_factors_nmf'),
@@ -486,6 +597,26 @@ def select_params(algorithm):
                 "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svdpp'),
                 "lr_all": st.sidebar.number_input("Learning rate for all parameters", min_value=0.0001, max_value=1.0, value=0.005, key='lr_all_svdpp'),
                 "reg_all": st.sidebar.number_input("Regularization term for all parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_all_svdpp')}
+    if algorithm == "KNNBasic":
+        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbasic'),
+                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["pearson", "msd", "cosine"], key='sim_options_knnbasic'),
+                                "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnbasic')}}
+    if algorithm == "KNNWithMeans":
+        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithmeans'),
+                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["pearson", "msd", "cosine"], key='sim_options_knnwithmeans'),
+                                "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnwithmeans')}}
+    if algorithm == "KNNWithZScore":
+        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithzscore'),
+                "min_k": st.sidebar.number_input("Minimum number of nearest neighbors", min_value=1, max_value=1000, value=1, key='min_k_knnwithzscore'),
+                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["pearson", "msd", "cosine"], key='sim_options_knnwithzscore'),
+                                "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnwithzscore')}}
+    if algorithm == "KNNBaseline":
+        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbaseline'),
+                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["pearson", "msd", "cosine"], key='sim_options_knnbaseline'),
+                                "user_based": st.sidebar.selectbox("User-based or item-based", ["user", "item"], key='user_based_knnbaseline')},
+                "bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_knnbaseline'),
+                                "reg_i": st.sidebar.number_input("Regularization term for item parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_i_knnbaseline'),
+                                "reg_u": st.sidebar.number_input("Regularization term for user parameters", min_value=0.0001, max_value=1.0, value=0.02, key='reg_u_knnbaseline')}}
 
 def select_params_contextual(algorithm):
     """

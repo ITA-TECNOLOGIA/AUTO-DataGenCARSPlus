@@ -1,6 +1,6 @@
 import logging
 from configparser import NoOptionError, NoSectionError
-
+import ast
 from datagencars.synthetic_dataset.generator.access_schema.access_data import AccessData
 
 
@@ -96,7 +96,49 @@ class AccessGenerationConfig(AccessData):
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
         return percentage_rating_variation
+
+    def get_all_implicit_rating_rules(self):
+        '''
+        Gets a list of all the implicit rating rules.
+        :return: A list of dictionaries containing the details of all implicit rating rules.
+        '''
+        implicit_rating_rules = []
+        number_maximum_rules = self.get_number_maximum_rules()
+        print(f"Number of implicit rating rules: {number_maximum_rules}")  # Added print statement for debugging
+        for position in range(1, number_maximum_rules + 1):
+            implicit_rating_rule = self.get_implicit_rating_rule_from_pos(position)
+            if implicit_rating_rule:
+                implicit_rating_rules.append(implicit_rating_rule)
+        print(f"Implicit rating rules found: {implicit_rating_rules}")  # Added print statement for debugging
+        return implicit_rating_rules
     
+    def get_number_maximum_rules(self):
+        '''
+        Gets the number of implicit rating rules.
+        :return: The number of implicit rating rules.
+        '''
+        number_maximum_rules = None
+        try:
+            number_maximum_rules = self.file_parser.getint(section='rating', option='number_maximum_rules')
+        except (NoOptionError, NoSectionError) as e:
+            logging.error(e)
+        return number_maximum_rules
+    
+    def get_implicit_rating_rule_from_pos(self, position):
+        '''
+        Gets the details of a specific implicit rating rule.
+        :param position: The position of the implicit rating rule.
+        :return: The details of a specific implicit rating rule as a dictionary.
+        '''
+        implicit_rating_rule = None
+        try:
+            implicit_rating_rule_str = self.file_parser.get(section='rating', option=f'rule_{position}')
+            print(f"Implicit rating rule string: {implicit_rating_rule_str}")  # Added print statement for debugging
+            implicit_rating_rule = ast.literal_eval(implicit_rating_rule_str)
+        except (NoOptionError, NoSectionError, ValueError) as e:
+            logging.error(e)
+        return implicit_rating_rule
+
     def get_number_behavior(self):
         '''
         Gets the number of behaviors to generate in the dataset.
