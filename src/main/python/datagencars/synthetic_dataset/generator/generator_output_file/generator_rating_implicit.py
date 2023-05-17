@@ -24,7 +24,6 @@ class GeneratorImplicitRatingFile(GeneratorFile):
         self.min_rating_value = self.access_generation_config.get_minimum_value_rating()
         self.max_rating_value = self.access_generation_config.get_maximum_value_rating()
         self.rules = self.access_generation_config.get_all_implicit_rating_rules()
-        number_maximum_rules = self.access_generation_config.get_number_maximum_rules()
         self.behavior_df = behavior_df
         self.item_df = item_df
 
@@ -68,10 +67,13 @@ class GeneratorImplicitRatingFile(GeneratorFile):
             elif ('object_type' in rule and object_type == rule['object_type'] and
                     'action_open' in rule and object_action == rule['action_open']):
                 open_timestamp = row['timestamp']
-                close_timestamp = filtered_behavior.loc[
-                    (filtered_behavior['user_id'] == user_id) &
-                    (filtered_behavior['item_id'] == item_id) &
-                    (filtered_behavior['object_action'] == rule['action_close']), 'timestamp'].values[0]
+                try:
+                    close_timestamp = filtered_behavior.loc[
+                        (filtered_behavior['user_id'] == user_id) &
+                        (filtered_behavior['item_id'] == item_id) &
+                        (filtered_behavior['object_action'] == rule['action_close']), 'timestamp'].values[0]
+                except:
+                    return 0, open_timestamp
 
                 if rule['min_time'] < (close_timestamp - open_timestamp) < rule['max_time']:
                     return rule['rating_good'], open_timestamp
