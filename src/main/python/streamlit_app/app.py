@@ -1050,11 +1050,17 @@ elif general_option == 'Analysis a dataset':
         if lars and side_lars:
             behavior_df = util.load_one_file('behavior')
     is_analysis = st.sidebar.radio(label='Select one option:', options=['Visualization', 'Evaluation'])
-    # VISUALIZATION:    
+    # VISUALIZATION:
     if is_analysis == 'Visualization':
+        feedback_option_radio = st.sidebar.radio(label='Select a type of user feedback:', options=['Explicit ratings', 'Implicit ratings'])
+        if feedback_option_radio == 'Implicit ratings':
+            behavior_df = util.load_one_file('behavior')
         st.header('Visualization')
         if with_context:
-            user_tab, item_tab, context_tab, rating_tab = st.tabs(['Users', 'Items', 'Contexts', 'Ratings'])
+            if feedback_option_radio == 'Implicit ratings':
+                user_tab, item_tab, context_tab, behavior_tab, rating_tab = st.tabs(['Users', 'Items', 'Contexts', 'Behaviors', 'Ratings'])
+            else:
+                user_tab, item_tab, context_tab, rating_tab = st.tabs(['Users', 'Items', 'Contexts', 'Ratings'])
         else:
             user_tab, item_tab, rating_tab = st.tabs(['Users', 'Items', 'Ratings'])   
         # Users tab:
@@ -1229,6 +1235,32 @@ elif general_option == 'Analysis a dataset':
                         st.error(f"Make sure the context dataset is in the right format. {e}")
                 else:
                     st.warning("The context file (context.csv) has not been uploaded.")
+        # Behaviors tab:
+        with behavior_tab:
+            # Behavior dataframe:
+            st.header("Behavior file")          
+            st.dataframe(behavior_df)
+            # Extracted statistics:
+            extract_statistics_behavior = ExtractStatisticsUIC(behavior_df)
+            # Missing values:
+            st.header("Missing values")
+            missing_values5 = extract_statistics_behavior.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})
+            st.table(missing_values5)
+            # Attributes, data types and value ranges:
+            st.header("Attributes, data types and value ranges")
+            table5 = extract_statistics_behavior.get_attributes_and_ranges()
+            st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
+            # Showing one figure by attribute:
+            st.header("Analysis by attribute")
+            col1, col2 = st.columns(2)
+            with col1:
+                behavior_attribute_list = behavior_df.columns.tolist()
+                behavior_attribute_list.remove('user_id')
+                column5 = st.selectbox("Select an attribute", behavior_attribute_list, key='column5')
+            with col2:
+                sort5 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort5')
+            data5 = extract_statistics_behavior.column_attributes_count(column5)
+            util.plot_column_attributes_count(data5, column5, sort5)
         # Ratings tab:
         with rating_tab:
             if not rating_df.empty:
@@ -1254,13 +1286,13 @@ elif general_option == 'Analysis a dataset':
                     st.table(unique_counts_df)               
                     # Attributes, data types and value ranges:
                     st.header("Attributes, data types and value ranges")
-                    table5 = extract_statistics_rating.get_attributes_and_ranges()
-                    st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
+                    table6 = extract_statistics_rating.get_attributes_and_ranges()
+                    st.table(pd.DataFrame(table6, columns=["Attribute name", "Data type", "Value ranges"]))
                     # Histogram of ratings:
                     st.header("Histogram of ratings")
                     counts = np.bincount(rating_df['rating'])[np.nonzero(np.bincount(rating_df['rating']))] #Count the frequency of each rating
-                    df5 = pd.DataFrame({'Type of ratings': np.arange(1, len(counts) + 1), 'Number of ratings': counts})
-                    chart5 = alt.Chart(df5).mark_bar(color='#0099CC').encode(
+                    df6 = pd.DataFrame({'Type of ratings': np.arange(1, len(counts) + 1), 'Number of ratings': counts})
+                    chart6 = alt.Chart(df6).mark_bar(color='#0099CC').encode(
                         x=alt.X('Type of ratings:O', axis=alt.Axis(title='Type of ratings')),
                         y=alt.Y('Number of ratings:Q', axis=alt.Axis(title='Number of ratings')),
                         tooltip=['Type of ratings', 'Number of ratings']
@@ -1270,11 +1302,11 @@ elif general_option == 'Analysis a dataset':
                             'fontSize': 16,
                         }
                     )                    
-                    st.altair_chart(chart5, use_container_width=True)
+                    st.altair_chart(chart6, use_container_width=True)
                     # Statistics per user:
                     st.header("Statistics per user")
                     users = list(rating_df['user_id'].unique())                    
-                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab5")   
+                    selected_user = st.selectbox("Select a user:", users, key="selected_user_tab6")   
                     # Items per user:
                     st.markdown("*Items*")                           
                     counts_items, unique_items, total_count = extract_statistics_rating.get_number_items_from_user(selected_user)
