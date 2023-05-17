@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
+from ast import literal_eval
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
@@ -1237,30 +1238,126 @@ elif general_option == 'Analysis a dataset':
                     st.warning("The context file (context.csv) has not been uploaded.")
         # Behaviors tab:
         with behavior_tab:
-            # Behavior dataframe:
-            st.header("Behavior file")          
-            st.dataframe(behavior_df)
-            # Extracted statistics:
-            extract_statistics_behavior = ExtractStatisticsUIC(behavior_df)
-            # Missing values:
-            st.header("Missing values")
-            missing_values5 = extract_statistics_behavior.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})
-            st.table(missing_values5)
-            # Attributes, data types and value ranges:
-            st.header("Attributes, data types and value ranges")
-            table5 = extract_statistics_behavior.get_attributes_and_ranges()
-            st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
-            # Showing one figure by attribute:
-            st.header("Analysis by attribute")
-            col1, col2 = st.columns(2)
-            with col1:
-                behavior_attribute_list = behavior_df.columns.tolist()
-                behavior_attribute_list.remove('user_id')
-                column5 = st.selectbox("Select an attribute", behavior_attribute_list, key='column5')
-            with col2:
-                sort5 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort5')
-            data5 = extract_statistics_behavior.column_attributes_count(column5)
-            util.plot_column_attributes_count(data5, column5, sort5)
+            if not behavior_df.empty:
+                # Behavior dataframe:
+                st.header("Behavior file")          
+                st.dataframe(behavior_df)
+                # Extracted statistics:
+                extract_statistics_behavior = ExtractStatisticsUIC(behavior_df)
+                # Missing values:
+                st.header("Missing values")
+                missing_values5 = extract_statistics_behavior.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})
+                st.table(missing_values5)
+                # Attributes, data types and value ranges:
+                st.header("Attributes, data types and value ranges")
+                table5 = extract_statistics_behavior.get_attributes_and_ranges()
+                st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
+                # Showing one figure by attribute:
+                st.header("Analysis by attribute")
+                col1, col2 = st.columns(2)
+                with col1:
+                    behavior_attribute_list = behavior_df.columns.tolist()
+                    behavior_attribute_list.remove('user_id')
+                    column5 = st.selectbox("Select an attribute", behavior_attribute_list, key='column5')
+                with col2:
+                    sort5 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort5')
+                data5 = extract_statistics_behavior.column_attributes_count(column5)
+                util.plot_column_attributes_count(data5, column5, sort5)
+            ############################
+                if not item_df.empty:
+                    # behavior_df = pd.read_csv(r'resources\data_schema_imascono\behavior.csv', parse_dates=['timestamp'])
+
+                    # Crear un diccionario de colores y asignar un color único a cada object_type
+                    unique_object_types = item_df['object_type'].unique()
+                    colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_object_types)))
+                    color_map = {object_type: color for object_type, color in zip(unique_object_types, colors)}
+
+                    behavior_df['item_id'] = behavior_df['item_id'].astype(str)
+                    item_df['item_id'] = item_df['item_id'].astype(str)
+
+                    # Combina los dos DataFrames en uno solo
+                    data = pd.merge(behavior_df, item_df, left_on='item_id', right_on='item_id', how='left')
+
+                    # Filtrar filas donde object_action es igual a 'Update'
+                    update_data = data[data['object_action'] == 'Update']
+
+                    # Extraer las posiciones y convertirlas en una lista de tuplas
+                    update_data['user_position'] = update_data['user_position'].apply(lambda x: literal_eval(x) if x else None)
+
+                    # Eliminar filas sin información de posición
+                    update_data = update_data.dropna(subset=['user_position'])
+
+                    # Obtener la lista de user_id únicos
+                    unique_user_ids = update_data['user_id'].unique()
+
+                    # Sidebar
+                    st.header('Virtual World Map')
+                    # Entrada de texto para las habitaciones
+                    rooms_input = st.text_input('Introduce rooms as list of dictionaries:')
+                    try:
+                        rooms = literal_eval(rooms_input)
+                        room_ids = [room['id'] for room in rooms]
+                        selected_rooms = st.multiselect('Seleccione las habitaciones:', options=room_ids)
+                        selected_users = st.multiselect('Seleccione los usuarios:', options=unique_user_ids)
+                        selected_data = st.selectbox('Seleccione los datos a visualizar:', options=['Solo Items', 'Solo Usuarios', 'Items y Usuarios'])
+                    except Exception as e:
+                        st.error(f"Error al parsear las habitaciones: {e}")
+
+                    if st.button('Show Map'):
+                        plt.figure(figsize=(10, 10))
+
+                        # Dibujar los object_types y guardar las referencias para la leyenda
+                        markers = []
+                        labels = []
+
+                        for user_id in selected_users:
+                            user_data = update_data[update_data['user_id'] == user_id]
+
+                            if len(user_data) > 1:
+                                for room in rooms:
+                                    if room['id'] in selected_rooms:
+                                        plt.gca().add_patch(plt.Rectangle((room['x_min'], room['z_min']), room['x_max'] - room['x_min'], room['z_max'] - room['z_min'], fill=None, edgecolor='black', linestyle='--'))
+                                        plt.text(room['x_min'] + (room['x_max'] - room['x_min']) / 2, room['z_min'] + (room['z_max'] - room['z_min']) / 2, f"ID: {room['id']}", fontsize=12, ha='center', va='center')
+
+                                if selected_data in ['Solo Items', 'Items y Usuarios']:
+                                    for index, row in item_df.iterrows():
+                                        pos = literal_eval(row['object_position'])
+                                        marker = plt.scatter(pos[0], pos[2], marker='s', color=color_map[row['object_type']])
+                                        
+                                        # Añadir el marcador y la etiqueta solo si no están ya en la lista
+                                        if row['object_type'] not in labels:
+                                            markers.append(marker)
+                                            labels.append(row['object_type'])
+
+                                if selected_data in ['Solo Usuarios', 'Items y Usuarios']:
+                                    positions = list(user_data['user_position'])
+                                    timestamps = list(user_data['timestamp'])
+                                    x_coords = list(pos[0] for pos in positions)
+                                    z_coords = list(pos[2] for pos in positions)
+                                    plt.plot(x_coords, z_coords, label=f'User {user_id}', linestyle='--', marker='o')
+
+                                    # Mostrar timestamp a continuación de la gráfica
+                                    st.write(f"Timestamps para el usuario {user_id}:")
+                                    for i, time in enumerate(timestamps):
+                                        st.write(f"{i+1}: {time}")
+
+                        # Configuración de la gráfica
+                        plt.title("Virtual world map")
+                        plt.xlabel('X')
+                        plt.ylabel('Z')
+
+                        # Ajustar los límites de la gráfica en función de las habitaciones seleccionadas
+                        x_mins, x_maxs = zip(*[(room['x_min'], room['x_max']) for room in rooms if room['id'] in selected_rooms])
+                        z_mins, z_maxs = zip(*[(room['z_min'], room['z_max']) for room in rooms if room['id'] in selected_rooms])
+                        plt.xlim(min(x_mins), max(x_maxs))
+                        plt.ylim(min(z_mins), max(z_maxs))
+
+                        # Añadir todos los marcadores a la leyenda
+                        plt.legend(handles=markers+plt.gca().get_legend_handles_labels()[0], labels=labels+plt.gca().get_legend_handles_labels()[1])
+                        plt.grid(True)
+
+                        st.pyplot(plt.gcf())
+                        plt.clf()
         # Ratings tab:
         with rating_tab:
             if not rating_df.empty:
