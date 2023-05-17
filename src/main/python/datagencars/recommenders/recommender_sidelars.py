@@ -1,7 +1,9 @@
 import logging
 import warnings
+import json
 from collections import defaultdict
 import pandas as pd
+import numpy as np
 from scipy.spatial.distance import euclidean
 from surprise import NormalPredictor, KNNBasic, KNNWithMeans, KNNWithZScore, KNNBaseline
 import datagencars.evaluation.rs_surprise.surprise_helpers as surprise_helpers
@@ -266,6 +268,10 @@ class RecommenderSIDELARS:
         random_recommendation_json = self.get_trajectory(candidate_random_recommendation_list, side_lars, min_social_distance)
         
         return filtered_ub_recommendation_json, random_recommendation_json
+    
+def default(o):
+    if isinstance(o, np.int64): return int(o)  
+    return o.__dict__
 
 def main():
     df_item = pd.read_csv(r'resources\data_schema_imascono\item.csv')
@@ -290,8 +296,15 @@ def main():
     for algorithm in algorithms:
         filtered_ub_recommendation_json, random_recommendation_json = recommender.dynamic_recommendation_pipeline(dataset, algorithm, k_recommendations=3, 
                                                                                                                   side_lars=True, min_social_distance=2.0)
-        print("User-based recommendation json:", filtered_ub_recommendation_json)
-        print("Random recommendation json:", random_recommendation_json)
+        # print("User-based recommendation json:", filtered_ub_recommendation_json)
+        # print("Random recommendation json:", random_recommendation_json)
+        
+        # Save the JSON data to a file
+        with open('filtered_ub_recommendation.json', 'w') as f:
+            json.dump(filtered_ub_recommendation_json, f, default=default)
+
+        with open('random_recommendation.json', 'w') as f:
+            json.dump(random_recommendation_json, f, default=default)
 
 if __name__ == '__main__':
     main()
