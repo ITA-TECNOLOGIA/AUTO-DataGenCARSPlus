@@ -17,6 +17,7 @@ import streamlit as st
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_user import AccessUser
+from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
@@ -820,7 +821,11 @@ elif general_option == 'Pre-process a dataset':
 
         st.write('TODO')
     elif is_preprocess == 'Replace NULL values':
-        file_selectibox = st.selectbox(label='Files available:', options=['item', 'context'])
+        if with_context:
+            file_selectibox = st.selectbox(label='Files available:', options=['item', 'context'])
+        else:
+            file_selectibox = st.selectbox(label='Files available:', options=['item'])
+
         if file_selectibox == 'item':
             _, df, _, _ = util.load_dataset(file_type_list=['item'])
         elif file_selectibox == 'context':
@@ -829,10 +834,26 @@ elif general_option == 'Pre-process a dataset':
         with st.expander(label='Help information'):
             st.markdown("""Workflow to complete unknown contextual information.""")
         with st.expander(label='Workflow'):
-            st.write('TODO')
-        st.write('TODO')
-    elif is_preprocess == 'Generate user profile':    
-        # Loading dataset:      
+            json_opt_params = {}
+            path = wf.create_workflow('ReplaceNULLValues', json_opt_params)
+            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
+            os.remove(path)
+        if not df.empty:
+            schema = util.infer_schema(df)
+            
+            if st.button(label='Replace NULL Values', key='button_replace_nulls'):
+                print('Replacing NULL Values')
+                replacenulls = ReplaceNullValues(df)
+                if file_selectibox == 'item':
+                    new_df = replacenulls.regenerate_item_file(schema)
+                elif file_selectibox == 'context':
+                    new_df = replacenulls.regenerate_context_file(schema)
+                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_df.to_csv(index=False).encode()).decode()}" download="{file_selectibox}.csv">Download {file_selectibox} CSV</a>'
+                st.markdown(link_rating, unsafe_allow_html=True)
+        else:
+            st.warning("The item file or context file have not been uploaded.")
+        
+    elif is_preprocess == 'Generate user profile':
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
         else:

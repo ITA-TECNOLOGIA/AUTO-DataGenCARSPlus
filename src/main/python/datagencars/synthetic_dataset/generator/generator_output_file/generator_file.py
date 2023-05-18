@@ -9,8 +9,10 @@ from datagencars.synthetic_dataset.generator.access_schema.access_schema import 
 class GeneratorFile(ABC):
 
     def __init__(self, generation_config, schema, item_profile=None):
-        # Access generation config.
-        self.access_generation_config = AccessGenerationConfig(file_str=generation_config)   
+        self.access_generation_config = None
+        if generation_config != None:
+            # Access generation config.
+            self.access_generation_config = AccessGenerationConfig(file_str=generation_config)   
         # Acces item profile.
         if item_profile:
             self.item_profile_access = AccessItemProfile(file_str=item_profile)
