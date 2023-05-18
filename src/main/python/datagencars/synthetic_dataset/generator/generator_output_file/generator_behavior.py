@@ -220,7 +220,7 @@ class GeneratorBehaviorFile(GeneratorFile):
         :return: A dataframe with behavior information (user_id, object_action, user_position, behavior_id, item_id, context_id, timestamp)
         '''
         print(f'Total of behaviors to generate: {self.num_behaviors}')
-        print('Generating instances by behavior.')
+        # print('Generating instances by behavior.')
 
         instance_generator = GeneratorInstance(schema_access=self.schema_access)
         for _ in range(self.num_behaviors):

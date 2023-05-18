@@ -29,7 +29,7 @@ class GeneratorItemFile(GeneratorFile):
         # Number of items to be generated.
         number_item = self.access_generation_config.get_number_item()
         print(f'Total of items to generate: {number_item}')
-        print('Generating instances by item.')        
+        # print('Generating instances by item.')        
         if with_correlation:
             # Random with correlation:
             instance_generator = GeneratorInstance(generation_access=self.access_generation_config, schema_access=self.schema_access, item_profile_access=self.item_profile_access)

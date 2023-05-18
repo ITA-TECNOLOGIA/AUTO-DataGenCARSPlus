@@ -5,7 +5,7 @@ channels:
 dependencies:
   - pip=23.0.1
   - python=3.8.3
-  - python-graphviz=0.20.1
+  - python-graphviz=0.20.1 # conda install python-graphviz
   - pip:
     - pandas==1.5.3
     - numpy==1.23.5

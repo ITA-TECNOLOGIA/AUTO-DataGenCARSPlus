@@ -246,8 +246,8 @@
         "condition":[["init_step", "False"], ["UP", "Automatic"]]}
     ],
     "legend":["GC", "U", "UP", "USc", "I", "ISc", "IP", "C",  "CSc", "R"]
-   },
-   {"workflow_name": "ReplicateDataset", 
+    },
+    {"workflow_name": "ReplicateDataset", 
     "nodes" : [
        {"node_name": "BEGIN", 
         "optional" : "False"}, 
@@ -371,7 +371,19 @@
         "condition": [["init_step", "False"], ["NULLValues", "True"]]}
     ],
     "legend":["I", "C", "R", "RSt", "UP"]
-   }
+    },
+    {"workflow_name": "ExtendDataset",
+     "nodes" : [],
+     "gateways":[],
+     "arrows" : [],
+     "legend":[]        
+    },
+    {"workflow_name": "ReplicateRatings",
+     "nodes" : [],
+     "gateways":[],
+     "arrows" : [],
+     "legend":[]        
+    }
 ],
 "legend": {
     "GC": "generation_config.conf",

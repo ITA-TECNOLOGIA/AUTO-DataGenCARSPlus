@@ -23,7 +23,7 @@ class GeneratorUserFile(GeneratorFile):
         # Number of users to be generated.
         number_user = self.access_generation_config.get_number_user()
         print(f'Total of users to generate: {number_user}')
-        print('Generating instances by user.')
+        # print('Generating instances by user.')
         if self.schema_access.get_number_attributes()!=None:
             for _ in range(number_user):
                 attribute_list = instance_generator.generate_instance()
