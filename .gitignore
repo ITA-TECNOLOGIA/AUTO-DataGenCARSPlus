@@ -2,6 +2,7 @@
 *.csv
 *.conf
 *.txt
+*.ipynb
 app_tmp.py
 resources/workflows/mapping_categorization.png
 resources/workflows/ratings_to_binary.png
