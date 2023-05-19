@@ -8,6 +8,9 @@ import datagencars.evaluation.rs_surprise.evaluation as evaluation
 import base64
 import io
 import requests
+import config
+from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
+import console
 
 
 ####### Generate a synthetic dataset ######
@@ -407,6 +410,150 @@ def generation_settings(tab_generation):
 
         return generation_config_value
 
+def upload_user_profile_file():
+    user_profile_df = None
+    with st.expander(label='Upload user_profile.csv'):
+        if user_profile_file := st.file_uploader(label='Choose the file:', key='user_profile_file'):
+            user_profile_value = user_profile_file.getvalue().decode("utf-8")
+            user_profile_df = pd.read_csv(io.StringIO(user_profile_value))  
+            st.dataframe(user_profile_df)
+
+def generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map=None):
+    """
+    
+    """    
+    user_profile_df = None    
+    inconsistent = False
+    # Randomly fill a dataframe and cache it:
+    weight_np = np.zeros(shape=(number_user_profile, len(attribute_column_list)), dtype=str)
+    @st.cache(allow_output_mutation=True)    
+    def get_dataframe():
+        df = pd.DataFrame(weight_np, columns=attribute_column_list)
+        for column in df.columns:
+            df[column] = 0
+        df['user_profile_id'] = df.index+1
+        df['other'] = 1
+        df = df.astype(str)
+        return df            
+    user_profile_df = get_dataframe()
+    export_df = user_profile_df.copy()
+    # Create row, column, and value inputs:
+    col_row, col_col, col_val = st.columns(3)
+    with col_row:
+        # Choosing the row index:
+        row = st.number_input('row (profile)', max_value=user_profile_df.shape[0]) #, value=1
+    with col_col:
+        # Choosing the column index:
+        attribute_column_list_box = attribute_column_list.copy()
+        attribute_column_list_box.remove('other')
+        attribute_column_list_box.remove('user_profile_id')
+        if len(attribute_column_list_box) > 0:
+            selected_attribute = st.selectbox(label='column (attribute)', options=attribute_column_list_box)
+            attribute_position = attribute_column_list_box.index(selected_attribute)                           
+            col = attribute_position
+            # Getting possible values, in order to facilitate the importance ranking:
+            if selected_attribute in item_possible_value_map:
+                item_possible_value_list = item_possible_value_map[selected_attribute]
+                st.warning(item_possible_value_list)    
+            elif selected_attribute in context_possible_value_map:    
+                context_possible_value_list = context_possible_value_map[selected_attribute]
+                st.warning(context_possible_value_list)       
+    with col_val:   
+        # Inserting weight value:
+        value = st.text_input(label='weight (with range [-1,1])', value=0)      
+        # Checking attribute weights:                    
+        # Float number:
+        if ('.' in str(value)) or (',' in str(value)):
+            # Negative number:
+            if float(value) < -1.0:
+                st.warning('The ```weight``` must be greater than -1.')  
+            else:
+                # Range [0-1]:
+                if float(value) > 1.0:
+                    st.warning('The ```weight``` value must be in the range ```[-1,1]```.')  
+        else:
+            # Negative number:
+            if int(value) < -1:
+                st.warning('The ```weight``` must be greater than -1.')  
+            else:
+                # Range [0-1]:
+                if (int(value) > 1):
+                    st.warning('The ```weight``` value must be in the range ```[-1,1]```.')
+
+    # Change the entry at (row, col) to the given weight value:
+    if not user_profile_df.empty:
+        print(user_profile_df.values[row][col+1])
+        user_profile_df.values[row][col+1] = str(value)
+    else:
+        st.warning("user_profile_df is empty.")
+    other_value = 1
+    for column in attribute_column_list:
+        if column != 'user_profile_id' and column != 'other':
+            other_value = float(other_value-abs(float(user_profile_df.values[row][attribute_column_list.index(column)])))
+    if not user_profile_df.empty:
+        user_profile_df.values[row][len(user_profile_df.columns)-1] = f"{other_value:.1f}"
+    else:
+        st.warning("user_profile_df is empty.")
+    if not user_profile_df.empty:
+        if float(user_profile_df.values[row][len(user_profile_df.columns)-1]) < 0 or float(user_profile_df.values[row][len(user_profile_df.columns)-1]) > 1:
+            st.warning('Values in a row for user must equal 1')
+            inconsistent = True
+        else:
+            for index, row in user_profile_df.iterrows():
+                for column in user_profile_df.columns:
+                    if column != 'user_profile_id' and column != 'other':
+                        if float(row[column]) > 0:
+                            export_df.values[index][attribute_column_list.index(column)] = f'(+)|{str(abs(float(row[column])))}'
+                        elif float(row[column]) < 0:
+                            export_df.values[index][attribute_column_list.index(column)] = f'(-)|{str(abs(float(row[column])))}'
+                        else:
+                            export_df.values[index][attribute_column_list.index(column)] = f'0'
+                    if column == 'other':
+                        if float(row[column]) == 0:
+                            export_df.values[index][attribute_column_list.index(column)] = f'0'
+                        else:
+                            export_df.values[index][attribute_column_list.index(column)] = f'{str(abs(float(row[column])))}'
+    else:
+        st.warning("user_profile_df is empty.")
+    # Show the user profile dataframe:
+    st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[-1,1]```.""")
+    st.dataframe(user_profile_df)
+    # Downloading user_profile.csv:
+    if not inconsistent:
+        link_user_profile = f'<a href="data:file/csv;base64,{base64.b64encode(export_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
+        st.markdown(link_user_profile, unsafe_allow_html=True)
+    return user_profile_df
+
+def generate_user_profile_automatic(rating_df, item_df, context_df=None):
+    """
+    """
+    output = st.empty()
+    with console.st_log(output.code):
+        # Generate user profile, by using an original dataset:
+        generate_up_dataset = None
+        user_profile_df = pd.DataFrame()                    
+        if not context_df.empty:                     
+            # With context:            
+            if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                if st.button(label='Generate', key='button_generate_up_cars'):
+                    print('Automatically generating user profiles.')                    
+                    generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df, context_df)
+                    user_profile_df = generate_up(generate_up_dataset)                                  
+                    print('The user profile has been generated.')                                                    
+            else:
+                st.warning("The item, context and rating files have not been uploaded.")
+        else:            
+            # Without context:            
+            if (not item_df.empty) and (not rating_df.empty): 
+                if st.button(label='Generate', key='button_generate_up_rs'):
+                    print('Automatically generating user profiles.')                    
+                    generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df)
+                    user_profile_df = generate_up(generate_up_dataset)                    
+                    print('The user profile has been generated.')                               
+            else:
+                st.warning("The item and rating files have not been uploaded.")
+    return user_profile_df
+
 ####### Pre-process a dataset #######
 # LOAD DATASET:
 def load_dataset(file_type_list):
@@ -438,8 +585,8 @@ def load_one_file(file_type):
     """
     df = pd.DataFrame()    
     with st.expander(f"Upload your {file_type}.csv file"):
-        separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ';')", ";")
-        uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
+        separator = st.text_input(label=f"Enter the separator for your {file_type}.csv file (default is ';')", value=";", key='text_input_'+file_type)
+        uploaded_file = st.file_uploader(label=f"Select {file_type}.csv file", type="csv")
         if uploaded_file is not None:
             if not separator:
                 st.error('Please provide a separator.')
@@ -481,6 +628,282 @@ def generate_up(generate_up):
 # Extend dataset:
 # Recalculate ratings:
 # Replace NULL values:
+def infer_schema(df):
+    """
+    :param df: original dataset
+    :return: A dataframe with schema information
+    """
+    possible_types = {int:'Integer', float:'Float', bool:'Boolean', list:'List', str:'String'}
+    def infer(items):
+        try:
+            item_type = possible_types[type(items[0])]
+            if item_type == 'String' and len(items[0].replace('[','').replace(']','').split(',')) > 0:
+                item = items[0].replace('[','').replace(']','').replace('\'','').replace(' ', '').split(',')
+                try:
+                    float(item[-1])
+                    return 'AttributeComposite'
+                except:
+                    if 'www.' in items[0]:
+                        return 'AttributeComposite'
+                    else:
+                        return 'List'
+            else:
+                return item_type
+        except Exception as ex:
+            print(ex)
+            return 'Unknown'
+        
+    schema = pd.DataFrame()
+
+    attributes = df.columns[1:]
+    schema['Attribute'] = attributes
+    types = list()
+    generator = list()
+    min_vals = list()
+    max_vals = list()
+    fix_vals = list()
+    item_vals = list()
+    values_list_vals = list()
+    for attribute in attributes:
+        items = list(set(df[attribute].drop_duplicates().dropna()))
+        # Infer types
+        item_type = infer(items)
+        min_val = 0
+        max_val = 0
+        fix_val = ''
+        values_list2=list()
+        # Infer rest of info
+        if item_type == 'Integer' or item_type == 'Float':
+            if len(items) >= 2:
+                item_generator = 'Integer/Float/String/Boolean (following a distribution)'
+                min_val = min(items)
+                max_val = max(items)
+            else:
+                item_generator = 'Fixed'
+                min_val = items[0]
+                max_val = items[0]
+        if item_type == 'String':
+            if len(items) >= 2:
+                item_generator = 'Integer/Float/String/Boolean (following a distribution)'
+            else:
+                item_generator = 'Fixed'
+                fix_val = items[0]
+        if item_type == 'Boolean':
+            item_generator = 'Integer/Float/String/Boolean (following a distribution)'
+        if item_type == 'List':
+            values_list=''
+            for elem in items:
+                values_list += ',' + elem.replace('[', '').replace(']','').replace(' ','').replace('\'','')
+            values_list2 = list(set(values_list[1:].split(',')))
+            item_generator = 'BooleanList'
+        if item_type == 'AttributeComposite':
+            if 'www.' in items[0]:
+                item_generator = 'URL'
+            else:
+                item_generator = 'Address'
+
+        types.append(item_type)
+        generator.append(item_generator)
+        min_vals.append(min_val)
+        max_vals.append(max_val)
+        fix_vals.append(fix_val)
+        item_vals.append(items)
+        values_list_vals.append(values_list2)
+
+    schema['TypeAttribute'] = types
+    schema['GeneratorType'] = generator
+    schema['Min_val'] = min_vals
+    schema['Max_val'] = max_vals
+    schema['Fix_val'] = fix_vals
+    schema['Item_vals'] = item_vals
+    schema['Values_list_vals'] = values_list_vals
+
+    schema_str = '[global] \ntype=context \nnumber_attributes=' + str(len(schema)) +'\n'
+    for index, row in schema.iterrows():
+        schema_str = schema_str + '[attribute' + str(int(index+1)) + ']\n'
+        attribute = row['Attribute']
+        schema_str = schema_str + 'name_attribute_' + str(int(index+1)) + '=' + attribute + '\n'
+        st.write(f'[{attribute}]')
+        atrib_generator = st.selectbox(label='Generator type:', options=config.GENERATOR_OPTS, key = attribute+'generator', index=config.GENERATOR_OPTS.index(row['GeneratorType']))
+        atrib_type = st.selectbox(label='Attribute type:', options=config.ATR_OPTS, key=attribute+'_attribute_type_', index=config.ATR_OPTS.index(row['TypeAttribute']))
+        schema_str = schema_str + 'type_attribute_' + str(int(index+1)) + '=' + atrib_type + '\n'
+        if atrib_type == 'Integer' or atrib_type == 'Float':
+            if atrib_generator == 'Fixed':
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=FixedAttributeGenerator\n'
+                fixed_val = st.number_input(label='Fixed value of the attribute', value=row['Min_val'], key=attribute+'_fixed_val')
+                schema_str = schema_str + 'input_parameter_attribute_' + str((index+1)) + '=' + str(fixed_val) + '\n'
+            else:
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
+                integer_min = st.number_input(label='Minimum value of the attribute', value=row['Min_val'], key=attribute+'_integer_min')
+                integer_max = st.number_input(label='Maximum value of the attribute', value=row['Max_val'], key=attribute+'_integer_max')
+                schema_str = schema_str + 'minimum_value_attribute_' + str((index+1)) + '=' + str((integer_min)) + '\n'
+                schema_str = schema_str + 'maximum_value_attribute_' + str((index+1)) + '=' + str((integer_max)) + '\n'
+        if atrib_type == 'String':
+            if atrib_generator == 'Fixed':
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=FixedAttributeGenerator\n'
+                schema_str = schema_str + 'input_parameter_attribute_' + str(index+1) + '=' + row['Fix_val'] + '\n'
+                fixed_val = st.text_input(label='Fixed value of the attribute', value=row['Fix_val'], key=attribute+'_fixed_val')
+            else:
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
+                schema_str = schema_str + 'number_posible_values_attribute_'+ str((index+1)) + '=' + str(len(row['Item_vals'])) + '\n'
+                for index2, elem in enumerate(row['Item_vals']):
+                    schema_str = schema_str + 'posible_value_' + str(index2+1) + '_attribute_' + str(index+1) + '=' + elem + '\n'
+                fixed_val = st.text_input(label="Introduce new values to the list (split by comma): ['rainy', 'cloudy', 'sunny']", value=row['Item_vals'], key=attribute+'_list_val')
+        if atrib_type == 'Boolean':
+            schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
+        if atrib_type == 'List':
+            schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=BooleanListAttributeGenerator\n'
+            schema_str = schema_str + 'type_component_attribute_' + str(int(index+1)) + '=Boolean\n'
+            schema_str = schema_str + 'number_maximum_component_attribute_'+ str((index+1)) + '=' + str(len(row['Item_vals'])) + '\n'
+            for index2, elem in enumerate(row['Values_list_vals']):
+                schema_str = schema_str + 'component_' + str(index2+1) + '_attribute_' + str(index+1) + '=' + elem + '\n'
+            fixed_val = st.text_input(label="Introduce new values to the list (split by comma): ['rainy', 'cloudy', 'sunny']", value=row['Values_list_vals'][:], key=attribute+'_list_val')
+            input_parameter_val = st.number_input(label='Number of boolean values to generate for these components', value=1, key=attribute+'_input_param_val')
+            schema_str = schema_str + 'input_parameter_attribute_' + str(int(index+1)) + '=' + str(input_parameter_val) + '\n'
+        if atrib_type == 'AttributeComposite':
+            if atrib_generator == 'Address':
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=AddressAttributeGenerator\n'
+                schema_str = schema_str + 'number_maximum_subattribute_attribute_'+ str((index+1)) + '=5\n'
+                schema_str = schema_str + 'name_subattribute_1_attribute_'+ str((index+1)) + '=street\n'
+                schema_str = schema_str + 'name_subattribute_2_attribute_'+ str((index+1)) + '=number\n'
+                schema_str = schema_str + 'name_subattribute_3_attribute_'+ str((index+1)) + '=zp\n'
+                schema_str = schema_str + 'name_subattribute_4_attribute_'+ str((index+1)) + '=latitude\n'
+                schema_str = schema_str + 'name_subattribute_5_attribute_'+ str((index+1)) + '=longitude\n'
+                schema_str = schema_str + 'type_subattribute_1_attribute_'+ str((index+1)) + '=String\n'
+                schema_str = schema_str + 'type_subattribute_2_attribute_'+ str((index+1)) + '=String\n'
+                schema_str = schema_str + 'type_subattribute_3_attribute_'+ str((index+1)) + '=String\n'
+                schema_str = schema_str + 'type_subattribute_4_attribute_'+ str((index+1)) + '=String\n'
+                schema_str = schema_str + 'type_subattribute_5_attribute_'+ str((index+1)) + '=String\n'
+                # Generate input parameter file: input_parameter_attribute_1=name_restaurant.csv
+                address_complete_type = st.selectbox(label='Address complete type:', options=['Manually', 'Upload file', 'Search Address'], key='address_complete_type')
+                ip_text_area = st.empty()
+                if address_complete_type == 'Manually':
+                    input_parameter_text_area = ip_text_area.text_area(label='Introduce address values (line by line), keeping the header: <street,number,zp,latitude,longitude>', value='street,number,zp,latitude,longitude', key='address_ip_text_area_'+str(index+1))   
+                    input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area), sep=",")                                                 
+                    input_parameter_list = input_parameter_df.astype(str).values.tolist()
+                    schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(input_parameter_list)+'\n'
+                if address_complete_type == 'Upload file':
+                    input_parameter_text_area = None
+                    input_parameter_list = []
+                    import_split = st.text_input(label='Specifies the type of separator to read the file (; , # tab)', key='import_split')
+                    if import_file := st.file_uploader(label='Import list', key='import_file'+str(index+1)):                            
+                        input_parameter_text_area = ip_text_area.text_area(label='Introduce address values below <street,number,zp,latitude,longitude> (line by line):', value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(index+1))                            
+                        input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area), sep=import_split)                                                 
+                        input_parameter_list = input_parameter_df.astype(str).values.tolist()                        
+                    schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(input_parameter_list)+'\n'
+                if address_complete_type == 'Search Address':
+                    places_list = []
+                    places_str = 'street,number,zp,latitude,longitude\n'
+                    input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value='place, zipcode', key='address_ip_text_area_'+str(index+1))   
+                    if import_file := st.file_uploader(label='Import place_name list, keeping header: place', key='import_file'+str(index+1)):                            
+                        input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(index+1))                            
+                    input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
+                    input_parameter_list = input_parameter_df.astype(str).values.tolist()
+                    # print(input_parameter_text_area)
+                    for place in input_parameter_list:   
+                        # print(place)
+                        # Construct the API endpoint URL
+                        if place[1] == '':
+                            url = f"https://nominatim.openstreetmap.org/search?q={place[0]}&format=json&limit=1000"
+                        else:
+                            url = f"https://nominatim.openstreetmap.org/search?q={place[0]}, {place[1]}&format=json&limit=1000"
+
+                        # Send a GET request to the API endpoint
+                        response = requests.get(url).json()
+                        # print(response)
+
+                        # If more than one result, return the first one
+                        location = response[0]
+
+                        # Extract the latitude and longitude coordinates from the first result
+                        lat = location['lat']
+                        lon = location['lon']
+
+                        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
+                        response = requests.get(url)
+                        # Extract the JSON response as a dictionary
+                        location2 = response.json()
+                        #print(location2)
+                        if location2 == None:
+                            st.write(str(place[0]) +' not found.')
+                        else:
+                            item_info=[]
+                            try:
+                                #zp = location2['address']['postcode']
+                                #print(location)
+                                name = str(location2['display_name'].split(',')[0])
+                                if name.lower() == place[0].lower():
+                                    # print('IF')
+                                    street = location2['address']['road'] 
+                                    try:
+                                        number = location2['address']['house_number']
+                                    except: 
+                                        number = 'S/N'
+                                    zp = location2['address']['postcode']
+                                    item_info.append(street)
+                                    item_info.append(number)
+                                    item_info.append(zp)
+                                    item_info.append(lat)
+                                    item_info.append(lon)
+                                    places_list.append(item_info)
+                                    # print(places_list)
+                                    places_str = places_str + item_info[0] + ', ' + item_info[1] + ', ' + item_info[2] + ', ' + str(item_info[3]) + ', ' + str(item_info[4]) + '\n'
+                                    # print(places_str)
+                            except Exception as ex:
+                                print(ex)
+                                pass
+                    
+                    ip_text_area_2 = st.empty()
+                    input_parameter_text_area_2 = ip_text_area_2.text_area(label='Address values generated', value=places_str, key='address_ip_text_area_2_'+str(index+1))   
+                    schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(places_list)+'\n'            
+                    input_parameter_text_area = places_str
+                # Buttons: export and import values  
+                file_name = attribute+'_input_parameter_list.csv'
+                if input_parameter_text_area != None:
+                    link_address_values = f'<a href="data:file/csv;base64,{base64.b64encode(input_parameter_text_area.encode()).decode()}" download={file_name}> Download </a>'
+                    if st.markdown(link_address_values, unsafe_allow_html=True):
+                    #if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='address_ip_export_button_'+str(position)):
+                        if len(input_parameter_text_area) == 0:                                 
+                            st.warning('The file to be exported must not be empty.')
+                        else:
+                            st.success('The file has been saved with the name: '+file_name)
+            elif atrib_generator == 'URL':
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=URLAttributeGenerator\n'
+                schema_str = schema_str + 'number_maximum_subattribute_attribute_'+ str((index+1)) + '=2\n'
+                schema_str = schema_str + 'name_subattribute_1_attribute_'+ str((index+1)) + '=name\n'
+                schema_str = schema_str + 'name_subattribute_2_attribute_'+ str((index+1)) + '=url\n'
+                schema_str = schema_str + 'type_subattribute_1_attribute_'+ str((index+1)) + '=String\n'
+                schema_str = schema_str + 'type_subattribute_2_attribute_'+ str((index+1)) + '=String\n'
+                # Generate input parameter file: input_parameter_attribute_1=name_restaurant.csv
+                ip_text_area = st.empty()
+                input_parameter_text_area = ip_text_area.text_area(label='Introduce values (a value by line), keeping the header: <place>', value='place', key='url_ip_text_area_'+str(index+1))   
+                # Buttons: export and import values  
+                export_button_column, import_area_column = st.columns(2)
+                with export_button_column:
+                    file_name = attribute +'_input_parameter_list.csv'
+                    if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='ip_export_button_'+str(index+1)):
+                        if len(input_parameter_text_area) == 0:                                 
+                            st.warning('The file to be exported must not be empty.')
+                        else:
+                            st.success('The file has been saved with the name: '+file_name)
+                with import_area_column:
+                    input_parameter_list = []
+                    if import_file := st.file_uploader(label='Import list', key='import_file'+str(index+1)):                                
+                        input_parameter_text_area = ip_text_area.text_area(label='Introduce values (a value by line), keeping the header: <place>', value=import_file.getvalue().decode("utf-8"), key='import_url_ip_text_area_'+str(index+1))                    
+                input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))
+                input_parameter_list = input_parameter_df['place'].astype(str).values.tolist()
+                schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(input_parameter_list)+'\n'
+                unique_value = st.checkbox(label='Unique value?:', value=True, key='unique_value_'+str(index+1)+'_'+attribute)
+                if unique_value:
+                    schema_str += 'unique_value_attribute_'+str(index+1)+'=True'+'\n'
+                else:
+                    schema_str += 'unique_value_attribute_'+str(index+1)+'=False'+'\n'
+      
+        st.markdown("""---""")
+        schema_str = schema_str + '\n'
+    print(schema_str)
+    return schema_str
+
 # Generate user profile:
 # Ratings to binary:
 def ratings_to_binary(df, threshold=3):

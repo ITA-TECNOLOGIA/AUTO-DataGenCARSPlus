@@ -51,14 +51,14 @@ class GenerateSyntheticDataset(ABC):
         '''
             Generating file: item.csv
         '''        
-        item_file_generator = GeneratorItemFile(self.generation_config, item_schema, item_profile)
+        item_file_generator = GeneratorItemFile(item_schema, self.generation_config, item_profile)
         return item_file_generator.generate_file(with_correlation)        
 
     def generate_context_file(self, context_schema):
         '''
             Generating file (for CARS): context.csv
         '''        
-        context_file_generator = GeneratorContextFile(self.generation_config, context_schema)
+        context_file_generator = GeneratorContextFile(context_schema, self.generation_config)
         return context_file_generator.generate_file()
     
     def generate_behavior_file(self, behavior_schema, item_df, item_schema):

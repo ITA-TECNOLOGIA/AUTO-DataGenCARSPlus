@@ -15,15 +15,20 @@ import pandas as pd
 import seaborn as sns
 import streamlit as st
 from ast import literal_eval
+from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
+from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
+from datagencars.existing_dataset.replicate_dataset.access_dataset.access_user import AccessUser
+from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
+from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from datagencars.synthetic_dataset.rating_implicit import RatingImplicit
 from streamlit_app import util
-from workflow.graph_generate import Workflow
+from streamlit_app import help_information
+from streamlit_app import workflow_image
 
 
 # Setting the main page:
@@ -49,24 +54,21 @@ st.markdown("""---""")
 # Tool bar:
 general_option = st.sidebar.selectbox(label='**Options available:**', options=['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis a dataset'])
 with_context = st.sidebar.checkbox('With context', value=True)
-wf = Workflow( config.WORKFLOWS_DESCRIPTION)
 
 ####### Generate a synthetic dataset #######
 if general_option == 'Generate a synthetic dataset':
+    # Loading dataset:
     init_step = 'True'
     feedback_option_radio = st.sidebar.radio(label='Select a type of user feedback:', options=['Explicit ratings', 'Implicit ratings'])
+
+    # WF --> Explicit ratings:
     if feedback_option_radio == 'Explicit ratings':
         feedback = 'explicit'
-        with st.expander(label='Help information'):
-            st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")
-        with st.expander(label='Workflow'):
-            json_opt_params = {}
-            json_opt_params['CARS'] = str(with_context)
-            json_opt_params['UP'] = 'Manual'
-            json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('GenerateSyntheticDataset(Explicit_ratings)', json_opt_params)            
-            st.image(image=path, use_column_width=False, output_format="auto", width=650)  
-            os.remove(path)      
+        # Help information:
+        help_information.help_explicit_rating_wf()
+        # Showing the initial image of the WF:
+        workflow_image.show_wf(wf_name='GenerateSyntheticDataset(Explicit_ratings)', init_step=init_step, with_context=with_context, optional_value_list=[("UP", "Manual")])
+  
         inconsistent = False
         # AVAILABLE TABS:
         if with_context:
@@ -243,156 +245,43 @@ if general_option == 'Generate a synthetic dataset':
                 schema_type = 'context'
                 context_schema_value = util.generate_schema_file(schema_type) 
         # USER PROFILE TAB:
+        user_profile_df = None
         with tab_user_profile:
-            st.header('User profile')        
-            user_profile_df = None
+            st.header('User profile')  
+            # Uploading the user profile file:
             if st.checkbox(label='Import the user profile?', value=True):
-                with st.expander(label='Upload user_profile.csv'):
-                    if user_profile_file := st.file_uploader(label='Choose the file:', key='user_profile_file'):
-                        user_profile_value = user_profile_file.getvalue().decode("utf-8")
-                        user_profile_df = pd.read_csv(io.StringIO(user_profile_value))  
-                        st.dataframe(user_profile_df)                    
+                util.upload_user_profile_file()
             else:
+                # Generating the user profile manually:
+                # Help information:
+                util.help_user_profile_manual()                          
                 # Adding column "id":
                 attribute_column_list = ['user_profile_id']
                 # Adding relevant item attribute columns:        
                 item_access_schema = AccessSchema(file_str=item_schema_value)
-                attribute_column_list.extend(item_access_schema.get_important_attribute_name_list())        
+                item_attribute_name_list = item_access_schema.get_important_attribute_name_list()
+                attribute_column_list.extend(item_attribute_name_list)   
+                item_possible_value_map = {}     
+                for item_attribute_name in item_attribute_name_list:
+                    item_possible_value_map[item_attribute_name] = item_access_schema.get_possible_values_attribute_list_from_name(attribute_name=item_attribute_name)                
                 # Adding relevant context attribute columns:    
                 if with_context:
                     context_access_schema = AccessSchema(file_str=context_schema_value)
-                    attribute_column_list.extend(context_access_schema.get_important_attribute_name_list())
+                    context_attribute_name_list = context_access_schema.get_important_attribute_name_list()
+                    attribute_column_list.extend(context_attribute_name_list)
+                    context_possible_value_map = {}
+                    for context_attribute_name in context_attribute_name_list:
+                        context_possible_value_map = context_access_schema.get_possible_values_attribute_list_from_name(attribute_name=context_attribute_name)
                 # Adding column "other":
-                attribute_column_list.extend(['other'])
-                with st.expander(label='Help information'):
-                    st.write('Insert weight values in the user profile matrix, considering the following:')            
-                    st.markdown("""* First of all, you will have to specify the ```number of user profiles``` to be generated. """)
-                    st.markdown("""* The user profile matrix consists of relevant attribute names related to the items and/or contexts. """)
-                    st.markdown("""* The values of the user profile matrix must have values between ```[0-1]```. Except column ```user_profile_id``` which must be an ```integer``` value and start at ```1```. """)
-                    st.markdown("""* Attributes that are not relevant for the user profile must have a ```weight=0```. """)
-                    st.markdown("""* Each row of the user profile matrix must sum to ```1```. """)
-                    st.markdown("""* In the ```row``` and ```column``` input fields, you must indicate the row index and the column attribute name (respectively), where the user's relevance weight will be inserted through the ```weight``` field. """)            
-                    st.markdown("""* In the ```weight``` input field, you must indicate the order and weight of importance of each attribute. For example:  ```(-)|0.1``` or ```(+)|0.1)```. """)                
-                    st.markdown(
-                    """
-                    * Weights may be associated with symbols or labels ```(-)``` and ```(+)```, which indicate the order of preference of attribute values for that user profile. The ```(-)``` label must indicate that the order of preference of the attribute values is from left to right, while the ```(+)``` label indicates the reverse order of preference (from right to left). For example, for the attribute ```distance``` and possible values ```[near, fear]```: 
-                    * **Example 1:** If the user indicates the label ``(-)``, it means that he/she prefers recommendations of nearby places (because he/she does not have a car or a bicycle or a bus as a means of transport to go to distant places).
-                    * **Example 2:** If the user indicates the label ``(+)``, it means that he does not mind receiving recommendations from places far away from him/ (because he has a car as a means of transport to go to distant places).
-                    """)
-                    st.markdown(
-                    """
-                    * The special attribute ```other``` represents unknown factors or noise. This allows modelling realistic scenarios where user profiles are not fully defined. For example:
-                    * **Example 1:** The user with ```user_profile_id=2```,  with a ```weight=0.2``` in the attribute ```other```, considers that ```20%``` of the ratings provided by the user of that profile, is due to unknown factors. 
-                    * **Example 2:** The user with ```user_profile_id=3```, with a ```weight=1``` in the attribute ```other```, represents users who behave in a completely unpredictable way. This is because the ratings provided by users cannot be explained by any of the attributes that define the user profile. """)
-                    st.write('Example of user profile matrix:')
-                    st.image(image=config.USER_PROFILE, use_column_width=True, output_format="auto") # , width=350            
+                attribute_column_list.extend(['other'])         
+
                 # Introducing the number of user profiles to generate:            
                 user_access = AccessSchema(file_str=user_schema_value)
                 initial_value = len(user_access.get_possible_values_attribute_list_from_name(attribute_name='user_profile_id'))
                 number_user_profile = st.number_input(label='Number of user profiles', value=initial_value)
-                # Randomly fill a dataframe and cache it
-                weight_np = np.zeros(shape=(number_user_profile, len(attribute_column_list)), dtype=str)
-                @st.cache(allow_output_mutation=True)
-                def get_dataframe():
-                    df = pd.DataFrame(weight_np, columns=attribute_column_list)
-                    for column in df.columns:
-                        df[column] = 0
-                    df['user_profile_id'] = df.index+1
-                    df['other'] = 1
-                    df = df.astype(str)
-                    # user_profile_id_list = list(range(1, number_user_profile+1))
-                    # df['user_profile_id'] = user_profile_id_list
-                    return df            
-                user_profile_df = get_dataframe()
-                export_df = user_profile_df.copy()
-                # Create row, column, and value inputs:
-                col_row, col_col, col_val = st.columns(3)
-                with col_row:
-                    # Choosing the row index:
-                    row = st.number_input('row (profile)', max_value=user_profile_df.shape[0]) #, value=1
-                with col_col:
-                    # Choosing the column index:
-                    attribute_column_list_box = attribute_column_list.copy()
-                    attribute_column_list_box.remove('other')
-                    attribute_column_list_box.remove('user_profile_id')
-                    if len(attribute_column_list_box) > 0:
-                        selected_attribute = st.selectbox(label='column (attribute)', options=attribute_column_list_box)
-                        attribute_position = attribute_column_list_box.index(selected_attribute)                           
-                        col = attribute_position
-                        # Getting possible values, in order to facilitate the importance ranking:
-                        item_possible_value_list = item_access_schema.get_possible_values_attribute_list_from_name(attribute_name=selected_attribute)                
-                        if with_context:
-                            context_possible_value_list = context_access_schema.get_possible_values_attribute_list_from_name(attribute_name=selected_attribute)
-                            if (len(item_possible_value_list) != 0) and (len(context_possible_value_list) == 0):
-                                st.warning(item_possible_value_list)
-                            elif (len(item_possible_value_list) == 0) and (len(context_possible_value_list) != 0):
-                                st.warning(context_possible_value_list)                   
-                        else:
-                            if (len(item_possible_value_list) != 0):
-                                st.warning(item_possible_value_list)                    
-                with col_val:   
-                    # Inserting weight value:
-                    value = st.text_input(label='weight (with range [-1,1])', value=0)      
-                    # Checking attribute weights:                    
-                    # Float number:
-                    if ('.' in str(value)) or (',' in str(value)):
-                        # Negative number:
-                        if float(value) < -1.0:
-                            st.warning('The ```weight``` must be greater than -1.')  
-                        else:
-                            # Range [0-1]:
-                            if float(value) > 1.0:
-                                st.warning('The ```weight``` value must be in the range ```[-1,1]```.')  
-                    else:
-                        # Negative number:
-                        if int(value) < -1:
-                            st.warning('The ```weight``` must be greater than -1.')  
-                        else:
-                            # Range [0-1]:
-                            if (int(value) > 1):
-                                st.warning('The ```weight``` value must be in the range ```[-1,1]```.')
-                # Change the entry at (row, col) to the given weight value:
-                if not user_profile_df.empty:
-                    print(user_profile_df.values[row][col+1])
-                    user_profile_df.values[row][col+1] = str(value)
-                else:
-                    st.warning("user_profile_df is empty.")
-                other_value = 1
-                for column in attribute_column_list:
-                    if column != 'user_profile_id' and column != 'other':
-                        other_value = float(other_value-abs(float(user_profile_df.values[row][attribute_column_list.index(column)])))
-                if not user_profile_df.empty:
-                    user_profile_df.values[row][len(user_profile_df.columns)-1] = f"{other_value:.1f}"
-                else:
-                    st.warning("user_profile_df is empty.")
-                if not user_profile_df.empty:
-                    if float(user_profile_df.values[row][len(user_profile_df.columns)-1]) < 0 or float(user_profile_df.values[row][len(user_profile_df.columns)-1]) > 1:
-                        st.warning('Values in a row for user must equal 1')
-                        inconsistent = True
-                    else:
-                        for index, row in user_profile_df.iterrows():
-                            for column in user_profile_df.columns:
-                                if column != 'user_profile_id' and column != 'other':
-                                    if float(row[column]) > 0:
-                                        export_df.values[index][attribute_column_list.index(column)] = f'(+)|{str(abs(float(row[column])))}'
-                                    elif float(row[column]) < 0:
-                                        export_df.values[index][attribute_column_list.index(column)] = f'(-)|{str(abs(float(row[column])))}'
-                                    else:
-                                        export_df.values[index][attribute_column_list.index(column)] = f'0'
-                                if column == 'other':
-                                    if float(row[column]) == 0:
-                                        export_df.values[index][attribute_column_list.index(column)] = f'0'
-                                    else:
-                                        export_df.values[index][attribute_column_list.index(column)] = f'{str(abs(float(row[column])))}'
-                else:
-                    st.warning("user_profile_df is empty.")
-                # Show the user profile dataframe:
-                st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[-1,1]```.""")
-                st.dataframe(user_profile_df)
-                # Downloading user_profile.csv:
-                if not inconsistent:
-                    link_user_profile = f'<a href="data:file/csv;base64,{base64.b64encode(export_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
-                    st.markdown(link_user_profile, unsafe_allow_html=True)
+                                        
+                # Generate user profile manual:
+                user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
         # RUN TAB:
         with tab_run:                   
             col_run, col_stop = st.columns(2)        
@@ -696,11 +585,13 @@ if general_option == 'Generate a synthetic dataset':
                     else:
                         st.warning('Before generating data ensure all files are correctly generated.')
 ####### Pre-process a dataset #######
-elif general_option == 'Pre-process a dataset':        
-    st.header('Load dataset')
-    # WORKFLOWS:
+elif general_option == 'Pre-process a dataset':    
+    # Selecting a Workflow:
     is_preprocess = st.sidebar.radio(label='Select a workflow:', options=['Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization'])
+    # WORKFLOWS:
+    st.header('Load dataset')        
     if is_preprocess == 'Replicate dataset':
+        # Loading dataset:
         init_step = 'True'
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
@@ -711,36 +602,26 @@ elif general_option == 'Pre-process a dataset':
         st.session_state["item_df"] = item_df      
         st.session_state["rating_df"] = rating_df
 
+        # WF --> Replicate dataset:
         st.header('Apply workflow: Replicate dataset')
-        with st.expander(label='Help information'):
-            st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
-        with st.expander(label='Workflow'):
-            json_opt_params = {}
-            json_opt_params['CARS'] = str(with_context)
-            json_opt_params['NULLValues'] = 'True'
-            json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('ReplicateDataset', json_opt_params)
-            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
-            os.remove(path)
+        # Help information:
+        help_information.help_replicate_dataset_wf()
+        # Showing the initial image of the WF:
+        workflow_image.show_wf(wf_name='ReplicateDataset', init_step=init_step, with_context=with_context, optional_value_list=[('NULLValues', 'True')])
               
+        # PRE-PROCESSING TAB:
         tab_preprocessing, tab_user_profile, tab_replicate  = st.tabs(['Pre-processing', 'User Profile', 'Replicate'])   
         new_item_df = pd.DataFrame()
-        new_context_df = pd.DataFrame()
-        # PRE-PROCESSING TAB:  
+        new_context_df = pd.DataFrame()        
         with tab_preprocessing:
             output = st.empty()  
             with console.st_log(output.code):
                 null_values = st.checkbox("Do you want to replace the null values?", value=True)                
                 if null_values:
-                    json_opt_params = {}
-                    json_opt_params['CARS'] = str(with_context)
-                    json_opt_params['NULLValues'] = str(null_values)
-                    json_opt_params['init_step'] = init_step
-                    path = wf.create_workflow('ReplicateDataset', json_opt_params)
-                    image.empty()
-                    image.image(image=path, use_column_width=False, output_format="auto", width=650)  
-                    os.remove(path)                    
-                    # Pre-processs: replace null values:
+                    # Showing the current image of the WF:
+                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step=init_step, with_context=with_context, optional_value_list=[('NULLValues', null_values)])
+                                       
+                    # Pre-processing: replace null values in item and context files.
                     if with_context:
                         if (not item_df.empty) and (not context_df.empty):                                        
                             file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
@@ -797,45 +678,15 @@ elif general_option == 'Pre-process a dataset':
                                 st.session_state["item_df"] = new_item_df
                         else:
                             st.warning("The item file has not been uploaded.")
-                else:
-                    init_step = 'False'
-                    json_opt_params = {}
-                    json_opt_params['CARS'] = str(with_context)
-                    json_opt_params['NULLValues'] = str(null_values)
-                    json_opt_params['init_step'] = init_step
-                    path = wf.create_workflow('ReplicateDataset', json_opt_params)
-                    image.empty()
-                    image.image(image=path, use_column_width=False, output_format="auto", width=650)
-                    os.remove(path)                    
+                else:                    
+                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', null_values)])          
         # USER PROFILE TAB:
         with tab_user_profile:
-            output = st.empty()
-            with console.st_log(output.code):
-                # Generate user profile, by using an original dataset:
-                generate_up = None
-                user_profile_df = pd.DataFrame()                    
-                if with_context:                     
-                    # With context:
-                    if (not item_df.empty and "item_df" in st.session_state) and (not context_df.empty and "context_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):
-                        if st.button(label='Generate', key='button_generate_up_cars'):
-                            print('Automatically generating user profiles.')
-                            generate_up = GenerateUserProfile(st.session_state["rating_df"], st.session_state["item_df"], st.session_state["context_df"])
-                            user_profile_df = util.generate_up(generate_up)
-                            st.session_state["user_profile_df"] = user_profile_df
-                            print('The user profile has been generated.')                                                    
-                    else:
-                        st.warning("The item, context and rating files have not been uploaded.")
-                else:            
-                    # Without context:                        
-                    if (not item_df.empty and "item_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state): 
-                        if st.button(label='Generate', key='button_generate_up_rs'):
-                            print('Automatically generating user profiles.')
-                            generate_up = GenerateUserProfile(st.session_state["rating_df"], st.session_state["item_df"])
-                            user_profile_df = util.generate_up(generate_up)
-                            st.session_state["user_profile_df"] = user_profile_df
-                            print('The user profile has been generated.')                               
-                    else:
-                        st.warning("The item and rating files have not been uploaded.")
+            if with_context:
+                user_profile_df = util.generate_user_profile_automatic(rating_df, item_df, context_df)
+            else:
+                user_profile_df = util.generate_user_profile_automatic(rating_df, item_df)
+        st.session_state["user_profile_df"] = user_profile_df   
         # REPLICATE TAB:
         with tab_replicate:
                 output = st.empty()
@@ -873,56 +724,160 @@ elif general_option == 'Pre-process a dataset':
                                 print('Replicated data generation has finished.')
                         else:
                             st.warning("The item and rating files have not been uploaded.")
-    elif is_preprocess == 'Extend dataset':        
+    elif is_preprocess == 'Extend dataset':
+        # Loading dataset:
+        init_step = 'True'
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
+        
+        # WF --> Extend dataset:
         st.header('Apply workflow: Extend dataset')
-        with st.expander(label='Help information'):
-            st.markdown("""Workflow to generate a dataset of ratings incrementally.""")
-        with st.expander(label='Workflow'):            
-            st.write('TODO')
+        # Help information:
+        help_information.help_extend_dataset_wf()
+        # Showing the initial image of the WF:
+        workflow_image.show_wf(wf_name='ExtendDataset', init_step=init_step, with_context=with_context)        
+        
         st.write('TODO')
-    elif is_preprocess == 'Recalculate ratings':          
+    elif is_preprocess == 'Recalculate ratings': 
+        # Loading dataset:
+        init_step = 'True'        
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
+
+        # WF --> Recalculate ratings:
         st.header('Apply workflow: Recalculate ratings')
-        with st.expander(label='Help information'):
-            st.markdown("""TODO""")
-        with st.expander(label='Workflow'):
-            st.write('TODO')
-        st.write('TODO')        
+        # Help information:
+        help_information.help_recalculate_ratings_wf()
+        # Showing the initial image of the WF:
+        workflow_image.show_wf(wf_name='RecalculateRatings', init_step=init_step, with_context=with_context)
+
+        st.write('TODO')
     elif is_preprocess == 'Replace NULL values':
-        file_selectibox = st.selectbox(label='Files available:', options=['item', 'context'])
+        if with_context:
+            file_selectibox = st.selectbox(label='Files available:', options=['item', 'context'])
+        else:
+            file_selectibox = st.selectbox(label='Files available:', options=['item'])
+
+        # Loading dataset:
+        init_step = True
         if file_selectibox == 'item':
             _, df, _, _ = util.load_dataset(file_type_list=['item'])
+            schema = util.infer_schema(df)
         elif file_selectibox == 'context':
             _, _, df, _ = util.load_dataset(file_type_list=['context'])
+            schema = util.infer_schema(df)
+        
+        # WF --> Replace NULL values:
         st.header('Apply workflow: Replace NULL values')
-        with st.expander(label='Help information'):
-            st.markdown("""Workflow to complete unknown contextual information.""")
-        with st.expander(label='Workflow'):
-            st.write('TODO')
-        st.write('TODO')
+        # Help information:
+        help_information.help_replace_nulls_wf()
+        # Showing the initial image of the WF:
+        workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step=init_step, with_context=with_context)
+        if not df.empty:
+            if st.button(label='Replace NULL Values', key='button_replace_nulls'):
+                print('Replacing NULL Values')
+                replacenulls = ReplaceNullValues(df)
+                if file_selectibox == 'item':
+                    new_df = replacenulls.regenerate_item_file(schema)
+                elif file_selectibox == 'context':
+                    new_df = replacenulls.regenerate_context_file(schema)
+                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_df.to_csv(index=False).encode()).decode()}" download="{file_selectibox}.csv">Download {file_selectibox} CSV</a>'
+                st.markdown(link_rating, unsafe_allow_html=True)
+        else:
+            st.warning("The item file or context file have not been uploaded.")        
     elif is_preprocess == 'Generate user profile':
+        # Loading dataset:
+        init_step = 'True'
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
         else:
-            user_df, item_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
+            user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
+
+        # WF --> Generate user profile:
         st.header('Apply workflow: Generate user profile')
-        with st.expander(label='Help information'):
-            st.markdown("""TODO""")
-        with st.expander(label='Workflow'):
-            st.write('TODO')
-        st.write('TODO')
-    elif is_preprocess == 'Ratings to binary':        
+        # Help information:
+        help_information.help_user_profile_wf()
+        # Worflow image:
+        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step=init_step, with_context=with_context)
+               
+        # Workflow:
+        st.header('User profile')
+        # Choosing user profile generation options (manual or automatic):
+        up_option = st.selectbox(label='Choose an option to generate the user profile:', options=['Manual', 'Automatic'])        
+        # Generating the user profile manually:
+        if up_option == 'Manual':  
+            # Help information:
+            help_information.help_user_profile_manual()                     
+            if with_context:           
+                if not item_df.empty and not context_df.empty:
+                    # Adding column "id":
+                    attribute_column_list = ['user_profile_id']  
+                    # Adding relevant item attribute columns:        
+                    item_access = AccessItem(item_df)
+                    item_attribute_name_list = item_access.get_item_attribute_list()                
+                    attribute_column_list.extend(item_attribute_name_list)   
+                    item_possible_value_map = {}     
+                    for item_attribute_name in item_attribute_name_list:
+                        item_possible_value_map[item_attribute_name] = item_access.get_item_possible_value_list_from_attributte(attribute_name=item_attribute_name)
+                    # Adding relevant context attribute columns:    
+                    context_access = AccessContext(context_df)
+                    context_attribute_name_list = context_access.get_context_attribute_list()                    
+                    attribute_column_list.extend(context_attribute_name_list)
+                    context_possible_value_map = {}
+                    for context_attribute_name in context_attribute_name_list:
+                        context_possible_value_map[context_attribute_name] = context_access.get_context_possible_value_list_from_attributte(attribute_name=context_attribute_name)
+                    # Adding column "other":
+                    attribute_column_list.extend(['other'])
+                    # Introducing the number of user profiles to generate:   
+                    number_user_profile = st.number_input(label='Number of user profiles', value=4)
+                    # Generate user profile manual (with context):              
+                    user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
+                else:
+                    st.warning("The item and context files have not been uploaded.")
+            else:              
+                if not item_df.empty:
+                    # Adding column "id":
+                    attribute_column_list = ['user_profile_id']  
+                    # Adding relevant item attribute columns:        
+                    item_access = AccessItem(item_df)
+                    item_attribute_name_list = item_access.get_item_attribute_list()                
+                    attribute_column_list.extend(item_attribute_name_list)   
+                    item_possible_value_map = {}     
+                    for item_attribute_name in item_attribute_name_list:
+                        item_possible_value_map[item_attribute_name] = item_access.get_item_possible_value_list_from_attributte(attribute_name=item_attribute_name)
+                    # Adding column "other":
+                    attribute_column_list.extend(['other'])
+                    # Introducing the number of user profiles to generate:   
+                    number_user_profile = st.number_input(label='Number of user profiles', value=4)
+                    # Generate user profile manual (not context):                 
+                    user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map)
+                else:
+                    st.warning("The item file has not been uploaded.")
+        elif up_option == 'Automatic':
+            # Help information:
+            help_information.help_user_profile_automatic()            
+            if with_context:
+                # Generate user profile automatic (with context):               
+                if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                    user_profile_df = util.generate_user_profile_automatic(rating_df, item_df, context_df)
+                else:
+                    st.warning("The item, context and rating files have not been uploaded.")
+            else:
+                # Generate user profile automatic (not context):                     
+                if (not item_df.empty) and (not rating_df.empty):
+                    user_profile_df = util.generate_user_profile_automatic(rating_df, item_df)                
+                else:
+                    st.warning("The item and rating files have not been uploaded.")
+    elif is_preprocess == 'Ratings to binary':    
+        # Loading dataset:    
+        init_step = 'True'
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
-        st.header('Apply workflow: Ratings to binary')        
-        with st.expander(label='Help information'):
-            st.markdown("""This tool allows you to convert ratings to binary values. For example, if you have a dataset with ratings from ```1``` to ```5```, you can convert them to ```0``` and ```1```, where ```0``` represents a negative rating and ```1``` a positive one.""")
-            st.markdown("""The tool will convert the ratings to binary values using a threshold. For example, if you set the threshold to ```3```, all ratings equal or greater than ```3``` will be converted to ```1```, and all ratings less than ```3``` will be converted to ```0```.""")                    
-        with st.expander(label='Workflow'):
-            json_opt_params = {}
-            path = wf.create_workflow('RatingsToBinary', json_opt_params)
-            st.image(image=path, use_column_width=False, output_format="auto", width=650)  
-            os.remove(path)      
+
+        # WF --> Ratings to binary:
+        st.header('Apply workflow: Ratings to binary')
+        # Help information:
+        help_information.help_ratings_to_binary_wf()        
+        # Showing the initial image of the WF:
+        workflow_image.show_wf(wf_name='RatingsToBinary', init_step=init_step)
+          
         if not rating_df.empty:            
             min_rating = rating_df['rating'].min()
             max_rating = rating_df['rating'].max()
@@ -935,7 +890,8 @@ elif general_option == 'Pre-process a dataset':
         else:            
             st.warning("The rating file has not been uploaded.")
     elif is_preprocess == 'Mapping categorization':
-        file_selectibox = st.selectbox(label='Files available:', options=['user', 'item', 'context'])
+        # Loading dataset:
+        file_selectibox = st.selectbox(label='Files available:', options=['user', 'item', 'context'])        
         file = 'F'
         num2cat = 'T'
         init_step = 'True'
@@ -948,37 +904,25 @@ elif general_option == 'Pre-process a dataset':
         elif file_selectibox == 'context':
             _, _, df, _ = util.load_dataset(file_type_list=['context'])   
             file = 'C'
+
+        # WF --> Mapping categorization:
         st.header('Apply workflow: Mapping categorization')
-        with st.expander(label='Help information'):
-            st.write('TODO')
-        with st.expander(label='Workflow'):
-            json_opt_params = {}
-            json_opt_params['CARS'] = str(with_context)
-            json_opt_params['Num2Cat'] = num2cat
-            json_opt_params['init_step'] = init_step
-            json_opt_params['file'] = file
-            path = wf.create_workflow('MappingToCategorization', json_opt_params)
-            image = st.image(image=path, use_column_width=False, output_format="auto", width=650)  
-            os.remove(path)      
+        # Help information:
+        help_information.help_mapping_categorization_wf()
+        # Showing the initial image of the WF:
+        workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_value_list=[('Num2Cat', num2cat), ('file', file)])
+         
         option = st.radio(options=['From numerical to categorical', 'From categorical to numerical'], label='Select an option')
         if not df.empty:
             if option == 'From numerical to categorical':
+                # Showing the image of the WF:
                 init_step = 'False'
                 num2cat = 'True'
-                json_opt_params = {}
-                json_opt_params['CARS'] = str(with_context)
-                json_opt_params['Num2Cat'] = num2cat
-                json_opt_params['init_step'] = init_step
-                json_opt_params['file'] = file
-                path = wf.create_workflow('MappingToCategorization', json_opt_params)
-                image.empty()
-                image.image(image=path, use_column_width=False, output_format="auto", width=600)  
-                os.remove(path)                 
+                workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_values=[('Num2Cat', num2cat), ('file', file)])                
                 st.header("Category Encoding")
-                with st.expander(label='Help information'):
-                    st.markdown("""This workflow allows you to convert numerical values to categorical values. For example, you can convert the numerical values of a rating scale to the corresponding categories of the scale (e.g. ```1-2 -> Bad```, ```3-4 -> Average```, ```5 -> Good```).""")
-                    st.markdown("""To use this tool, you need to upload a CSV file containing the numerical values to convert. Then, you need to specify the mapping for each numerical value. For example, you could to specify the following mappings: numerical values ```1```, ```2```, ```3```, ```4``` and ```5``` to categories ```Bad```, ```Average```, ```Good```, ```Very good``` and ```Excellent```, respectively.""")
-                    st.markdown("""Objects and datetime values are ignored.""")                    
+                # Help information:
+                help_information.help_mapping_categorization_num2cat() 
+
                 include_nan = st.checkbox("Include NaN values")
                 mappings = {}
                 for col in df.columns:
@@ -1006,22 +950,15 @@ elif general_option == 'Pre-process a dataset':
                     link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(categorized_df.to_csv(index=False).encode()).decode()}" download="{file_selectibox}.csv">Download</a>'
                     st.markdown(link_rating, unsafe_allow_html=True)
             else:
+                # Showing the image of the WF:
                 num2cat = 'False'
                 init_step = 'False'
-                json_opt_params = {}
-                json_opt_params['CARS'] = str(with_context)
-                json_opt_params['Num2Cat'] = num2cat
-                json_opt_params['init_step'] = init_step
-                json_opt_params['file'] = file
-                path = wf.create_workflow('MappingToCategorization', json_opt_params)
-                image.empty()
-                image.image(image=path, use_column_width=False, output_format="auto", width=600)  
-                os.remove(path)         
+                workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_value_list=[('Num2Cat', num2cat), ('file', file)])
+                
                 st.header("Label Encoding")
-                with st.expander(label='Help information'):
-                    st.markdown("""This workflow allows you to convert categorical values into numerical values.""")
-                    st.markdown("""For example, you can convert the categorical values of a rating scale to the corresponding numerical values of the scale (e.g. ```Bad -> 1```, ```Average -> 2```, ```Good -> 3```, ```Very good -> 4```, ```Excellent -> 5```).""")
-                    st.markdown("""To use this tool, you need to upload a CSV file containing the categorical values to convert. Then, you need to select the categorical columns to convert.""")
+                # Help information:
+                help_information.help_mapping_categorization_cat2num()
+                                
                 categorical_cols = [col for col in df.select_dtypes(exclude=[np.number]) if 'id' not in col.lower()]
                 if categorical_cols:
                     selected_cols = st.multiselect("Select categorical columns to label encode:", categorical_cols)

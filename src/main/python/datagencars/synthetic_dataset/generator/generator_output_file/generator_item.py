@@ -9,7 +9,7 @@ class GeneratorItemFile(GeneratorFile):
     The following files are required: generation_config.conf, item_schema.conf and item_profile.conf.  
     '''
 
-    def __init__(self, generation_config, item_schema, item_profile):
+    def __init__(self, item_schema, generation_config=None, item_profile=None):
         super().__init__(generation_config, item_schema, item_profile)
 
     def update_object_action(self, df):
@@ -20,16 +20,19 @@ class GeneratorItemFile(GeneratorFile):
 
         return df
 
-    def generate_file(self, with_correlation):
+    def generate_file(self, with_correlation, input_csv=None):
         '''
         Generates the item file.        
         :return: A dataframe with item information.
         '''
         instance_generator = None
-        # Number of items to be generated.
-        number_item = self.access_generation_config.get_number_item()
+        if self.access_generation_config != None:
+            # Number of items to be generated.
+            number_item = self.access_generation_config.get_number_item()
+        else:
+            number_item = len(input_csv)
         print(f'Total of items to generate: {number_item}')
-        print('Generating instances by item.')        
+        # print('Generating instances by item.')        
         if with_correlation:
             # Random with correlation:
             instance_generator = GeneratorInstance(generation_access=self.access_generation_config, schema_access=self.schema_access, item_profile_access=self.item_profile_access)
@@ -50,8 +53,12 @@ class GeneratorItemFile(GeneratorFile):
         else:
             # Without correlation (Random or Gaussian distribution):
             instance_generator = GeneratorInstance(schema_access=self.schema_access)
-            for _ in range(number_item):            
-                attribute_list = instance_generator.generate_instance()
+            for i in range(number_item): 
+                if not(input_csv is None):
+                    instance = input_csv.iloc[i]
+                else:
+                    instance = None
+                attribute_list = instance_generator.generate_instance(instance=instance)           
                 self.file_df.loc[len(self.file_df.index)] = attribute_list            
 
         # Adding item_id column:

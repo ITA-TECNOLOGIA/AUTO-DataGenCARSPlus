@@ -24,8 +24,7 @@ class GeneratorUserFile(GeneratorFile):
         number_user = self.access_generation_config.get_number_user()
         print(f'Total of users to generate: {number_user}')
         print('Generating instances by user.')
-        number_attributes = self.schema_access.get_number_attributes()
-        if number_attributes!=None and number_attributes!=0:
+        if self.schema_access.get_number_attributes()!=None:
             for _ in range(number_user):
                 attribute_list = instance_generator.generate_instance()
                 self.file_df.loc[len(self.file_df.index)] = attribute_list
