@@ -7,7 +7,7 @@ def help_explicit_rating_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")
 
-def help_explicit_rating_wf():
+def help_implicit_rating_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a completely-synthetic dataset based on implicit ratings.""")
 

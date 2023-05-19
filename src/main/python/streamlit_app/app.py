@@ -366,22 +366,18 @@ if general_option == 'Generate a synthetic dataset':
                                     my_bar.progress(100, 'Synthetic data generation has finished.')    
                 else:
                     st.warning('Before generating data ensure all files are correctly generated.')
-    elif feedback_option_radio == 'Implicit ratings':
+    elif feedback_option_radio == 'Implicit ratings':        
         if with_context:
             lars = st.sidebar.checkbox('LARS', value=True)
             if lars:
                 side_lars = st.sidebar.checkbox('SocIal-Distance prEserving', value=True)
         feedback = 'implicit'
-        with st.expander(label='Help information'):
-            st.markdown("""Workflow to generate a completely-synthetic dataset based on implicit ratings.""")
-        with st.expander(label='Workflow'):
-            json_opt_params = {}
-            json_opt_params['CARS'] = str(with_context)
-            json_opt_params['UP'] = 'Manual'
-            json_opt_params['init_step'] = init_step
-            path = wf.create_workflow('GenerateSyntheticDataset(Implicit_ratings)', json_opt_params)
-            st.image(image=path, use_column_width=False, output_format="auto", width=650)
-            os.remove(path)      
+        init_step = 'True'
+        # Help information:
+        help_information.help_implicit_rating_wf()
+        # Showing the initial image of the WF:
+        workflow_image.show_wf(wf_name='GenerateSyntheticDataset(Implicit_ratings)', init_step=init_step, with_context=with_context)
+        
         inconsistent = False
         # AVAILABLE TABS:
         if with_context and lars and side_lars:
