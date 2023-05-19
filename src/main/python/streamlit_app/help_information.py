@@ -3,6 +3,13 @@ import config
 
 
 ####### Generate a synthetic dataset ######
+def help_explicit_rating_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")
+
+def help_explicit_rating_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a completely-synthetic dataset based on implicit ratings.""")
 
 ####### Pre-process a dataset #######
 # LOAD DATASET:
@@ -24,6 +31,9 @@ def help_recalculate_ratings_wf():
         st.markdown("""Workflow to recalculate ratings in a dataset.""")
 
 # Replace NULL values:
+def help_replace_nulls_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to complete unknown contextual information.""")
 
 # Generate user profile:
 def help_user_profile_wf():
@@ -77,7 +87,27 @@ def help_user_profile_automatic():
         st.image(image=config.USER_PROFILE, use_column_width=True, output_format="auto")
 
 # Ratings to binary:
+def help_ratings_to_binary_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""This tool allows you to convert ratings to binary values. For example, if you have a dataset with ratings from ```1``` to ```5```, you can convert them to ```0``` and ```1```, where ```0``` represents a negative rating and ```1``` a positive one.""")
+        st.markdown("""The tool will convert the ratings to binary values using a threshold. For example, if you set the threshold to ```3```, all ratings equal or greater than ```3``` will be converted to ```1```, and all ratings less than ```3``` will be converted to ```0```.""")
+
 # Mapping categorization:
+def help_mapping_categorization_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""TODO""")
+
+def help_mapping_categorization_num2cat():
+    with st.expander(label='Help information'):
+        st.markdown("""This workflow allows you to convert numerical values to categorical values. For example, you can convert the numerical values of a rating scale to the corresponding categories of the scale (e.g. ```1-2 -> Bad```, ```3-4 -> Average```, ```5 -> Good```).""")
+        st.markdown("""To use this tool, you need to upload a CSV file containing the numerical values to convert. Then, you need to specify the mapping for each numerical value. For example, you could to specify the following mappings: numerical values ```1```, ```2```, ```3```, ```4``` and ```5``` to categories ```Bad```, ```Average```, ```Good```, ```Very good``` and ```Excellent```, respectively.""")
+        st.markdown("""Objects and datetime values are ignored.""")   
+
+def help_mapping_categorization_cat2num():
+    with st.expander(label='Help information'):
+        st.markdown("""This workflow allows you to convert categorical values into numerical values.""")
+        st.markdown("""For example, you can convert the categorical values of a rating scale to the corresponding numerical values of the scale (e.g. ```Bad -> 1```, ```Average -> 2```, ```Good -> 3```, ```Very good -> 4```, ```Excellent -> 5```).""")
+        st.markdown("""To use this tool, you need to upload a CSV file containing the categorical values to convert. Then, you need to select the categorical columns to convert.""")
 
 ####### Analysis a dataset #######
 # VISUALIZATION:
