@@ -829,8 +829,10 @@ elif general_option == 'Pre-process a dataset':
         init_step = True
         if file_selectibox == 'item':
             _, df, _, _ = util.load_dataset(file_type_list=['item'])
+            schema = util.infer_schema(df)
         elif file_selectibox == 'context':
             _, _, df, _ = util.load_dataset(file_type_list=['context'])
+            schema = util.infer_schema(df)
         
         # WF --> Replace NULL values:
         st.header('Apply workflow: Replace NULL values')
@@ -839,7 +841,6 @@ elif general_option == 'Pre-process a dataset':
         # Showing the initial image of the WF:
         workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step=init_step, with_context=with_context)
         if not df.empty:
-            schema = util.infer_schema(df)            
             if st.button(label='Replace NULL Values', key='button_replace_nulls'):
                 print('Replacing NULL Values')
                 replacenulls = ReplaceNullValues(df)
