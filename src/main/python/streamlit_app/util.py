@@ -8,6 +8,9 @@ import datagencars.evaluation.rs_surprise.evaluation as evaluation
 import base64
 import io
 import requests
+import config
+from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
+import console
 
 
 ####### Generate a synthetic dataset ######
@@ -407,6 +410,150 @@ def generation_settings(tab_generation):
 
         return generation_config_value
 
+def upload_user_profile_file():
+    user_profile_df = None
+    with st.expander(label='Upload user_profile.csv'):
+        if user_profile_file := st.file_uploader(label='Choose the file:', key='user_profile_file'):
+            user_profile_value = user_profile_file.getvalue().decode("utf-8")
+            user_profile_df = pd.read_csv(io.StringIO(user_profile_value))  
+            st.dataframe(user_profile_df)
+
+def generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map=None):
+    """
+    
+    """    
+    user_profile_df = None    
+    inconsistent = False
+    # Randomly fill a dataframe and cache it:
+    weight_np = np.zeros(shape=(number_user_profile, len(attribute_column_list)), dtype=str)
+    @st.cache(allow_output_mutation=True)    
+    def get_dataframe():
+        df = pd.DataFrame(weight_np, columns=attribute_column_list)
+        for column in df.columns:
+            df[column] = 0
+        df['user_profile_id'] = df.index+1
+        df['other'] = 1
+        df = df.astype(str)
+        return df            
+    user_profile_df = get_dataframe()
+    export_df = user_profile_df.copy()
+    # Create row, column, and value inputs:
+    col_row, col_col, col_val = st.columns(3)
+    with col_row:
+        # Choosing the row index:
+        row = st.number_input('row (profile)', max_value=user_profile_df.shape[0]) #, value=1
+    with col_col:
+        # Choosing the column index:
+        attribute_column_list_box = attribute_column_list.copy()
+        attribute_column_list_box.remove('other')
+        attribute_column_list_box.remove('user_profile_id')
+        if len(attribute_column_list_box) > 0:
+            selected_attribute = st.selectbox(label='column (attribute)', options=attribute_column_list_box)
+            attribute_position = attribute_column_list_box.index(selected_attribute)                           
+            col = attribute_position
+            # Getting possible values, in order to facilitate the importance ranking:
+            if selected_attribute in item_possible_value_map:
+                item_possible_value_list = item_possible_value_map[selected_attribute]
+                st.warning(item_possible_value_list)    
+            elif selected_attribute in context_possible_value_map:    
+                context_possible_value_list = context_possible_value_map[selected_attribute]
+                st.warning(context_possible_value_list)       
+    with col_val:   
+        # Inserting weight value:
+        value = st.text_input(label='weight (with range [-1,1])', value=0)      
+        # Checking attribute weights:                    
+        # Float number:
+        if ('.' in str(value)) or (',' in str(value)):
+            # Negative number:
+            if float(value) < -1.0:
+                st.warning('The ```weight``` must be greater than -1.')  
+            else:
+                # Range [0-1]:
+                if float(value) > 1.0:
+                    st.warning('The ```weight``` value must be in the range ```[-1,1]```.')  
+        else:
+            # Negative number:
+            if int(value) < -1:
+                st.warning('The ```weight``` must be greater than -1.')  
+            else:
+                # Range [0-1]:
+                if (int(value) > 1):
+                    st.warning('The ```weight``` value must be in the range ```[-1,1]```.')
+
+    # Change the entry at (row, col) to the given weight value:
+    if not user_profile_df.empty:
+        print(user_profile_df.values[row][col+1])
+        user_profile_df.values[row][col+1] = str(value)
+    else:
+        st.warning("user_profile_df is empty.")
+    other_value = 1
+    for column in attribute_column_list:
+        if column != 'user_profile_id' and column != 'other':
+            other_value = float(other_value-abs(float(user_profile_df.values[row][attribute_column_list.index(column)])))
+    if not user_profile_df.empty:
+        user_profile_df.values[row][len(user_profile_df.columns)-1] = f"{other_value:.1f}"
+    else:
+        st.warning("user_profile_df is empty.")
+    if not user_profile_df.empty:
+        if float(user_profile_df.values[row][len(user_profile_df.columns)-1]) < 0 or float(user_profile_df.values[row][len(user_profile_df.columns)-1]) > 1:
+            st.warning('Values in a row for user must equal 1')
+            inconsistent = True
+        else:
+            for index, row in user_profile_df.iterrows():
+                for column in user_profile_df.columns:
+                    if column != 'user_profile_id' and column != 'other':
+                        if float(row[column]) > 0:
+                            export_df.values[index][attribute_column_list.index(column)] = f'(+)|{str(abs(float(row[column])))}'
+                        elif float(row[column]) < 0:
+                            export_df.values[index][attribute_column_list.index(column)] = f'(-)|{str(abs(float(row[column])))}'
+                        else:
+                            export_df.values[index][attribute_column_list.index(column)] = f'0'
+                    if column == 'other':
+                        if float(row[column]) == 0:
+                            export_df.values[index][attribute_column_list.index(column)] = f'0'
+                        else:
+                            export_df.values[index][attribute_column_list.index(column)] = f'{str(abs(float(row[column])))}'
+    else:
+        st.warning("user_profile_df is empty.")
+    # Show the user profile dataframe:
+    st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[-1,1]```.""")
+    st.dataframe(user_profile_df)
+    # Downloading user_profile.csv:
+    if not inconsistent:
+        link_user_profile = f'<a href="data:file/csv;base64,{base64.b64encode(export_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
+        st.markdown(link_user_profile, unsafe_allow_html=True)
+    return user_profile_df
+
+def generate_user_profile_automatic(rating_df, item_df, context_df=None):
+    """
+    """
+    output = st.empty()
+    with console.st_log(output.code):
+        # Generate user profile, by using an original dataset:
+        generate_up_dataset = None
+        user_profile_df = pd.DataFrame()                    
+        if not context_df.empty:                     
+            # With context:            
+            if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                if st.button(label='Generate', key='button_generate_up_cars'):
+                    print('Automatically generating user profiles.')                    
+                    generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df, context_df)
+                    user_profile_df = generate_up(generate_up_dataset)                                  
+                    print('The user profile has been generated.')                                                    
+            else:
+                st.warning("The item, context and rating files have not been uploaded.")
+        else:            
+            # Without context:            
+            if (not item_df.empty) and (not rating_df.empty): 
+                if st.button(label='Generate', key='button_generate_up_rs'):
+                    print('Automatically generating user profiles.')                    
+                    generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df)
+                    user_profile_df = generate_up(generate_up_dataset)                    
+                    print('The user profile has been generated.')                               
+            else:
+                st.warning("The item and rating files have not been uploaded.")
+    return user_profile_df
+
 ####### Pre-process a dataset #######
 # LOAD DATASET:
 def load_dataset(file_type_list):
@@ -438,8 +585,8 @@ def load_one_file(file_type):
     """
     df = pd.DataFrame()    
     with st.expander(f"Upload your {file_type}.csv file"):
-        separator = st.text_input(f"Enter the separator for your {file_type}.csv file (default is ';')", ";")
-        uploaded_file = st.file_uploader(f"Select {file_type}.csv file", type="csv")
+        separator = st.text_input(label=f"Enter the separator for your {file_type}.csv file (default is ';')", value=";", key='text_input_'+file_type)
+        uploaded_file = st.file_uploader(label=f"Select {file_type}.csv file", type="csv")
         if uploaded_file is not None:
             if not separator:
                 st.error('Please provide a separator.')
@@ -481,6 +628,73 @@ def generate_up(generate_up):
 # Extend dataset:
 # Recalculate ratings:
 # Replace NULL values:
+def infer_schema(df):
+    """
+    :param df: original dataset
+    :return: A dataframe with schema information
+    """
+    possible_types = {int:'Integer', float:'Float', bool:'Boolean', str:'String'}
+    def infer(items):
+        try:
+            return possible_types[type(items[0])]
+        except:
+            return 'Unknown'
+        
+    schema = pd.DataFrame()
+
+    attributes = df.columns[1:]
+    schema['Attribute'] = attributes
+    types = list()
+    generator = list()
+    min_vals = list()
+    max_vals = list()
+    for attribute in attributes:
+        items = list(set(df[attribute].drop_duplicates().dropna()))
+        # Infer types
+        item_type = infer(items)
+        # Infer rest of info
+        if item_type == 'Integer' or item_type == 'Float':
+            if len(items) >= 2:
+                item_generator = 'Integer/Float/String/Boolean (following a distribution)'
+                min_val = min(items)
+                max_val = max(items)
+            else:
+                item_generator = 'Fixed'
+                min_val = items[0]
+                max_val = items[0]
+        types.append(item_type)
+        generator.append(item_generator)
+        min_vals.append(min_val)
+        max_vals.append(max_val)
+    schema['TypeAttribute'] = types
+    schema['GeneratorType'] = generator
+    schema['Min_val'] = min_vals
+    schema['Max_val'] = max_vals
+
+    schema_str = '[global] \ntype=context \nnumber_attributes=' + str(len(schema)) +'\n'
+    for index, row in schema.iterrows():
+        schema_str = schema_str + '[attribute' + str(int(index+1)) + ']\n'
+        attribute = row['Attribute']
+        schema_str = schema_str + 'name_attribute_' + str(int(index+1)) + '=' + attribute + '\n'
+        st.write(f'[{attribute}]')
+        atrib_generator = st.selectbox(label='Generator type:', options=config.GENERATOR_OPTS, key = attribute+'generator', index=config.GENERATOR_OPTS.index(row['GeneratorType']))
+        atrib_type = st.selectbox(label='Attribute type:', options=config.ATR_OPTS, key=attribute+'_attribute_type_', index=config.ATR_OPTS.index(row['TypeAttribute']))
+        schema_str = schema_str + 'type_attribute_' + str(int(index+1)) + '=' + atrib_type + '\n'
+        if atrib_type == 'Integer' or atrib_type == 'Float':
+            if atrib_generator == 'Fixed':
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=FixedAttributeGenerator\n'
+                fixed_val = st.number_input(label='Fixed value of the attribute', value=row['Min_val'], key=attribute+'_fixed_val')
+                schema_str = schema_str + 'input_parameter_attribute_' + str((index+1)) + '=' + str(fixed_val) + '\n'
+            else:
+                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
+                integer_min = st.number_input(label='Minimum value of the attribute', value=row['Min_val'], key=attribute+'_integer_min')
+                integer_max = st.number_input(label='Maximum value of the attribute', value=row['Max_val'], key=attribute+'_integer_max')
+                schema_str = schema_str + 'minimum_value_attribute_' + str((index+1)) + '=' + str((integer_min)) + '\n'
+                schema_str = schema_str + 'maximum_value_attribute_' + str((index+1)) + '=' + str((integer_max)) + '\n'
+        st.markdown("""---""")
+        schema_str = schema_str + '\n'
+    return schema_str
+
 # Generate user profile:
 # Ratings to binary:
 def ratings_to_binary(df, threshold=3):
