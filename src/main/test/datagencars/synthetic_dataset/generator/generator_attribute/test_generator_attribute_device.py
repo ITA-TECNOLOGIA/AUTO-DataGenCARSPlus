@@ -1,7 +1,7 @@
 import logging
 import unittest
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
-from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_device import GeneratorAttributeDevice
+from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_fixed_composite import GeneratorFixedComposite
 
 class TestGeneratorAttributeDevice(unittest.TestCase):
     def setUp(self):        
@@ -9,7 +9,7 @@ class TestGeneratorAttributeDevice(unittest.TestCase):
         with open(item_schema_file_path, 'r') as item_schema_file:
             item_schema = item_schema_file.read()            
         schema_access = AccessSchema(file_str=item_schema)
-        self.__generator = GeneratorAttributeDevice(schema_access)
+        self.__generator = GeneratorFixedComposite(schema_access)
     def tearDown(self):
         del self.__generator
     def test_generate_attribute_value(self):
@@ -17,7 +17,7 @@ class TestGeneratorAttributeDevice(unittest.TestCase):
         [attribute1]
         name_attribute_1=device_data
         type_attribute_1=AttributeComposite
-        generator_type_attribute_1=FixedAttributeGenerator
+        generator_type_attribute_1=FixedComposite
         number_maximum_subattribute_attribute_1=7
         name_subattribute_1_attribute_1=browserName
         name_subattribute_2_attribute_1=browserVersion
@@ -35,7 +35,7 @@ class TestGeneratorAttributeDevice(unittest.TestCase):
         type_subattribute_7_attribute_1=String
         input_parameter_subattribute_1_attribute_1=["Chrome", "Safari", "Firefox", "Mobile Safari", "GSA", "Edge", "Samsung Browser", "Opera", "MIUI Browser"]
         input_parameter_subattribute_3_attribute_1=["Android", "Windows", "Mac OS", "iOS", "Linux", "Chromium OS"]
-        generator_type_attribute_2=DeviceAttributeGenerator
+        generator_type_attribute_2=FixedComposite
         '''
         attribute_position=1
         attribute_name, attribute_value = self.__generator.generate_attribute_value(position=attribute_position)

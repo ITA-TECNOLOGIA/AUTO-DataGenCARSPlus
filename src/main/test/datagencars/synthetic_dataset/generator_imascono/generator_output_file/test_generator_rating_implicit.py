@@ -14,15 +14,15 @@ class TestGeneratorContext(unittest.TestCase):
             generation_config = generation_config_file.read()
 
         # item_df:
-        item_path = 'resources/data_schema_imascono/item.csv'
+        item_path = r'resources\dataset_imascono\item.csv' #'resources/data_schema_imascono/item.csv'
         item_df = pd.read_csv(item_path, encoding='utf-8', index_col=False)
 
         # behavior_df:
-        behavior_path = 'resources/data_schema_imascono/behavior.csv'
+        behavior_path = r'resources\dataset_imascono\behavior_processed.csv' #'resources/data_schema_imascono/behavior.csv'
         behavior_df = pd.read_csv(behavior_path, encoding='utf-8', index_col=False)
 
         # context_df:
-        context_path = 'resources/data_schema_imascono/context.csv'
+        context_path = r'resources\dataset_imascono\context.csv' #'resources/data_schema_imascono/context.csv'
         context_df = pd.read_csv(context_path, encoding='utf-8', index_col=False)
        
         # Rating generator:
@@ -34,7 +34,7 @@ class TestGeneratorContext(unittest.TestCase):
     def test_generate_rating_file(self):     
         rating_file = self.__generator.generate_file(with_context=True)
         logging.info(f'rating_file: {rating_file}')
-        rating_file.to_csv('rating.csv', index=False)    
+        rating_file.to_csv('rating.csv', index=False)
         self.assertFalse(rating_file.empty)
 
 if __name__ == '__main__':

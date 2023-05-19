@@ -1,7 +1,7 @@
 import random, ast
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute import GeneratorAttribute
 
-class GeneratorAttributeDevice(GeneratorAttribute):
+class GeneratorFixedComposite(GeneratorAttribute):
     '''
     A generator of attribute values representing a device
     (browserName, browserVersion, deviceName, deviceType, deviceVendor, osName, osVersion) 
@@ -21,7 +21,7 @@ class GeneratorAttributeDevice(GeneratorAttribute):
             [attribute1]
             name_attribute_1=device_data
             type_attribute_1=AttributeComposite
-            generator_type_attribute_1=FixedAttributeGenerator
+            generator_type_attribute_1=FixedComposite
             number_maximum_subattribute_attribute_1=5
             name_subattribute_1_attribute_1=browserName
             name_subattribute_2_attribute_1=browserVersion
@@ -40,7 +40,7 @@ class GeneratorAttributeDevice(GeneratorAttribute):
             input_parameter_subattribute_3_attribute_1=[]
             input_parameter_subattribute_4_attribute_1=[]
             input_parameter_subattribute_5_attribute_1=[]
-            generator_type_attribute_2=DeviceAttributeGenerator
+            generator_type_attribute_2=FixedComposite
         :param position: The position of an attribute.
         :return: The attribute value (device).
         '''
