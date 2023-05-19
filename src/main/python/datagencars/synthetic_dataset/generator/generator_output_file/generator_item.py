@@ -32,7 +32,7 @@ class GeneratorItemFile(GeneratorFile):
         else:
             number_item = len(input_csv)
         print(f'Total of items to generate: {number_item}')
-        print('Generating instances by item.')        
+        # print('Generating instances by item.')        
         if with_correlation:
             # Random with correlation:
             instance_generator = GeneratorInstance(generation_access=self.access_generation_config, schema_access=self.schema_access, item_profile_access=self.item_profile_access)

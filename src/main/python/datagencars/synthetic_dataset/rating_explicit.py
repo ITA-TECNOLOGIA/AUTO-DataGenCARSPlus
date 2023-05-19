@@ -1,5 +1,3 @@
-import logging
-
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_rating_explicit import GeneratorExplicitRatingFile
 from datagencars.synthetic_dataset.generate_synthetic_dataset import GenerateSyntheticDataset
 
