@@ -10,19 +10,19 @@ class TestGeneratorContext(unittest.TestCase):
         # context_schema.conf
         context_schema_file_path = 'resources/data_schema_imascono/context_schema.conf'
         with open(context_schema_file_path, 'r') as context_schema_file:
-            context_schema = context_schema_file.read()        
+            context_schema = context_schema_file.read()
         # generation_config.conf
         generation_config_file_path = 'resources/data_schema_imascono/generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
-            generation_config = generation_config_file.read()      
+            generation_config = generation_config_file.read()
         # Context generator:        
-        self.__generator = GeneratorContextFile(generation_config, context_schema)
+        self.__generator = GeneratorContextFile(context_schema, generation_config)
     
     def tearDown(self):
         del self.__generator
     
     def test_generate_context_file(self):
-        context_file = self.__generator.generate_file()        
+        context_file = self.__generator.generate_file()
         logging.info(f'context_file: {context_file}')
         context_file.to_csv('context.csv', index=False)
         self.assertEqual(context_file.shape[0], 10)

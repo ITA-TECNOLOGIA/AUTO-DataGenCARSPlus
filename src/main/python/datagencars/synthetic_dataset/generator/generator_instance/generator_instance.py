@@ -2,7 +2,7 @@ from datagencars.synthetic_dataset.generator.generator_attribute.generator_attri
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_boolean_list import GeneratorAttributeBooleanList
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_correlation import GeneratorAttributeCorrelation
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_date import GeneratorAttributeDate
-from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_fixed_composite import GeneratorFixedComposite
+from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_device import GeneratorDevice
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_fixed import GeneratorAttributeFixed
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_gaussian import GeneratorAttributeGaussian
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_object_position import GeneratorAttributeObjectPosition
@@ -47,8 +47,8 @@ class GeneratorInstance():
                         attribute_generator = GeneratorAttributeBooleanList(self.schema_access)
                     elif generator_type == 'ObjectPositionAttributeGenerator':
                         attribute_generator = GeneratorAttributeObjectPosition(self.schema_access)
-                    elif generator_type == 'FixedComposite':
-                        attribute_generator = GeneratorFixedComposite(self.schema_access)
+                    elif generator_type == 'DeviceGenerator':
+                        attribute_generator = GeneratorDevice(self.schema_access)
                     _, attribute_value = attribute_generator.generate_attribute_value(position)
             attribute_list.append(attribute_value)
         return attribute_list

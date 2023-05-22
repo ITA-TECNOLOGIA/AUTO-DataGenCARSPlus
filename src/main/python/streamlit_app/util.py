@@ -41,13 +41,13 @@ def generate_schema_file(schema_type):
             st.write('__[attribute'+str(position)+']__')
             value += '[attribute'+str(position)+']'+'\n'
             # name_attribute:     
-            attribute_name = st.text_input(label="Attribute's name:", key=schema_type+'_attribute_name_'+str(position)) 
+            attribute_name = st.text_input(label="Attribute's name:", key=schema_type+'_attribute_name_'+str(position))
             value += 'name_attribute_'+str(position)+'='+attribute_name+'\n'
             # generator_type_attribute:
-            generator_type = st.selectbox(label='Generator type:', options=['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'RandomAttributeGenerator', 'FixedComposite', 'ObjectPositionAttributeGenerator'],  key=schema_type+'_generator_type_'+str(position))            
+            generator_type = st.selectbox(label='Generator type:', options=['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'RandomAttributeGenerator', 'DeviceGenerator', 'ObjectPositionAttributeGenerator', 'FixedAttributeGenerator'],  key=schema_type+'_generator_type_'+str(position))            
             # type_attribute:
             attribute_type = None
-            if generator_type=='RandomAttributeGenerator' or generator_type=='FixedComposite' or generator_type=='ObjectPositionAttributeGenerator':
+            if generator_type=='RandomAttributeGenerator' or generator_type=='DeviceGenerator' or generator_type=='ObjectPositionAttributeGenerator' or generator_type=='FixedAttributeGenerator':
                 attribute_type = st.selectbox(label='Attribute type:', options=['String', 'List', 'AttributeComposite'], key=schema_type+'_attribute_type_'+str(position)) 
                 if attribute_type == 'String' and generator_type == 'RandomAttributeGenerator':
                     value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
@@ -58,7 +58,7 @@ def generate_schema_file(schema_type):
                     value += 'number_posible_values_attribute_'+str(position)+'='+str(number_possible_value)+'\n'
                     for i in range(number_possible_value):
                         value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(str_possible_value_list[i]).strip()+'\n'
-                elif attribute_type == 'List' and generator_type == 'FixedComposite':
+                elif (attribute_type == 'List' and generator_type == 'DeviceGenerator') or attribute_type == 'List' and generator_type == 'FixedAttributeGenerator':
                     value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
                     number_maximum_subattribute = st.number_input(label='Number of subattributes to generate:', value=5, key='number_maximum_subattribute_'+schema_type+'_'+str(position))
                     value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
