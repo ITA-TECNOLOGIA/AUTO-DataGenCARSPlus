@@ -15,7 +15,7 @@ class ExtractStatistics(ABC):
         except:
             return None
 
-    def get_attributes_and_ranges(self): # list_attributes_and_ranges
+    def get_attributes_and_ranges(self):
         # sourcery skip: low-code-quality, remove-redundant-pass, use-contextlib-suppress
         """
         List attributes, data types, and value ranges of the dataframe.
@@ -53,12 +53,13 @@ class ExtractStatistics(ABC):
                         raise ValueError("Unsupported datetime format")
                     table.append([column, dtype, f"{datetime_obj.min().strftime('%Y-%m-%d')} - {datetime_obj.max().strftime('%Y-%m-%d')}"])
                 except ValueError:
-                    if self.df[column].apply(lambda x: isinstance(x, str) and x.startswith('{')).any():
+                    df = self.df.copy()
+                    if df[column].apply(lambda x: isinstance(x, str) and x.startswith('{')).any():
                         # Convert the column values to dicts (where possible) and then collect unique values
-                        self.df[column] = self.df[column].apply(self.try_loads)
+                        df[column] = df[column].apply(self.try_loads)
                         unique_values = {}
 
-                        for data in self.df[column]:
+                        for data in df[column]:
                             if data is not None:
                                 for key, value in data.items():
                                     if key in unique_values:
