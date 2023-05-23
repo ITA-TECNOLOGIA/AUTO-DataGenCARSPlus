@@ -1,6 +1,6 @@
 import base64
-import io
-import os
+from ast import literal_eval
+
 import altair as alt
 import config
 import console
@@ -14,11 +14,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
-from ast import literal_eval
+from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_user import AccessUser
-from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
@@ -26,10 +25,7 @@ from datagencars.existing_dataset.replicate_dataset.replicate_dataset import Rep
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from datagencars.synthetic_dataset.rating_implicit import RatingImplicit
-from streamlit_app import util
-from streamlit_app import help_information
-from streamlit_app import workflow_image
-
+from streamlit_app import help_information, util, workflow_image
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -245,16 +241,16 @@ if general_option == 'Generate a synthetic dataset':
                 schema_type = 'context'
                 context_schema_value = util.generate_schema_file(schema_type) 
         # USER PROFILE TAB:
-        user_profile_df = None
+        user_profile_df = pd.DataFrame()
         with tab_user_profile:
             st.header('User profile')  
             # Uploading the user profile file:
             if st.checkbox(label='Import the user profile?', value=True):
-                util.upload_user_profile_file()
+                user_profile_df = util.upload_user_profile_file()
             else:
                 # Generating the user profile manually:
                 # Help information:
-                util.help_user_profile_manual()                          
+                help_information.help_user_profile_manual()                          
                 # Adding column "id":
                 attribute_column_list = ['user_profile_id']
                 # Adding relevant item attribute columns:        
@@ -280,8 +276,8 @@ if general_option == 'Generate a synthetic dataset':
                 initial_value = len(user_access.get_possible_values_attribute_list_from_name(attribute_name='user_profile_id'))
                 number_user_profile = st.number_input(label='Number of user profiles', value=initial_value)
                                         
-                # Generate user profile manual:
-                user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
+                # Generate user profile manual:                
+                user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)                  
         # RUN TAB:
         with tab_run:                   
             col_run, col_stop = st.columns(2)        
@@ -351,15 +347,14 @@ if general_option == 'Generate a synthetic dataset':
                                     st.experimental_rerun()
                                 else:
                                     if config_file_text_area:
-                                        st.write('rating.csv')
-                                        print('Generating rating.csv')           
+                                        st.write('rating.csv')                                        
                                         if with_context:
                                             rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value, with_context=with_context, context_df=context_file_df, context_schema=context_schema_value)        
                                         else:
                                             rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile_df, item_df=item_file_df, item_schema=item_schema_value)
                                         st.dataframe(rating_file_df)
                                         link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
-                                        st.markdown(link_rating, unsafe_allow_html=True)
+                                        st.markdown(link_rating, unsafe_allow_html=True)                                                                            
                                     else:
                                         st.warning('The configuration file (generation_config.conf) is required.')
                                     print('Synthetic data generation has finished.')   
@@ -564,7 +559,8 @@ if general_option == 'Generate a synthetic dataset':
                                             else:
                                                 if generation_config_value:
                                                     st.write('rating.csv')
-                                                    print('Generating rating.csv')           
+                                                    print('Generating rating.csv')  
+                                                    print('Generating instances by context.')         
                                                     if with_context:
                                                         rating_file_df = generator.generate_rating_file(item_df=item_file_df, behavior_df=behavior_file_df, with_context=with_context, context_df=context_file_df)  
                                                     else:
@@ -590,13 +586,9 @@ elif general_option == 'Pre-process a dataset':
         # Loading dataset:
         init_step = 'True'
         if with_context:
-            user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
-            st.session_state["context_df"] = context_df
+            user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])            
         else:
-            user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])      
-        st.session_state["user_df"] = user_df
-        st.session_state["item_df"] = item_df      
-        st.session_state["rating_df"] = rating_df
+            user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
 
         # WF --> Replicate dataset:
         st.header('Apply workflow: Replicate dataset')
@@ -604,20 +596,21 @@ elif general_option == 'Pre-process a dataset':
         help_information.help_replicate_dataset_wf()
         # Showing the initial image of the WF:
         workflow_image.show_wf(wf_name='ReplicateDataset', init_step=init_step, with_context=with_context, optional_value_list=[('NULLValues', 'True')])
-              
-        # PRE-PROCESSING TAB:
-        tab_preprocessing, tab_user_profile, tab_replicate  = st.tabs(['Pre-processing', 'User Profile', 'Replicate'])   
+            
+        # Options tab:
+        tab_replace_null_values, tab_generate_user_profile, tab_replicate_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Replicate dataset'])
+        # REPLACE NULL VALUES TAB:
         new_item_df = pd.DataFrame()
         new_context_df = pd.DataFrame()        
-        with tab_preprocessing:
+        with tab_replace_null_values:
             output = st.empty()  
             with console.st_log(output.code):
                 null_values = st.checkbox("Do you want to replace the null values?", value=True)                
                 if null_values:
                     # Showing the current image of the WF:
                     workflow_image.show_wf(wf_name='ReplicateDataset', init_step=init_step, with_context=with_context, optional_value_list=[('NULLValues', null_values)])
-                                       
-                    # Pre-processing: replace null values in item and context files.
+                                    
+                    # Replacing NULL values in item or context file.
                     if with_context:
                         if (not item_df.empty) and (not context_df.empty):                                        
                             file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
@@ -627,31 +620,31 @@ elif general_option == 'Pre-process a dataset':
                                     print(f'Checking if {file_type_selectbox}.csv has NaN values.')
                                     if item_df.isnull().values.any():        
                                         print(f'Replacing NaN values.')
-                                        new_item_df = pd.DataFrame() # TODO
+                                        new_item_df = pd.DataFrame() # TODO BEA, including WF Replace NULLs values
                                         print('The null values have been replaced.')
                                         with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
                                             st.dataframe(new_item_df)
                                             link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
                                             st.markdown(link_rating, unsafe_allow_html=True)
                                     else:
+                                        st.write('new_item_df = item_df.copy()')
                                         new_item_df = item_df.copy()
                                         st.warning(f'The {file_type_selectbox}.csv file has no null values.')
-                                    st.session_state["item_df"] = new_item_df
                                 elif file_type_selectbox == 'context':
                                     # Check if context_df has NaN values:
                                     print(f'Checking if {file_type_selectbox}.csv has NaN values')
                                     if context_df.isnull().values.any():
                                         print(f'Replacing NaN values.')
-                                        new_context_df = pd.DataFrame() # TODO
+                                        new_context_df = pd.DataFrame() # TODO BEA, including WF Replace NULLs values
                                         print('The null values have been replaced.')
                                         with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
                                             st.dataframe(new_context_df)
                                             link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_context_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
                                             st.markdown(link_rating, unsafe_allow_html=True)
                                     else:
-                                        new_context_df = context_df.copy()
-                                        st.warning(f'The {file_type_selectbox}.csv file has no null values.')
-                                    st.session_state["context_df"] = new_context_df
+                                        st.write('new_context_df = context_df.copy()')
+                                        new_context_df = context_df.copy()                                        
+                                        st.warning(f'The {file_type_selectbox}.csv file has no null values.')                                        
                         else:
                             st.warning("The item and context files have not been uploaded.")
                     else:
@@ -670,56 +663,56 @@ elif general_option == 'Pre-process a dataset':
                                         st.markdown(link_rating, unsafe_allow_html=True)
                                 else:
                                     new_item_df = item_df.copy()
-                                    st.warning(f'The {file_type_selectbox}.csv file has no null values.')
-                                st.session_state["item_df"] = new_item_df
+                                    st.warning(f'The {file_type_selectbox}.csv file has no null values.')                                
                         else:
                             st.warning("The item file has not been uploaded.")
                 else:                    
                     workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', null_values)])          
+                    new_item_df = item_df.copy()
+                    new_context_df = context_df.copy()
         # USER PROFILE TAB:
-        with tab_user_profile:
-            if with_context:
-                user_profile_df = util.generate_user_profile_automatic(rating_df, item_df, context_df)
+        user_profile_df = pd.DataFrame()
+        with tab_generate_user_profile:
+            if with_context:                             
+                user_profile_df = util.generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df, context_df=new_context_df)                
             else:
-                user_profile_df = util.generate_user_profile_automatic(rating_df, item_df)
-        st.session_state["user_profile_df"] = user_profile_df   
-        # REPLICATE TAB:
-        with tab_replicate:
-                output = st.empty()
-                with console.st_log(output.code):
-                    percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
-                    if with_context:                        
-                        # With context:
-                        if (not item_df.empty and "item_df" in st.session_state) and (not context_df.empty and "context_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):
-                            if st.button(label='Replicate', key='button_replicate_cars'):
-                                print('Extracting statistics.')
-                                print('Replicating the rating.csv file.')
-                                replicate_cars = ReplicateDataset( st.session_state["rating_df"],  st.session_state["user_profile_df"], st.session_state["item_df"], st.session_state["context_df"])                            
-                                new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)
-                                st.session_state["rating_df"] = new_rating_df
-                                with st.expander(label='Show the replicated file: rating.csv'):
-                                    st.dataframe(st.session_state["rating_df"])
-                                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(st.session_state["rating_df"].to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
-                                    st.markdown(link_rating, unsafe_allow_html=True) 
-                                print('Replicated data generation has finished.')
-                        else:
-                            st.warning("The item, context and rating files have not been uploaded.")
-                    else:            
-                        # Without context:                        
-                        if (not item_df.empty and "item_df" in st.session_state) and (not rating_df.empty and "rating_df" in st.session_state):                             
-                            if st.button(label='Replicate', key='button_replicate_rs'):
-                                print('Extracting statistics.')
-                                print('Replicating the rating.csv file.')
-                                replicate_cars = ReplicateDataset( st.session_state["rating_df"],  st.session_state["user_profile_df"], st.session_state["item_df"])                                
-                                new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)
-                                st.session_state["rating_df"] = new_rating_df
-                                with st.expander(label='Show the replicated file: rating.csv'):
-                                    st.dataframe(st.session_state["rating_df"])
-                                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(st.session_state["rating_df"].to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
-                                    st.markdown(link_rating, unsafe_allow_html=True)
-                                print('Replicated data generation has finished.')
-                        else:
-                            st.warning("The item and rating files have not been uploaded.")
+                user_profile_df = util.generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df)                
+        # REPLICATE TAB:        
+        with tab_replicate_dataset:
+            output = st.empty()
+            with console.st_log(output.code):
+                percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+                if with_context:                   
+                    # With context:                                            
+                    if st.button(label='Replicate', key='button_replicate_cars'):
+                        st.write(item_df)
+                        st.write(context_df)
+                        st.write(rating_df)
+                        st.write(user_profile_df)
+                        print('Extracting statistics.')
+                        print('Replicating the rating.csv file.')                                
+                        replicate_cars = ReplicateDataset(rating_df,  user_profile_df, new_item_df, new_context_df)
+                        new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
+                        with st.expander(label='Show the replicated file: rating.csv'):
+                            st.dataframe(new_rating_df)
+                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
+                            st.markdown(link_rating, unsafe_allow_html=True) 
+                        print('Replicated data generation has finished.')
+                else:            
+                    # Without context:                    
+                    if st.button(label='Replicate', key='button_replicate_rs'):                        
+                        st.write(item_df)                            
+                        st.write(rating_df)
+                        st.write(user_profile_df) 
+                        print('Extracting statistics.')
+                        print('Replicating the rating.csv file.')
+                        replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df)
+                        new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
+                        with st.expander(label='Show the replicated file: rating.csv'):
+                            st.dataframe(new_rating_df)
+                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
+                            st.markdown(link_rating, unsafe_allow_html=True)
+                        print('Replicated data generation has finished.')                  
     elif is_preprocess == 'Extend dataset':
         # Loading dataset:
         init_step = 'True'
@@ -969,7 +962,6 @@ elif general_option == 'Pre-process a dataset':
                     st.write("No categorical columns found.")
         else:
             st.warning("The user, item or context file has not been uploaded.")
-
 ####### Analysis a dataset #######
 elif general_option == 'Analysis a dataset':
     # LOAD DATASET:
