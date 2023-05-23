@@ -411,12 +411,13 @@ def generation_settings(tab_generation):
         return generation_config_value
 
 def upload_user_profile_file():
-    user_profile_df = None
+    user_profile_df = pd.DataFrame()
     with st.expander(label='Upload user_profile.csv'):
         if user_profile_file := st.file_uploader(label='Choose the file:', key='user_profile_file'):
             user_profile_value = user_profile_file.getvalue().decode("utf-8")
             user_profile_df = pd.read_csv(io.StringIO(user_profile_value))  
             st.dataframe(user_profile_df)
+    return user_profile_df
 
 def generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map=None):
     """
