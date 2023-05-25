@@ -533,7 +533,7 @@ def generate_user_profile_automatic(rating_df, item_df, context_df=None):
         # Generate user profile, by using an original dataset:
         generate_up_dataset = None
         user_profile_df = pd.DataFrame()                    
-        if not context_df.empty:                     
+        if context_df is not None and not context_df.empty:                     
             # With context:            
             if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
                 if st.button(label='Generate', key='button_generate_up_cars'):
@@ -902,7 +902,6 @@ def infer_schema(df):
       
         st.markdown("""---""")
         schema_str = schema_str + '\n'
-    print(schema_str)
     return schema_str
 
 # Generate user profile:

@@ -584,7 +584,6 @@ elif general_option == 'Pre-process a dataset':
     st.header('Load dataset')        
     if is_preprocess == 'Replicate dataset':
         # Loading dataset:
-        init_step = 'True'
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])            
         else:
@@ -595,7 +594,7 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_replicate_dataset_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='ReplicateDataset', init_step=init_step, with_context=with_context, optional_value_list=[('NULLValues', 'True')])
+        workflow_image.show_wf(wf_name='ReplicateDataset', init_step='True', with_context=True, optional_value_list=[('NULLValues', 'True'), ('NULLValuesC', 'True'), ('NULLValuesI', 'True')])
             
         # Options tab:
         tab_replace_null_values, tab_generate_user_profile, tab_replicate_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Replicate dataset'])
@@ -605,69 +604,73 @@ elif general_option == 'Pre-process a dataset':
         with tab_replace_null_values:
             output = st.empty()  
             with console.st_log(output.code):
-                null_values = st.checkbox("Do you want to replace the null values?", value=True)                
-                if null_values:
+                null_values_c = True
+                if with_context:
+                    null_values_c = st.checkbox("Do you want to replace the null values in context_file?", value=True)   
+                null_values_i = st.checkbox("Do you want to replace the null values in item_file?", value=True)               
+                if null_values_i or null_values_c:
                     # Showing the current image of the WF:
-                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step=init_step, with_context=with_context, optional_value_list=[('NULLValues', null_values)])
+                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
                                     
                     # Replacing NULL values in item or context file.
                     if with_context:
                         if (not item_df.empty) and (not context_df.empty):                                        
-                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
                             if st.button(label='Replace', key='button_replace_item_context'):
-                                if file_type_selectbox == 'item':
+                                if null_values_i:
                                     # Check if item_df has NaN values:
-                                    print(f'Checking if {file_type_selectbox}.csv has NaN values.')
+                                    print(f'Checking if item.csv has NaN values.')
                                     if item_df.isnull().values.any():        
                                         print(f'Replacing NaN values.')
-                                        new_item_df = pd.DataFrame() # TODO BEA, including WF Replace NULLs values
+                                        replacenulls = ReplaceNullValues(item_df)
+                                        schema = util.infer_schema(item_df)
+                                        new_item_df = replacenulls.regenerate_item_file(schema) 
                                         print('The null values have been replaced.')
-                                        with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
+                                        with st.expander(label=f'Show replicated file: item.csv'):
                                             st.dataframe(new_item_df)
-                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
+                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
                                             st.markdown(link_rating, unsafe_allow_html=True)
                                     else:
                                         st.write('new_item_df = item_df.copy()')
                                         new_item_df = item_df.copy()
-                                        st.warning(f'The {file_type_selectbox}.csv file has no null values.')
-                                elif file_type_selectbox == 'context':
+                                        st.warning(f'The item.csv file has no null values.')
+                                elif null_values_c:
                                     # Check if context_df has NaN values:
-                                    print(f'Checking if {file_type_selectbox}.csv has NaN values')
+                                    print(f'Checking if context.csv has NaN values')
                                     if context_df.isnull().values.any():
-                                        print(f'Replacing NaN values.')
-                                        new_context_df = pd.DataFrame() # TODO BEA, including WF Replace NULLs values
+                                        replacenulls = ReplaceNullValues(context_df)
+                                        schema = util.infer_schema(context_df)
+                                        new_context_df = replacenulls.regenerate_item_file(schema) 
                                         print('The null values have been replaced.')
-                                        with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
+                                        with st.expander(label=f'Show replicated file: context.csv'):
                                             st.dataframe(new_context_df)
-                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_context_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
+                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_context_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download</a>'
                                             st.markdown(link_rating, unsafe_allow_html=True)
                                     else:
                                         st.write('new_context_df = context_df.copy()')
                                         new_context_df = context_df.copy()                                        
-                                        st.warning(f'The {file_type_selectbox}.csv file has no null values.')                                        
+                                        st.warning(f'The context.csv file has no null values.')                                        
                         else:
                             st.warning("The item and context files have not been uploaded.")
                     else:
                         if not item_df.empty:                                        
-                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item'])
                             if st.button(label='Replace', key='button_replace_item'):
                                 # Check if item_df has NaN values:
-                                print(f'Checking if {file_type_selectbox}.csv has NaN values')
+                                print(f'Checking if item.csv has NaN values')
                                 if item_df.isnull().values.any():
                                     print(f'Replacing NaN values.')
                                     new_item_df = pd.DataFrame() # TODO
                                     print('The null values have been replaced.')
-                                    with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
+                                    with st.expander(label=f'Show replicated file: item.csv'):
                                         st.dataframe(new_item_df)
-                                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
+                                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
                                         st.markdown(link_rating, unsafe_allow_html=True)
                                 else:
                                     new_item_df = item_df.copy()
-                                    st.warning(f'The {file_type_selectbox}.csv file has no null values.')                                
+                                    st.warning(f'The item.csv file has no null values.')                                
                         else:
                             st.warning("The item file has not been uploaded.")
                 else:                    
-                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', null_values)])          
+                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])          
                     new_item_df = item_df.copy()
                     new_context_df = context_df.copy()
         # USER PROFILE TAB:
@@ -723,7 +726,7 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_extend_dataset_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='ExtendDataset', init_step=init_step, with_context=with_context)        
+        workflow_image.show_wf(wf_name='ExtendDataset', init_step=init_step, with_context=True, optional_value_list=[('NULLValues', 'True')])        
         
         st.write('TODO')
     elif is_preprocess == 'Recalculate ratings': 
@@ -736,7 +739,7 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_recalculate_ratings_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='RecalculateRatings', init_step=init_step, with_context=with_context)
+        workflow_image.show_wf(wf_name='RecalculateRatings', init_step='True', with_context=True, optional_value_list=[('NULLValues', 'True')])
 
         st.write('TODO')
     elif is_preprocess == 'Replace NULL values':
@@ -785,7 +788,7 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_user_profile_wf()
         # Worflow image:
-        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step=init_step, with_context=with_context)
+        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step=init_step, with_context=True)
                
         # Workflow:
         st.header('User profile')
@@ -870,7 +873,7 @@ elif general_option == 'Pre-process a dataset':
         if not rating_df.empty:            
             min_rating = rating_df['rating'].min()
             max_rating = rating_df['rating'].max()
-            threshold = st.number_input(f"Binary threshold (range from {min_rating} to {max_rating})", min_value=min_rating, max_value=max_rating, value=3)
+            threshold = st.number_input(f"Binary threshold (range from {min_rating} to {max_rating})", value=3)
             df_binary = util.ratings_to_binary(rating_df, threshold)
             st.write("Converted ratings:")
             st.dataframe(df_binary.head())
@@ -899,7 +902,7 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_mapping_categorization_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_value_list=[('Num2Cat', num2cat), ('file', file)])
+        workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=True, optional_value_list=[('Num2Cat', num2cat), ('file', file)])
          
         option = st.radio(options=['From numerical to categorical', 'From categorical to numerical'], label='Select an option')
         if not df.empty:
@@ -907,7 +910,7 @@ elif general_option == 'Pre-process a dataset':
                 # Showing the image of the WF:
                 init_step = 'False'
                 num2cat = 'True'
-                workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_values=[('Num2Cat', num2cat), ('file', file)])                
+                workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_value_list=[('Num2Cat', num2cat), ('file', file)])                
                 st.header("Category Encoding")
                 # Help information:
                 help_information.help_mapping_categorization_num2cat() 
