@@ -602,86 +602,20 @@ elif general_option == 'Pre-process a dataset':
         new_item_df = pd.DataFrame()
         new_context_df = pd.DataFrame()        
         with tab_replace_null_values:
-            output = st.empty()  
-            with console.st_log(output.code):
-                null_values_c = True
-                if with_context:
-                    null_values_c = st.checkbox("Do you want to replace the null values in context_file?", value=True)   
-                null_values_i = st.checkbox("Do you want to replace the null values in item_file?", value=True)               
-                if null_values_i or null_values_c:
-                    # Showing the current image of the WF:
-                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
-                                    
-                    # Replacing NULL values in item or context file.
-                    if with_context:
-                        if (not item_df.empty) and (not context_df.empty):                                        
-                            if st.button(label='Replace', key='button_replace_item_context'):
-                                if null_values_i:
-                                    # Check if item_df has NaN values:
-                                    print(f'Checking if item.csv has NaN values.')
-                                    if item_df.isnull().values.any():        
-                                        print(f'Replacing NaN values.')
-                                        replacenulls = ReplaceNullValues(item_df)
-                                        schema = util.infer_schema(item_df)
-                                        new_item_df = replacenulls.regenerate_item_file(schema) 
-                                        print('The null values have been replaced.')
-                                        with st.expander(label=f'Show replicated file: item.csv'):
-                                            st.dataframe(new_item_df)
-                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
-                                            st.markdown(link_rating, unsafe_allow_html=True)
-                                    else:
-                                        st.write('new_item_df = item_df.copy()')
-                                        new_item_df = item_df.copy()
-                                        st.warning(f'The item.csv file has no null values.')
-                                elif null_values_c:
-                                    # Check if context_df has NaN values:
-                                    print(f'Checking if context.csv has NaN values')
-                                    if context_df.isnull().values.any():
-                                        replacenulls = ReplaceNullValues(context_df)
-                                        schema = util.infer_schema(context_df)
-                                        new_context_df = replacenulls.regenerate_item_file(schema) 
-                                        print('The null values have been replaced.')
-                                        with st.expander(label=f'Show replicated file: context.csv'):
-                                            st.dataframe(new_context_df)
-                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_context_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download</a>'
-                                            st.markdown(link_rating, unsafe_allow_html=True)
-                                    else:
-                                        st.write('new_context_df = context_df.copy()')
-                                        new_context_df = context_df.copy()                                        
-                                        st.warning(f'The context.csv file has no null values.')                                        
-                        else:
-                            st.warning("The item and context files have not been uploaded.")
-                    else:
-                        if not item_df.empty:                                        
-                            if st.button(label='Replace', key='button_replace_item'):
-                                # Check if item_df has NaN values:
-                                print(f'Checking if item.csv has NaN values')
-                                if item_df.isnull().values.any():
-                                    print(f'Replacing NaN values.')
-                                    new_item_df = pd.DataFrame() # TODO
-                                    print('The null values have been replaced.')
-                                    with st.expander(label=f'Show replicated file: item.csv'):
-                                        st.dataframe(new_item_df)
-                                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
-                                        st.markdown(link_rating, unsafe_allow_html=True)
-                                else:
-                                    new_item_df = item_df.copy()
-                                    st.warning(f'The item.csv file has no null values.')                                
-                        else:
-                            st.warning("The item file has not been uploaded.")
-                else:                    
-                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])          
-                    new_item_df = item_df.copy()
-                    new_context_df = context_df.copy()
+            null_values_c, null_values_i = util.tab_logic_replace_null(with_context, item_df, context_df)
         # USER PROFILE TAB:
         user_profile_df = pd.DataFrame()
         with tab_generate_user_profile:
+            # Showing the current image of the WF:
+            workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
             if with_context:                             
                 user_profile_df = util.generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df, context_df=new_context_df)                
             else:
                 user_profile_df = util.generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df)                
         # REPLICATE TAB:        
         with tab_replicate_dataset:
+            # Showing the current image of the WF:
+            workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
             output = st.empty()
             with console.st_log(output.code):
                 percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
@@ -719,15 +653,22 @@ elif general_option == 'Pre-process a dataset':
     elif is_preprocess == 'Extend dataset':
         # Loading dataset:
         init_step = 'True'
-        _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
+        _, item_df, context_df, rating_df = util.load_dataset(file_type_list=['item', 'context', 'rating'])
         
         # WF --> Extend dataset:
         st.header('Apply workflow: Extend dataset')
         # Help information:
         help_information.help_extend_dataset_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='ExtendDataset', init_step=init_step, with_context=True, optional_value_list=[('NULLValues', 'True')])        
-        
+        workflow_image.show_wf(wf_name='ExtendDataset', init_step=init_step, with_context=True, optional_value_list=[('NULLValues', 'True'), ('NULLValuesC', 'True'), ('NULLValuesI', 'True')])   
+
+        # Options tab:
+        tab_replace_null_values, tab_generate_user_profile, tab_replicate_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Extend dataset'])     
+        # REPLACE NULL VALUES TAB:
+        new_item_df = pd.DataFrame()
+        new_context_df = pd.DataFrame()        
+        with tab_replace_null_values:
+            null_values_c, null_values_i = util.tab_logic_replace_null(with_context, item_df, context_df)
         st.write('TODO')
     elif is_preprocess == 'Recalculate ratings': 
         # Loading dataset:
