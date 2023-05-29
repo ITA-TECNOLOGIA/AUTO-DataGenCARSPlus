@@ -40,7 +40,6 @@ class RecommenderSIDELARS:
         except Exception as e:
             logging.error(e)
 
-    #TODO: Poner esta funcion fuera de la clase de Recommender
     def get_last_position_for_user(self, user_id):
         """
         Retrieves the latest position of the user based on behavior data.
@@ -84,24 +83,6 @@ class RecommenderSIDELARS:
         :param k_recommendations: The number of items to recommend to the user.
         :return: Top k candidate items to be recommended to users.
         """
-        # NO SÉ SI ES MEJOR EXTENDER LOS RESULTADOS DE TODOS LOS ALGORITMOS EN UNA SOLA LISTA O SOLAMENTE DE UN ALGORITMO
-        # # Parameter settings of the KNN algorithms.
-        # sim_options = {'user_based': True}  # compute similarities between users
-        # algorithms = [
-        #     KNNBasic(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        #     KNNWithMeans(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        #     KNNWithZScore(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        #     KNNBaseline(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options)
-        # ]
-
-        # all_predictions = []
-        # for algorithm in algorithms:
-        #     # Fitting the algorithm.
-        #     algorithm.fit(trainset)
-
-        #     # Predicting ratings for all pairs (u,i) that are NOT in the training set.
-        #     predictions = algorithm.test(testset)
-        #     all_predictions.extend(predictions)
 
         # Fitting the algorithm.
         algorithm.fit(trainset)
