@@ -34,7 +34,7 @@ class TestGeneratorContext(unittest.TestCase):
     def test_generate_rating_file(self):
         rating_file = self.__generator.generate_file(with_context=True)
         logging.info(f'rating_file: {rating_file}')
-        rating_file.to_csv('rating.csv', index=False)
+        rating_file.to_csv('resources/data_schema_imascono/rating.csv', index=False)
         self.assertFalse(rating_file.empty)
 
 if __name__ == '__main__':

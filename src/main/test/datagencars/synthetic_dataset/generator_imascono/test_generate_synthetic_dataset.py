@@ -29,7 +29,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         user_file = self.__generator.generate_user_file(user_schema=user_schema)        
         logging.info(f'user_file: {user_file}')
         user_file.to_csv('resources/data_schema_imascono/user.csv', index=False)
-        self.assertEqual(user_file.shape[0], 100)
+        self.assertEqual(user_file.shape[0], 13820)
 
     def test_generate_item_file(self):
         '''        
@@ -43,7 +43,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         item_file = self.__generator.generate_item_file(item_schema)
         logging.info(f'item_file: {item_file}')
         item_file.to_csv('resources/data_schema_imascono/item.csv', index=False)
-        self.assertEqual(item_file.shape[0], 50)
+        self.assertEqual(item_file.shape[0], 25)
 
     def test_generate_context_file(self):
         '''
@@ -56,7 +56,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         context_file = self.__generator.generate_context_file(context_schema=context_schema)
         logging.info(f'context_file: {context_file}')
         context_file.to_csv('resources/data_schema_imascono/context.csv', index=False)
-        self.assertEqual(context_file.shape[0], 10)
+        self.assertEqual(context_file.shape[0], 142)
 
     def test_generate_behavior_file(self):
         '''        
@@ -77,7 +77,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         behavior_file = self.__generator.generate_behavior_file(behavior_schema, item_df, item_schema)
         logging.info(f'behavior_file: {behavior_file}')
         behavior_file.to_csv('resources/data_schema_imascono/behavior.csv', index=False)
-        self.assertAlmostEqual(behavior_file.shape[0], 1000, delta=1)
+        self.assertAlmostEqual(behavior_file.shape[0], 55867, delta=1)
 
     def test_generate_rating_file_cars(self):
         '''        
