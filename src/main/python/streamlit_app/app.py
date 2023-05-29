@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
+from collections import defaultdict
 from ast import literal_eval
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
@@ -29,7 +30,6 @@ from datagencars.synthetic_dataset.rating_implicit import RatingImplicit
 from streamlit_app import util
 from streamlit_app import help_information
 from streamlit_app import workflow_image
-
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -1139,7 +1139,7 @@ elif general_option == 'Analysis a dataset':
         if with_context:
             with context_tab:
                 if not context_df.empty:
-                    # try:
+                    try:
                         # Context dataframe:
                         st.header("Context file")
                         st.dataframe(context_df)
@@ -1198,8 +1198,8 @@ elif general_option == 'Analysis a dataset':
                                 st.pyplot(fig)
                         else:
                             st.warning(f"At least two columns needed to show correlation.")
-                    # except Exception as e:
-                    #     st.error(f"Make sure the context dataset is in the right format. {e}")
+                    except Exception as e:
+                        st.error(f"Make sure the context dataset is in the right format. {e}")
                 else:
                     st.warning("The context file (context.csv) has not been uploaded.")
         # Behaviors tab:
@@ -1234,82 +1234,155 @@ elif general_option == 'Analysis a dataset':
                     else:
                         st.warning(f"No columns (without user_id) to show.")
                     if not item_df.empty:
-                        # Create a dictionary of colors and assign a unique color to each object_type
-                        unique_object_types = item_df['object_type'].unique()
-                        colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_object_types)))
-                        color_map = {object_type: color for object_type, color in zip(unique_object_types, colors)}
+                        try:
+                            # Create a dictionary of colors and assign a unique color to each object_type
+                            unique_object_types = item_df['object_type'].unique()
+                            colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_object_types)))
+                            color_map = {object_type: color for object_type, color in zip(unique_object_types, colors)}
 
-                        behavior_df['item_id'] = behavior_df['item_id'].astype(str)
-                        item_df['item_id'] = item_df['item_id'].astype(str)
-                        data = pd.merge(behavior_df, item_df, left_on='item_id', right_on='item_id', how='left')
-                        update_data = data[data['object_action'] == 'Update']
+                            behavior_df['item_id'] = behavior_df['item_id'].astype(str)
+                            item_df['item_id'] = item_df['item_id'].astype(str)
+                            data = pd.merge(behavior_df, item_df, left_on='item_id', right_on='item_id', how='left')
+                            update_data = data[data['object_action'] == 'Update']
 
-                        # Extract positions and convert them to a list of tuples
-                        update_data['user_position'] = update_data['user_position'].apply(lambda x: literal_eval(x) if x else None)
-                        update_data = update_data.dropna(subset=['user_position'])
-                        unique_user_ids = update_data['user_id'].unique()
+                            # Extract positions and convert them to a list of tuples
+                            update_data['user_position'] = update_data['user_position'].apply(lambda x: literal_eval(x) if x else None)
+                            update_data = update_data.dropna(subset=['user_position'])
+                            unique_user_ids = update_data['user_id'].unique()
 
-                        st.header('Virtual World Map')
-                        rooms_input = st.text_input('Introduce rooms as list of dictionaries:')
-                        if rooms_input:
-                            try:
-                                rooms = literal_eval(rooms_input)
-                                room_ids = [room['id'] for room in rooms]
-                                selected_rooms = st.multiselect('Seleccione las habitaciones:', options=room_ids)
-                                selected_users = st.multiselect('Seleccione los usuarios:', options=unique_user_ids)
-                                selected_data = st.selectbox('Seleccione los datos a visualizar:', options=['Solo Items', 'Solo Usuarios', 'Items y Usuarios'])
-                            except Exception as e:
-                                st.error(f"Error al parsear las habitaciones: {e}")
+                            st.header('Virtual World Map')
+                            rooms_input = st.text_input('Introduce rooms as list of dictionaries:')
+                            if rooms_input:
+                                try:
+                                    # rooms = literal_eval(rooms_input)
+                                    # room_ids = [room['id'] for room in rooms]
+                                    # selected_rooms = st.multiselect('Select rooms to plot:', options=room_ids)
+                                    # selected_users = st.multiselect('Select users to plot:', options=unique_user_ids)
+                                    # selected_data = st.selectbox('Select data to plot:', options=['Items and Users', 'Only Items', 'Only Users', ])
 
-                            if st.button('Show Map'):
-                                plt.figure(figsize=(10, 10))
+                                    # if st.button('Show Map'):
+                                    #     plt.figure(figsize=(10, 10))
 
-                                # Draw the object_types and save the references for the legend
-                                markers = []
-                                labels = []
-                                for user_id in selected_users:
-                                    user_data = update_data[update_data['user_id'] == user_id]
+                                    #     # Draw the object_types and save the references for the legend
+                                    #     markers = []
+                                    #     labels = []
+                                    #     for user_id in selected_users:
+                                    #         user_data = update_data[update_data['user_id'] == user_id]
 
-                                    if len(user_data) > 1:
-                                        for room in rooms:
-                                            if room['id'] in selected_rooms:
-                                                plt.gca().add_patch(plt.Rectangle((room['x_min'], room['z_min']), room['x_max'] - room['x_min'], room['z_max'] - room['z_min'], fill=None, edgecolor='black', linestyle='--'))
-                                                plt.text(room['x_min'] + (room['x_max'] - room['x_min']) / 2, room['z_min'] + (room['z_max'] - room['z_min']) / 2, f"ID: {room['id']}", fontsize=12, ha='center', va='center')
+                                    #         if len(user_data) > 1:
+                                    #             for room in rooms:
+                                    #                 if room['id'] in selected_rooms:
+                                    #                     plt.gca().add_patch(plt.Rectangle((room['x_min'], room['z_min']), room['x_max'] - room['x_min'], room['z_max'] - room['z_min'], fill=None, edgecolor='black', linestyle='--'))
+                                    #                     plt.text(room['x_min'] + (room['x_max'] - room['x_min']) / 2, room['z_min'] + (room['z_max'] - room['z_min']) / 2, f"ID: {room['id']}", fontsize=12, ha='center', va='center')
 
-                                        if selected_data in ['Solo Items', 'Items y Usuarios']:
-                                            for index, row in item_df.iterrows():
-                                                pos = literal_eval(row['object_position'])
-                                                marker = plt.scatter(pos[0], pos[2], marker='s', color=color_map[row['object_type']])
-                                                
-                                                if row['object_type'] not in labels:
-                                                    markers.append(marker)
-                                                    labels.append(row['object_type'])
+                                    #             if selected_data in ['Only Items', 'Items and Users']:
+                                    #                 for index, row in item_df.iterrows():
+                                    #                     pos = literal_eval(row['object_position'])
+                                    #                     marker = plt.scatter(pos[0], pos[2], marker='s', color=color_map[row['object_type']])
+                                                        
+                                    #                     if row['object_type'] not in labels:
+                                    #                         markers.append(marker)
+                                    #                         labels.append(row['object_type'])
 
-                                        if selected_data in ['Solo Usuarios', 'Items y Usuarios']:
-                                            positions = list(user_data['user_position'])
-                                            timestamps = list(user_data['timestamp'])
-                                            x_coords = list(pos[0] for pos in positions)
-                                            z_coords = list(pos[2] for pos in positions)
-                                            plt.plot(x_coords, z_coords, label=f'User {user_id}', linestyle='--', marker='o')
+                                    #             if selected_data in ['Only Users', 'Items and Users']:
+                                    #                 positions = list(user_data['user_position'])
+                                    #                 timestamps = list(user_data['timestamp'])
+                                    #                 x_coords = list(pos[0] for pos in positions)
+                                    #                 z_coords = list(pos[2] for pos in positions)
+                                    #                 plt.plot(x_coords, z_coords, label=f'User {user_id}', linestyle='--', marker='o')
 
-                                            st.write(f"Timestamps para el usuario {user_id}:")
-                                            for i, time in enumerate(timestamps):
-                                                st.write(f"{i+1}: {time}")
+                                    #                 st.write(f"Timestamps para el usuario {user_id}:")
+                                    #                 for i, time in enumerate(timestamps):
+                                    #                     st.write(f"{i+1}: {time}")
 
-                                plt.title("Virtual world map")
-                                plt.xlabel('X')
-                                plt.ylabel('Z')
+                                    #     plt.title("Virtual world map")
+                                    #     plt.xlabel('X')
+                                    #     plt.ylabel('Z')
 
-                                # Adjust the limits of the graph according to the selected rooms
-                                x_mins, x_maxs = zip(*[(room['x_min'], room['x_max']) for room in rooms if room['id'] in selected_rooms])
-                                z_mins, z_maxs = zip(*[(room['z_min'], room['z_max']) for room in rooms if room['id'] in selected_rooms])
-                                plt.xlim(min(x_mins), max(x_maxs))
-                                plt.ylim(min(z_mins), max(z_maxs))
+                                    #     # Adjust the limits of the graph according to the selected rooms
+                                    #     x_mins, x_maxs = zip(*[(room['x_min'], room['x_max']) for room in rooms if room['id'] in selected_rooms])
+                                    #     z_mins, z_maxs = zip(*[(room['z_min'], room['z_max']) for room in rooms if room['id'] in selected_rooms])
+                                    #     plt.xlim(min(x_mins), max(x_maxs))
+                                    #     plt.ylim(min(z_mins), max(z_maxs))
 
-                                plt.legend(handles=markers+plt.gca().get_legend_handles_labels()[0], labels=labels+plt.gca().get_legend_handles_labels()[1])
-                                plt.grid(True)
-                                st.pyplot(plt.gcf())
-                                plt.clf()
+                                    #     plt.legend(handles=markers+plt.gca().get_legend_handles_labels()[0], labels=labels+plt.gca().get_legend_handles_labels()[1])
+                                    #     plt.grid(True)
+                                    #     st.pyplot(plt.gcf())
+                                    #     plt.clf()
+                                    rooms = literal_eval(rooms_input)
+                                    room_ids = [room['id'] for room in rooms]
+                                    selected_rooms = st.multiselect('Select rooms to plot:', options=room_ids)
+                                    selected_users = st.multiselect('Select users to plot:', options=unique_user_ids)
+                                    selected_data = st.selectbox('Select data to plot:', options=['Items and Users', 'Only Items', 'Only Users', ])
+
+                                    if st.button('Show Map'):
+                                        plt.figure(figsize=(10, 10))
+
+                                        # Draw the object_types and save the references for the legend
+                                        markers = []
+                                        labels = []
+                                        for user_id in selected_users:
+                                            user_data = update_data[update_data['user_id'] == user_id]
+
+                                            # Convert the 'timestamp' column to a numeric Unix timestamp
+                                            user_data['timestamp'] = pd.to_datetime(user_data['timestamp'])
+                                            user_data['timestamp'] = user_data['timestamp'].apply(lambda x: pd.Timestamp(x).timestamp())
+
+                                            # Group the data by session
+                                            sessions = defaultdict(list)
+                                            for _, row in user_data.iterrows():
+                                                user_id = row['user_id']
+                                                timestamp = row['timestamp']
+                                                session_id = np.argmin([abs(r['timestamp'] - timestamp) for _, r in user_data.iterrows() if r['user_id'] == user_id])
+                                                session_timestamp = np.mean([r['timestamp'] for _, r in user_data.iterrows() if r['user_id'] == user_id and np.argmin([abs(r2['timestamp'] - r['timestamp']) for _, r2 in user_data.iterrows() if r2['user_id'] == user_id]) == session_id])
+                                                sessions[(user_id, session_timestamp)].append(row.to_dict())
+
+                                            for (user_id, session_timestamp), session_data in sessions.items():
+                                                if len(session_data) > 1:
+                                                    for room in rooms:
+                                                        if room['id'] in selected_rooms:
+                                                            plt.gca().add_patch(plt.Rectangle((room['x_min'], room['z_min']), room['x_max'] - room['x_min'], room['z_max'] - room['z_min'], fill=None, edgecolor='black', linestyle='--'))
+                                                            plt.text(room['x_min'] + (room['x_max'] - room['x_min']) / 2, room['z_min'] + (room['z_max'] - room['z_min']) / 2, f"ID: {room['id']}", fontsize=12, ha='center', va='center')
+
+                                                    if selected_data in ['Only Items', 'Items and Users']:
+                                                        for index, row in item_df.iterrows():
+                                                            pos = literal_eval(row['object_position'])
+                                                            marker = plt.scatter(pos[0], pos[2], marker='s', color=color_map[row['object_type']])
+                                                            
+                                                            if row['object_type'] not in labels:
+                                                                markers.append(marker)
+                                                                labels.append(row['object_type'])
+
+                                                    if selected_data in ['Only Users', 'Items and Users']:
+                                                        positions = [d['user_position'] for d in session_data]
+                                                        timestamps = [d['timestamp'] for d in session_data]
+                                                        x_coords = list(pos[0] for pos in positions)
+                                                        z_coords = list(pos[2] for pos in positions)
+                                                        plt.plot(x_coords, z_coords, label=f'User {user_id}, Session {session_timestamp}', linestyle='--', marker='o')
+
+                                                        # Print the timestamps for the session
+                                                        st.write(f"Timestamps for User {user_id}, Session {session_timestamp}:")
+                                                        for i, time in enumerate(timestamps):
+                                                            st.write(f"Step {i+1}: {time}")
+
+                                        plt.title("Virtual world map")
+                                        plt.xlabel('X')
+                                        plt.ylabel('Z')
+
+                                        # Adjust the limits of the graph according to the selected rooms
+                                        x_mins, x_maxs = zip(*[(room['x_min'], room['x_max']) for room in rooms if room['id'] in selected_rooms])
+                                        z_mins, z_maxs = zip(*[(room['z_min'], room['z_max']) for room in rooms if room['id'] in selected_rooms])
+                                        plt.xlim(min(x_mins), max(x_maxs))
+                                        plt.ylim(min(z_mins), max(z_maxs))
+
+                                        plt.legend(handles=markers+plt.gca().get_legend_handles_labels()[0], labels=labels+plt.gca().get_legend_handles_labels()[1])
+                                        plt.grid(True)
+                                        st.pyplot(plt.gcf())
+                                        plt.clf()
+                                except Exception as e:
+                                    st.error(f"Error parsing the rooms: {e}. Make sure the format is correct.")
+                        except Exception as e:
+                            st.error(f"Make sure the behavior dataset is in the right format. {e}")
         # Ratings tab:
         with rating_tab:
             if not rating_df.empty:
@@ -1475,7 +1548,7 @@ elif general_option == 'Analysis a dataset':
                     rating_statistics_dict['variance'] = [variance_ratings]                  
                     rating_statistics_dict['standard deviation'] = [sd_ratings]      
                     rating_statistics_df = pd.DataFrame(rating_statistics_dict)
-                    st.dataframe(rating_statistics_df)                  
+                    st.dataframe(rating_statistics_df)
                 except Exception as e:
                     st.error(f"Make sure the rating dataset is in the right format. {e}")
             else:
@@ -1621,8 +1694,6 @@ elif general_option == 'Analysis a dataset':
                             metrics = st.sidebar.multiselect("Select one or more cross validation binary metrics", ["Precision", "Recall", "F1_Score", "AUC_ROC"], default="Precision")
                         else:
                             metrics = st.sidebar.multiselect("Select one or more cross validation non-binary metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
-                        # min_social_distance = st.sidebar.number_input("Minimum social distance", min_value=0, max_value=100, value=2, step=1)
-                        # k_recommendations = st.sidebar.number_input("Number of recommendations", min_value=1, max_value=100, value=3, step=1)
                         # EVALUATION:
                         if st.sidebar.button("Evaluate"):
                             fold_results_df = util.evaluate_algo(algo_list, strategy_instance, metrics, data)
