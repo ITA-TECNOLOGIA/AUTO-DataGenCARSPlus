@@ -602,16 +602,15 @@ elif general_option == 'Pre-process a dataset':
         new_item_df = pd.DataFrame()
         new_context_df = pd.DataFrame()        
         with tab_replace_null_values:
-            null_values_c, null_values_i = util.tab_logic_replace_null(with_context, item_df, context_df)
+            null_values_c, null_values_i = util.tab_logic_replace_null('ReplicateDataset', with_context, item_df, context_df)
         # USER PROFILE TAB:
         user_profile_df = pd.DataFrame()
         with tab_generate_user_profile:
-            # Showing the current image of the WF:
-            workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
-            if with_context:                             
-                user_profile_df = util.generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df, context_df=new_context_df)                
-            else:
-                user_profile_df = util.generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df)                
+            optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if with_context:
+                user_profile_df = util.tab_logic_generate_up('ReplicateDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
+            else:    
+                user_profile_df = util.tab_logic_generate_up('ReplicateDataset', with_context, optional_value_list, rating_df, new_item_df)             
         # REPLICATE TAB:        
         with tab_replicate_dataset:
             # Showing the current image of the WF:
@@ -663,12 +662,21 @@ elif general_option == 'Pre-process a dataset':
         workflow_image.show_wf(wf_name='ExtendDataset', init_step=init_step, with_context=True, optional_value_list=[('NULLValues', 'True'), ('NULLValuesC', 'True'), ('NULLValuesI', 'True')])   
 
         # Options tab:
-        tab_replace_null_values, tab_generate_user_profile, tab_replicate_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Extend dataset'])     
+        tab_replace_null_values, tab_generate_user_profile, tab_extend_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Extend dataset'])     
         # REPLACE NULL VALUES TAB:
         new_item_df = pd.DataFrame()
         new_context_df = pd.DataFrame()        
         with tab_replace_null_values:
-            null_values_c, null_values_i = util.tab_logic_replace_null(with_context, item_df, context_df)
+            null_values_c, null_values_i = util.tab_logic_replace_null('ExtendDataset', with_context, item_df, context_df)
+        with tab_generate_user_profile:
+            optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if with_context:
+                user_profile_df = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
+            else:    
+                user_profile_df = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df) 
+        with tab_extend_dataset:
+            # Showing the current image of the WF:
+            workflow_image.show_wf(wf_name='ExtendDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
         st.write('TODO')
     elif is_preprocess == 'Recalculate ratings': 
         # Loading dataset:
@@ -703,7 +711,12 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_replace_nulls_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step=init_step, with_context=with_context)
+        workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="True", with_context="True", optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
+        tab_replace_null_values = st.tabs(['Replace NULL values'])
+        if file_selectibox == 'context':
+            workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(False))])
+        else:
+            workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(False)), ('NULLValuesI', str(True))])
         if not df.empty:
             if st.button(label='Replace NULL Values', key='button_replace_nulls'):
                 print('Replacing NULL Values')

@@ -632,7 +632,7 @@ def generate_up(generate_up):
 # Extend dataset:
 # Recalculate ratings:
 # Replace NULL values:
-def tab_logic_replace_null(with_context, item_df, context_df):
+def tab_logic_replace_null(wf_name, with_context, item_df, context_df):
     output = st.empty()  
     with console.st_log(output.code):
         null_values_c = True
@@ -641,7 +641,7 @@ def tab_logic_replace_null(with_context, item_df, context_df):
         null_values_i = st.checkbox("Do you want to replace the null values in item_file?", value=True)               
         if null_values_i or null_values_c:
             # Showing the current image of the WF:
-            workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
+            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
                             
             # Replacing NULL values in item or context file.
             if with_context:
@@ -701,11 +701,21 @@ def tab_logic_replace_null(with_context, item_df, context_df):
                 else:
                     st.warning("The item file has not been uploaded.")
         else:                    
-            workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])          
+            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])          
             new_item_df = item_df.copy()
             new_context_df = context_df.copy()
     
     return null_values_c, null_values_i
+
+def tab_logic_generate_up(wf_name, with_context, optional_value_list, rating_df, new_item_df, new_context_df=None):
+    # Showing the current image of the WF:
+    workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)
+    if with_context:                             
+        user_profile_df = generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df, context_df=new_context_df)                
+    else:
+        user_profile_df = generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df)   
+    
+    return user_profile_df
 
 def infer_schema(df):
     """
