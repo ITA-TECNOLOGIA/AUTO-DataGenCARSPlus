@@ -632,7 +632,7 @@ def generate_up(generate_up):
 # Extend dataset:
 # Recalculate ratings:
 # Replace NULL values:
-def tab_logic_replace_null(wf_name, with_context, item_df, context_df):
+def tab_logic_replace_null(wf_name, with_context, item_df, context_df, other_opts = None):
     output = st.empty()  
     with console.st_log(output.code):
         null_values_c = True
@@ -641,7 +641,10 @@ def tab_logic_replace_null(wf_name, with_context, item_df, context_df):
         null_values_i = st.checkbox("Do you want to replace the null values in item_file?", value=True)               
         if null_values_i or null_values_c:
             # Showing the current image of the WF:
-            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
+            optional_value_list = [('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if other_opts != None:
+                optional_value_list = optional_value_list + other_opts
+            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)
                             
             # Replacing NULL values in item or context file.
             if with_context:
@@ -700,8 +703,11 @@ def tab_logic_replace_null(wf_name, with_context, item_df, context_df):
                             st.warning(f'The item.csv file has no null values.')                                
                 else:
                     st.warning("The item file has not been uploaded.")
-        else:                    
-            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])          
+        else:   
+            optional_value_list = [('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if other_opts != None:
+                optional_value_list = optional_value_list + other_opts                 
+            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)          
             new_item_df = item_df.copy()
             new_context_df = context_df.copy()
     
