@@ -40,7 +40,6 @@ class RecommenderSIDELARS:
         except Exception as e:
             logging.error(e)
 
-    #TODO: Poner esta funcion fuera de la clase de Recommender
     def get_last_position_for_user(self, user_id):
         """
         Retrieves the latest position of the user based on behavior data.
@@ -84,24 +83,6 @@ class RecommenderSIDELARS:
         :param k_recommendations: The number of items to recommend to the user.
         :return: Top k candidate items to be recommended to users.
         """
-        # NO SÉ SI ES MEJOR EXTENDER LOS RESULTADOS DE TODOS LOS ALGORITMOS EN UNA SOLA LISTA O SOLAMENTE DE UN ALGORITMO
-        # # Parameter settings of the KNN algorithms.
-        # sim_options = {'user_based': True}  # compute similarities between users
-        # algorithms = [
-        #     KNNBasic(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        #     KNNWithMeans(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        #     KNNWithZScore(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        #     KNNBaseline(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options)
-        # ]
-
-        # all_predictions = []
-        # for algorithm in algorithms:
-        #     # Fitting the algorithm.
-        #     algorithm.fit(trainset)
-
-        #     # Predicting ratings for all pairs (u,i) that are NOT in the training set.
-        #     predictions = algorithm.test(testset)
-        #     all_predictions.extend(predictions)
 
         # Fitting the algorithm.
         algorithm.fit(trainset)
@@ -209,6 +190,7 @@ class RecommenderSIDELARS:
             if current_user_location is None:
                 continue  # skip this user if their location is not available
             recommended_item_list = []
+            explanation_items = []
             for item, rating in user_ratings:
                 # Item location:
                 df_item_current = self.df_item.loc[self.df_item['item_id'] == item]
@@ -226,8 +208,12 @@ class RecommenderSIDELARS:
                     recommended_item_dict['distance'] = distance
                     recommended_item_dict['room_id'] = room_id
                     recommended_item_list.append(recommended_item_dict)
+                    explanation_items.append(f"{object_type} {item} en la habitación {room_id}")
             sorted_recommended_item_list = sorted(recommended_item_list, key=lambda x: x['distance'])
-            recommendation_dict[uid] = sorted_recommended_item_list
+            explanation = "You might be interested in visiting:\n"
+            explanation += "\n".join([f"{idx + 1}. {item}" for idx, item in enumerate(explanation_items)])
+            explanation += "because many users similar to you have visited it.\n."
+            recommendation_dict[uid] = {"recommendations": sorted_recommended_item_list, "explanation": explanation}
         if apply_social_distancing:
             recommendation_dict = self.apply_social_distance(recommendation_dict, min_social_distance)
         return recommendation_dict
@@ -274,10 +260,10 @@ def default(o):
     return o.__dict__
 
 def main():
-    df_item = pd.read_csv(r'resources\data_schema_imascono\item.csv')
-    df_context = pd.read_csv(r'resources\data_schema_imascono\context.csv')
-    df_rating = pd.read_csv(r'resources\data_schema_imascono\rating.csv')
-    df_behavior = pd.read_csv(r'resources\data_schema_imascono\behavior.csv')
+    df_item = pd.read_csv(r'resources\dataset_imascono\item.csv')
+    df_context = pd.read_csv(r'resources\dataset_imascono\context.csv')
+    df_rating = pd.read_csv(r'resources\dataset_imascono\rating.csv')
+    df_behavior = pd.read_csv(r'resources\dataset_imascono\behavior.csv')
     dataset = surprise_helpers.convert_to_surprise_dataset(df_rating)
     
     recommender = RecommenderSIDELARS(df_item, df_context, df_rating, df_behavior)
@@ -288,9 +274,9 @@ def main():
     sim_options = {'user_based': True}  # Compute similarities between users
     algorithms = [
         KNNBasic(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        KNNWithMeans(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        KNNWithZScore(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
-        KNNBaseline(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options)
+        # KNNWithMeans(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
+        # KNNWithZScore(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options),
+        # KNNBaseline(k=k_max_neighbours, min_k=k_min_neighbours, sim_options=sim_options)
     ]
 
     for algorithm in algorithms:

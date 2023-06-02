@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
+from collections import defaultdict
 from ast import literal_eval
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
@@ -29,7 +30,6 @@ from datagencars.synthetic_dataset.rating_implicit import RatingImplicit
 from streamlit_app import util
 from streamlit_app import help_information
 from streamlit_app import workflow_image
-
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',
@@ -1003,53 +1003,64 @@ elif general_option == 'Analysis a dataset':
                 try:
                     # User dataframe:
                     st.header("User file")
-                    st.dataframe(user_df)                    
+                    st.dataframe(user_df)
                     # Extracted statistics:
                     extract_statistics_user = ExtractStatisticsUIC(user_df)
                     # Missing values:
                     st.header("Missing values")
                     missing_values2 = extract_statistics_user.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})                    
-                    st.table(missing_values2)                    
+                    st.table(missing_values2)
                     # Attributes, data types and value ranges:
                     st.header("Attributes, data types and value ranges")
                     table2 = extract_statistics_user.get_attributes_and_ranges()
                     st.table(pd.DataFrame(table2, columns=["Attribute name", "Data type", "Value ranges"]))
                     # Showing one figure by attribute:
                     st.header("Analysis by attribute")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        user_attribute_list = user_df.columns.tolist()
-                        user_attribute_list.remove('user_id')
-                        column2 = st.selectbox("Select an attribute", user_attribute_list, key='column2')
-                    with col2:
-                        sort2 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort2')
-                    data2 = extract_statistics_user.column_attributes_count(column2)
-                    util.plot_column_attributes_count(data2, column2, sort2)
+                    user_attribute_list = user_df.columns.tolist()
+                    user_attribute_list.remove('user_id')
+                    if len(user_attribute_list) > 0:
+                        col1, col2 = st.columns(2)
+                        with col1:
+
+                            column2 = st.selectbox("Select an attribute", user_attribute_list, key='column2')
+                        with col2:
+                            sort2 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort2')
+                        data2 = extract_statistics_user.column_attributes_count(column2)
+                        util.plot_column_attributes_count(data2, column2, sort2)
+                    else:
+                        st.warning(f"No columns (without user_id) to show.")
+
                     # Showing extracted statistics:
                     st.header("Extracted statistics")                    
                     st.write('Number total of users: ', extract_statistics_user.get_number_id())
-                    st.write('Analyzing possible values per attribute: ')
-                    number_possible_values_df = extract_statistics_user.get_number_possible_values_by_attribute()
-                    avg_possible_values_df = extract_statistics_user.get_avg_possible_values_by_attribute()
-                    sd_possible_values_df = extract_statistics_user.get_sd_possible_values_by_attribute()                                        
-                    extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
-                    # Insert the new column at index 0:
-                    label_column_list = ['count', 'average', 'standard deviation']                    
-                    extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
-                    if extracted_statistics_df.isnull().values.any():
-                        st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
-                    st.dataframe(extracted_statistics_df)                    
-                    # Showing more details:
-                    with st.expander('More details'):
-                        statistics = extract_statistics_user.statistics_by_attribute()
-                        util.print_statistics_by_attribute(statistics)          
+                    st.write('Analyzing possible values per attribute:')
+                    if len(user_attribute_list) > 0:
+                        number_possible_values_df = extract_statistics_user.get_number_possible_values_by_attribute()
+                        avg_possible_values_df = extract_statistics_user.get_avg_possible_values_by_attribute()
+                        sd_possible_values_df = extract_statistics_user.get_sd_possible_values_by_attribute()                                        
+                        extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
+                        # Insert the new column at index 0:
+                        label_column_list = ['count', 'average', 'standard deviation']                    
+                        extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
+                        if extracted_statistics_df.isnull().values.any():
+                            st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
+                        st.dataframe(extracted_statistics_df)                    
+                        # Showing more details:
+                        with st.expander('More details'):
+                            statistics = extract_statistics_user.statistics_by_attribute()
+                            util.print_statistics_by_attribute(statistics)
+                    else:
+                        st.warning(f"No columns (without user_id) to show.")
                     # Showing correlation between attributes:
                     st.header("Correlation between attributes")
-                    corr_matrix = util.correlation_matrix(df=user_df, label='user')                    
-                    if not corr_matrix.empty:                        
-                        fig, ax = plt.subplots(figsize=(10, 10))                    
-                        sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
-                        st.pyplot(fig)      
+                    if len(user_attribute_list) > 1:
+                        corr_matrix = util.correlation_matrix(df=user_df, label='user')                    
+                        if not corr_matrix.empty:                        
+                            fig, ax = plt.subplots(figsize=(10, 10))                    
+                            sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
+                            st.pyplot(fig)
+                    else:
+                        st.warning(f"At least two columns needed to show correlation.")
                 except Exception as e:
                     st.error(f"Make sure the user dataset is in the right format. {e}")
             else:
@@ -1073,40 +1084,49 @@ elif general_option == 'Analysis a dataset':
                     st.table(pd.DataFrame(table3, columns=["Attribute name", "Data type", "Value ranges"]))
                     # Showing one figure by attribute:
                     st.header("Analysis by attribute")
-                    col1, col2 = st.columns(2)
-                    with col1:                        
-                        item_attribute_list = item_df.columns.tolist()
-                        item_attribute_list.remove('item_id')
-                        column3 = st.selectbox("Select an attribute", item_attribute_list, key='column3')
-                    with col2:
-                        sort3 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort3')
-                    data3 = extract_statistics_item.column_attributes_count(column3)
-                    util.plot_column_attributes_count(data3, column3, sort3)
+                    item_attribute_list = item_df.columns.tolist()
+                    item_attribute_list.remove('item_id')
+                    if len(item_attribute_list) > 0:
+                        col1, col2 = st.columns(2)
+                        with col1:                        
+                            column3 = st.selectbox("Select an attribute", item_attribute_list, key='column3')
+                        with col2:
+                            sort3 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort3')
+                        data3 = extract_statistics_item.column_attributes_count(column3)
+                        util.plot_column_attributes_count(data3, column3, sort3)
+                    else:
+                        st.warning(f"No columns (without item_id) to show.")
                     # Showing extracted statistics:
-                    st.header("Extracted statistics")                    
+                    st.header("Extracted statistics")
                     st.write('Number total of items: ', extract_statistics_item.get_number_id())
-                    st.write('Analyzing possible values per attribute: ')
-                    number_possible_values_df = extract_statistics_item.get_number_possible_values_by_attribute()
-                    avg_possible_values_df = extract_statistics_item.get_avg_possible_values_by_attribute()
-                    sd_possible_values_df = extract_statistics_item.get_sd_possible_values_by_attribute()                                        
-                    extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
-                    # Insert the new column at index 0:
-                    label_column_list = ['count', 'average', 'standard deviation']                    
-                    extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
-                    if extracted_statistics_df.isnull().values.any():
-                        st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
-                    st.dataframe(extracted_statistics_df) 
-                    # Showing more details:
-                    with st.expander('More details'):                        
-                        statistics = extract_statistics_item.statistics_by_attribute()
-                        util.print_statistics_by_attribute(statistics)                        
+                    st.write('Analyzing possible values per attribute:')
+                    if len(item_attribute_list) > 0:
+                        number_possible_values_df = extract_statistics_item.get_number_possible_values_by_attribute()
+                        avg_possible_values_df = extract_statistics_item.get_avg_possible_values_by_attribute()
+                        sd_possible_values_df = extract_statistics_item.get_sd_possible_values_by_attribute()                                        
+                        extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
+                        # Insert the new column at index 0:
+                        label_column_list = ['count', 'average', 'standard deviation']                    
+                        extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
+                        if extracted_statistics_df.isnull().values.any():
+                            st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
+                        st.dataframe(extracted_statistics_df)
+                        # Showing more details:
+                        with st.expander('More details'):                        
+                            statistics = extract_statistics_item.statistics_by_attribute()
+                            util.print_statistics_by_attribute(statistics)
+                    else:
+                        st.warning(f"No columns (without item_id) to show.")
                     # Showing correlation between attributes:
                     st.header("Correlation between attributes")
-                    corr_matrix = util.correlation_matrix(df=item_df, label='item')
-                    if not corr_matrix.empty:                        
-                        fig, ax = plt.subplots(figsize=(10, 10))                    
-                        sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
-                        st.pyplot(fig)                        
+                    if len(item_attribute_list) > 1:
+                        corr_matrix = util.correlation_matrix(df=item_df, label='item')
+                        if not corr_matrix.empty:                        
+                            fig, ax = plt.subplots(figsize=(10, 10))                    
+                            sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
+                            st.pyplot(fig)
+                    else:
+                        st.warning(f"At least two columns needed to show correlation.")
                 except Exception as e:
                     st.error(f"Make sure the item dataset is in the right format. {e}")
             else:
@@ -1130,167 +1150,180 @@ elif general_option == 'Analysis a dataset':
                         table4 = extract_statistics_context.get_attributes_and_ranges()
                         st.table(pd.DataFrame(table4, columns=["Attribute name", "Data type", "Value ranges"]))
                         # Showing one figure by attribute:
-                        st.header("Analysis by attribute")                        
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            context_attribute_list = context_df.columns.tolist()
-                            context_attribute_list.remove('context_id')
-                            column4 = st.selectbox("Select an attribute", context_attribute_list, key='column4')
-                        with col2:
-                            sort4 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort4')
-                        data4 = extract_statistics_context.column_attributes_count(column4)
-                        util.plot_column_attributes_count(data4, column4, sort4)
+                        st.header("Analysis by attribute")
+                        context_attribute_list = context_df.columns.tolist()
+                        context_attribute_list.remove('context_id')
+                        if len(context_attribute_list) > 0:
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                column4 = st.selectbox("Select an attribute", context_attribute_list, key='column4')
+                            with col2:
+                                sort4 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort4')
+                            data4 = extract_statistics_context.column_attributes_count(column4)
+                            util.plot_column_attributes_count(data4, column4, sort4)
+                        else:
+                            st.warning(f"No columns (without context_id) to show.")
                         # Showing extracted statistics:
-                        st.header("Extracted statistics")                    
+                        st.header("Extracted statistics")
                         st.write('Number total of contexts: ', extract_statistics_context.get_number_id())
-                        st.write('Analyzing possible values per attribute: ')
-                        number_possible_values_df = extract_statistics_context.get_number_possible_values_by_attribute()
-                        avg_possible_values_df = extract_statistics_context.get_avg_possible_values_by_attribute()
-                        sd_possible_values_df = extract_statistics_context.get_sd_possible_values_by_attribute()                                        
-                        extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
-                        # Insert the new column at index 0:
-                        label_column_list = ['count', 'average', 'standard deviation']                    
-                        extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
-                        if extracted_statistics_df.isnull().values.any():
-                            st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
-                        st.dataframe(extracted_statistics_df)
-                        # Showing more details:
-                        with st.expander('More details'):
-                            statistics = extract_statistics_context.statistics_by_attribute()
-                            util.print_statistics_by_attribute(statistics)       
+                        st.write('Analyzing possible values per attribute:')
+                        if len(context_attribute_list) > 0:
+                            number_possible_values_df = extract_statistics_context.get_number_possible_values_by_attribute()
+                            avg_possible_values_df = extract_statistics_context.get_avg_possible_values_by_attribute()
+                            sd_possible_values_df = extract_statistics_context.get_sd_possible_values_by_attribute()                                        
+                            extracted_statistics_df = pd.concat([number_possible_values_df, avg_possible_values_df, sd_possible_values_df])                    
+                            # Insert the new column at index 0:
+                            label_column_list = ['count', 'average', 'standard deviation']                    
+                            extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
+                            if extracted_statistics_df.isnull().values.any():
+                                st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
+                            st.dataframe(extracted_statistics_df)
+                            # Showing more details:
+                            with st.expander('More details'):
+                                statistics = extract_statistics_context.statistics_by_attribute()
+                                util.print_statistics_by_attribute(statistics)
+                        else:
+                            st.warning(f"No columns (without context_id) to show.")
                         # Showing correlation between attributes:
                         st.header("Correlation between attributes")
-                        corr_matrix = util.correlation_matrix(df=context_df, label='context')
-                        if not corr_matrix.empty:                        
-                            fig, ax = plt.subplots(figsize=(10, 10))                    
-                            sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
-                            st.pyplot(fig)         
+                        if len(context_attribute_list) > 1:
+                            corr_matrix = util.correlation_matrix(df=context_df, label='context')
+                            if not corr_matrix.empty:                        
+                                fig, ax = plt.subplots(figsize=(10, 10))                    
+                                sns.heatmap(corr_matrix, vmin=-1, vmax=1, center=0, cmap='coolwarm', annot=True, fmt=".2f", ax=ax)
+                                st.pyplot(fig)
+                        else:
+                            st.warning(f"At least two columns needed to show correlation.")
                     except Exception as e:
                         st.error(f"Make sure the context dataset is in the right format. {e}")
                 else:
                     st.warning("The context file (context.csv) has not been uploaded.")
         # Behaviors tab:
-        with behavior_tab:
-            if not behavior_df.empty:
-                # Behavior dataframe:
-                st.header("Behavior file")          
-                st.dataframe(behavior_df)
-                # Extracted statistics:
-                extract_statistics_behavior = ExtractStatisticsUIC(behavior_df)
-                # Missing values:
-                st.header("Missing values")
-                missing_values5 = extract_statistics_behavior.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})
-                st.table(missing_values5)
-                # Attributes, data types and value ranges:
-                st.header("Attributes, data types and value ranges")
-                table5 = extract_statistics_behavior.get_attributes_and_ranges()
-                st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
-                # Showing one figure by attribute:
-                st.header("Analysis by attribute")
-                col1, col2 = st.columns(2)
-                with col1:
+        if with_context and feedback_option_radio == 'Implicit ratings':
+            with behavior_tab:
+                if not behavior_df.empty:
+                    # Behavior dataframe:
+                    st.header("Behavior file")          
+                    st.dataframe(behavior_df)
+                    # Extracted statistics:
+                    extract_statistics_behavior = ExtractStatisticsUIC(behavior_df)
+                    # Missing values:
+                    st.header("Missing values")
+                    missing_values5 = extract_statistics_behavior.count_missing_values(replace_values={"NULL":np.nan,-1:np.nan})
+                    st.table(missing_values5)
+                    # Attributes, data types and value ranges:
+                    st.header("Attributes, data types and value ranges")
+                    table5 = extract_statistics_behavior.get_attributes_and_ranges()
+                    st.table(pd.DataFrame(table5, columns=["Attribute name", "Data type", "Value ranges"]))
+                    # Showing one figure by attribute:
+                    st.header("Analysis by attribute")
                     behavior_attribute_list = behavior_df.columns.tolist()
                     behavior_attribute_list.remove('user_id')
-                    column5 = st.selectbox("Select an attribute", behavior_attribute_list, key='column5')
-                with col2:
-                    sort5 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort5')
-                data5 = extract_statistics_behavior.column_attributes_count(column5)
-                util.plot_column_attributes_count(data5, column5, sort5)
-            ############################
-                if not item_df.empty:
-                    # behavior_df = pd.read_csv(r'resources\data_schema_imascono\behavior.csv', parse_dates=['timestamp'])
+                    if len(behavior_attribute_list) > 0:
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            column5 = st.selectbox("Select an attribute", behavior_attribute_list, key='column5')
+                        with col2:
+                            sort5 = st.selectbox('Sort', ['none', 'asc', 'desc'], key='sort5')
+                        data5 = extract_statistics_behavior.column_attributes_count(column5)
+                        util.plot_column_attributes_count(data5, column5, sort5)
+                    else:
+                        st.warning(f"No columns (without user_id) to show.")
+                    if not item_df.empty:
+                        try:
+                            # Create a dictionary of colors and assign a unique color to each object_type
+                            unique_object_types = item_df['object_type'].unique()
+                            colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_object_types)))
+                            color_map = {object_type: color for object_type, color in zip(unique_object_types, colors)}
 
-                    # Crear un diccionario de colores y asignar un color único a cada object_type
-                    unique_object_types = item_df['object_type'].unique()
-                    colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_object_types)))
-                    color_map = {object_type: color for object_type, color in zip(unique_object_types, colors)}
+                            behavior_df['item_id'] = behavior_df['item_id'].astype(str)
+                            item_df['item_id'] = item_df['item_id'].astype(str)
+                            data = pd.merge(behavior_df, item_df, left_on='item_id', right_on='item_id', how='left')
+                            update_data = data[data['object_action'] == 'Update']
 
-                    behavior_df['item_id'] = behavior_df['item_id'].astype(str)
-                    item_df['item_id'] = item_df['item_id'].astype(str)
+                            # Extract positions and convert them to a list of tuples
+                            update_data['user_position'] = update_data['user_position'].apply(lambda x: literal_eval(x) if x else None)
+                            update_data = update_data.dropna(subset=['user_position'])
+                            unique_user_ids = update_data['user_id'].unique()
 
-                    # Combina los dos DataFrames en uno solo
-                    data = pd.merge(behavior_df, item_df, left_on='item_id', right_on='item_id', how='left')
+                            st.header('Virtual World Map')
+                            rooms_input = st.text_input('Introduce rooms as list of dictionaries:')
+                            if rooms_input:
+                                try:
+                                    rooms = literal_eval(rooms_input)
+                                    room_ids = [room['id'] for room in rooms]
+                                    selected_rooms = st.multiselect('Select rooms to plot:', options=room_ids)
+                                    selected_users = st.multiselect('Select users to plot:', options=unique_user_ids)
+                                    selected_data = st.selectbox('Select data to plot:', options=['Items and Users', 'Only Items', 'Only Users', ])
 
-                    # Filtrar filas donde object_action es igual a 'Update'
-                    update_data = data[data['object_action'] == 'Update']
+                                    if st.button('Show Map'):
+                                        plt.figure(figsize=(10, 10))
 
-                    # Extraer las posiciones y convertirlas en una lista de tuplas
-                    update_data['user_position'] = update_data['user_position'].apply(lambda x: literal_eval(x) if x else None)
+                                        # Draw the object_types and save the references for the legend
+                                        markers = []
+                                        labels = []
+                                        for user_id in selected_users:
+                                            user_data = update_data[update_data['user_id'] == user_id]
 
-                    # Eliminar filas sin información de posición
-                    update_data = update_data.dropna(subset=['user_position'])
+                                            # Convert the 'timestamp' column to a numeric Unix timestamp
+                                            user_data['timestamp'] = pd.to_datetime(user_data['timestamp'])
+                                            user_data['timestamp'] = user_data['timestamp'].apply(lambda x: pd.Timestamp(x).timestamp())
 
-                    # Obtener la lista de user_id únicos
-                    unique_user_ids = update_data['user_id'].unique()
+                                            # Group the data by session
+                                            sessions = defaultdict(list)
+                                            for _, row in user_data.iterrows():
+                                                user_id = row['user_id']
+                                                timestamp = row['timestamp']
+                                                session_id = np.argmin([abs(r['timestamp'] - timestamp) for _, r in user_data.iterrows() if r['user_id'] == user_id])
+                                                session_timestamp = np.mean([r['timestamp'] for _, r in user_data.iterrows() if r['user_id'] == user_id and np.argmin([abs(r2['timestamp'] - r['timestamp']) for _, r2 in user_data.iterrows() if r2['user_id'] == user_id]) == session_id])
+                                                sessions[(user_id, session_timestamp)].append(row.to_dict())
 
-                    # Sidebar
-                    st.header('Virtual World Map')
-                    # Entrada de texto para las habitaciones
-                    rooms_input = st.text_input('Introduce rooms as list of dictionaries:')
-                    try:
-                        rooms = literal_eval(rooms_input)
-                        room_ids = [room['id'] for room in rooms]
-                        selected_rooms = st.multiselect('Seleccione las habitaciones:', options=room_ids)
-                        selected_users = st.multiselect('Seleccione los usuarios:', options=unique_user_ids)
-                        selected_data = st.selectbox('Seleccione los datos a visualizar:', options=['Solo Items', 'Solo Usuarios', 'Items y Usuarios'])
-                    except Exception as e:
-                        st.error(f"Error al parsear las habitaciones: {e}")
+                                            for (user_id, session_timestamp), session_data in sessions.items():
+                                                if len(session_data) > 1:
+                                                    for room in rooms:
+                                                        if room['id'] in selected_rooms:
+                                                            plt.gca().add_patch(plt.Rectangle((room['x_min'], room['z_min']), room['x_max'] - room['x_min'], room['z_max'] - room['z_min'], fill=None, edgecolor='black', linestyle='--'))
+                                                            plt.text(room['x_min'] + (room['x_max'] - room['x_min']) / 2, room['z_min'] + (room['z_max'] - room['z_min']) / 2, f"ID: {room['id']}", fontsize=12, ha='center', va='center')
 
-                    if st.button('Show Map'):
-                        plt.figure(figsize=(10, 10))
+                                                    if selected_data in ['Only Items', 'Items and Users']:
+                                                        for index, row in item_df.iterrows():
+                                                            pos = literal_eval(row['object_position'])
+                                                            marker = plt.scatter(pos[0], pos[2], marker='s', color=color_map[row['object_type']])
+                                                            
+                                                            if row['object_type'] not in labels:
+                                                                markers.append(marker)
+                                                                labels.append(row['object_type'])
 
-                        # Dibujar los object_types y guardar las referencias para la leyenda
-                        markers = []
-                        labels = []
+                                                    if selected_data in ['Only Users', 'Items and Users']:
+                                                        positions = [d['user_position'] for d in session_data]
+                                                        timestamps = [d['timestamp'] for d in session_data]
+                                                        x_coords = list(pos[0] for pos in positions)
+                                                        z_coords = list(pos[2] for pos in positions)
+                                                        plt.plot(x_coords, z_coords, label=f'User {user_id}, Session {session_timestamp}', linestyle='--', marker='o')
 
-                        for user_id in selected_users:
-                            user_data = update_data[update_data['user_id'] == user_id]
+                                                        # Print the timestamps for the session
+                                                        st.write(f"Timestamps for User {user_id}, Session {session_timestamp}:")
+                                                        for i, time in enumerate(timestamps):
+                                                            st.write(f"Step {i+1}: {time}")
 
-                            if len(user_data) > 1:
-                                for room in rooms:
-                                    if room['id'] in selected_rooms:
-                                        plt.gca().add_patch(plt.Rectangle((room['x_min'], room['z_min']), room['x_max'] - room['x_min'], room['z_max'] - room['z_min'], fill=None, edgecolor='black', linestyle='--'))
-                                        plt.text(room['x_min'] + (room['x_max'] - room['x_min']) / 2, room['z_min'] + (room['z_max'] - room['z_min']) / 2, f"ID: {room['id']}", fontsize=12, ha='center', va='center')
+                                        plt.title("Virtual world map")
+                                        plt.xlabel('X')
+                                        plt.ylabel('Z')
 
-                                if selected_data in ['Solo Items', 'Items y Usuarios']:
-                                    for index, row in item_df.iterrows():
-                                        pos = literal_eval(row['object_position'])
-                                        marker = plt.scatter(pos[0], pos[2], marker='s', color=color_map[row['object_type']])
-                                        
-                                        # Añadir el marcador y la etiqueta solo si no están ya en la lista
-                                        if row['object_type'] not in labels:
-                                            markers.append(marker)
-                                            labels.append(row['object_type'])
+                                        # Adjust the limits of the graph according to the selected rooms
+                                        x_mins, x_maxs = zip(*[(room['x_min'], room['x_max']) for room in rooms if room['id'] in selected_rooms])
+                                        z_mins, z_maxs = zip(*[(room['z_min'], room['z_max']) for room in rooms if room['id'] in selected_rooms])
+                                        plt.xlim(min(x_mins), max(x_maxs))
+                                        plt.ylim(min(z_mins), max(z_maxs))
 
-                                if selected_data in ['Solo Usuarios', 'Items y Usuarios']:
-                                    positions = list(user_data['user_position'])
-                                    timestamps = list(user_data['timestamp'])
-                                    x_coords = list(pos[0] for pos in positions)
-                                    z_coords = list(pos[2] for pos in positions)
-                                    plt.plot(x_coords, z_coords, label=f'User {user_id}', linestyle='--', marker='o')
-
-                                    # Mostrar timestamp a continuación de la gráfica
-                                    st.write(f"Timestamps para el usuario {user_id}:")
-                                    for i, time in enumerate(timestamps):
-                                        st.write(f"{i+1}: {time}")
-
-                        # Configuración de la gráfica
-                        plt.title("Virtual world map")
-                        plt.xlabel('X')
-                        plt.ylabel('Z')
-
-                        # Ajustar los límites de la gráfica en función de las habitaciones seleccionadas
-                        x_mins, x_maxs = zip(*[(room['x_min'], room['x_max']) for room in rooms if room['id'] in selected_rooms])
-                        z_mins, z_maxs = zip(*[(room['z_min'], room['z_max']) for room in rooms if room['id'] in selected_rooms])
-                        plt.xlim(min(x_mins), max(x_maxs))
-                        plt.ylim(min(z_mins), max(z_maxs))
-
-                        # Añadir todos los marcadores a la leyenda
-                        plt.legend(handles=markers+plt.gca().get_legend_handles_labels()[0], labels=labels+plt.gca().get_legend_handles_labels()[1])
-                        plt.grid(True)
-
-                        st.pyplot(plt.gcf())
-                        plt.clf()
+                                        plt.legend(handles=markers+plt.gca().get_legend_handles_labels()[0], labels=labels+plt.gca().get_legend_handles_labels()[1])
+                                        plt.grid(True)
+                                        st.pyplot(plt.gcf())
+                                        plt.clf()
+                                except Exception as e:
+                                    st.error(f"Error parsing the rooms: {e}. Make sure the format is correct.")
+                        except Exception as e:
+                            st.error(f"Make sure the behavior dataset is in the right format. {e}")
         # Ratings tab:
         with rating_tab:
             if not rating_df.empty:
@@ -1456,7 +1489,7 @@ elif general_option == 'Analysis a dataset':
                     rating_statistics_dict['variance'] = [variance_ratings]                  
                     rating_statistics_dict['standard deviation'] = [sd_ratings]      
                     rating_statistics_df = pd.DataFrame(rating_statistics_dict)
-                    st.dataframe(rating_statistics_df)                  
+                    st.dataframe(rating_statistics_df)
                 except Exception as e:
                     st.error(f"Make sure the rating dataset is in the right format. {e}")
             else:
@@ -1602,8 +1635,6 @@ elif general_option == 'Analysis a dataset':
                             metrics = st.sidebar.multiselect("Select one or more cross validation binary metrics", ["Precision", "Recall", "F1_Score", "AUC_ROC"], default="Precision")
                         else:
                             metrics = st.sidebar.multiselect("Select one or more cross validation non-binary metrics", ["RMSE", "MSE", "MAE", "FCP", "Precision", "Recall", "F1_Score", "MAP", "NDCG"], default="MAE")
-                        # min_social_distance = st.sidebar.number_input("Minimum social distance", min_value=0, max_value=100, value=2, step=1)
-                        # k_recommendations = st.sidebar.number_input("Number of recommendations", min_value=1, max_value=100, value=3, step=1)
                         # EVALUATION:
                         if st.sidebar.button("Evaluate"):
                             fold_results_df = util.evaluate_algo(algo_list, strategy_instance, metrics, data)

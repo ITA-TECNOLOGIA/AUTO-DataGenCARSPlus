@@ -242,5 +242,8 @@ class GeneratorBehaviorFile(GeneratorFile):
 
         # Convert timestamps to the specified format
         self.file_df['timestamp'] = pd.to_datetime(self.file_df['timestamp'], unit='s').dt.strftime('%Y-%m-%d %H:%M:%S')
+
+        # Sort by user_id
+        self.file_df = self.file_df.sort_values('user_id')
         
         return self.file_df.copy()

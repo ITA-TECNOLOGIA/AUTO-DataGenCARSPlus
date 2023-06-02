@@ -15,8 +15,8 @@ class TestGeneratorItem(unittest.TestCase):
         generation_config_file_path = 'resources/data_schema_imascono/generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()  
-        # Item generator:        
-        self.__generator = GeneratorItemFile(generation_config, item_schema, item_profile=None)
+        # Item generator:
+        self.__generator = GeneratorItemFile(item_schema, generation_config, item_profile=None)
     
     def tearDown(self):
         del self.__generator
@@ -27,8 +27,8 @@ class TestGeneratorItem(unittest.TestCase):
         '''        
         item_file = self.__generator.generate_file(with_correlation=False)        
         logging.info(f'item_file: {item_file}')
-        item_file.to_csv('item.csv', index=False)
-        self.assertEqual(item_file.shape[0], 100)
+        item_file.to_csv('resources/data_schema_imascono/item.csv', index=False)
+        self.assertEqual(item_file.shape[0], 25)
 
     
 if __name__ == '__main__':
