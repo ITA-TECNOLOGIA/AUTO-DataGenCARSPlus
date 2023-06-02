@@ -10,7 +10,10 @@ import io
 import requests
 import config
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
+from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 import console
+import workflow_image
+
 
 
 ####### Generate a synthetic dataset ######
@@ -533,7 +536,7 @@ def generate_user_profile_automatic(rating_df, item_df, context_df=None):
         # Generate user profile, by using an original dataset:
         generate_up_dataset = None
         user_profile_df = pd.DataFrame()                    
-        if not context_df.empty:                     
+        if context_df is not None and not context_df.empty:                     
             # With context:            
             if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
                 if st.button(label='Generate', key='button_generate_up_cars'):
@@ -629,6 +632,97 @@ def generate_up(generate_up):
 # Extend dataset:
 # Recalculate ratings:
 # Replace NULL values:
+def tab_logic_replace_null(wf_name, with_context, item_df, context_df, other_opts = None):
+    output = st.empty()  
+    with console.st_log(output.code):
+        null_values_c = True
+        if with_context:
+            null_values_c = st.checkbox("Do you want to replace the null values in context_file?", value=True)   
+        null_values_i = st.checkbox("Do you want to replace the null values in item_file?", value=True)               
+        if null_values_i or null_values_c:
+            # Showing the current image of the WF:
+            optional_value_list = [('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if other_opts != None:
+                optional_value_list = optional_value_list + other_opts
+            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)
+                            
+            # Replacing NULL values in item or context file.
+            if with_context:
+                if (not item_df.empty) and (not context_df.empty):                                        
+                    if st.button(label='Replace', key='button_replace_item_context'):
+                        if null_values_i:
+                            # Check if item_df has NaN values:
+                            print(f'Checking if item.csv has NaN values.')
+                            if item_df.isnull().values.any():        
+                                print(f'Replacing NaN values.')
+                                replacenulls = ReplaceNullValues(item_df)
+                                schema = infer_schema(item_df)
+                                new_item_df = replacenulls.regenerate_item_file(schema) 
+                                print('The null values have been replaced.')
+                                with st.expander(label=f'Show replicated file: item.csv'):
+                                    st.dataframe(new_item_df)
+                                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
+                                    st.markdown(link_rating, unsafe_allow_html=True)
+                            else:
+                                st.write('new_item_df = item_df.copy()')
+                                new_item_df = item_df.copy()
+                                st.warning(f'The item.csv file has no null values.')
+                        elif null_values_c:
+                            # Check if context_df has NaN values:
+                            print(f'Checking if context.csv has NaN values')
+                            if context_df.isnull().values.any():
+                                replacenulls = ReplaceNullValues(context_df)
+                                schema = infer_schema(context_df)
+                                new_context_df = replacenulls.regenerate_item_file(schema) 
+                                print('The null values have been replaced.')
+                                with st.expander(label=f'Show replicated file: context.csv'):
+                                    st.dataframe(new_context_df)
+                                    link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_context_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download</a>'
+                                    st.markdown(link_rating, unsafe_allow_html=True)
+                            else:
+                                st.write('new_context_df = context_df.copy()')
+                                new_context_df = context_df.copy()                                        
+                                st.warning(f'The context.csv file has no null values.')                                        
+                else:
+                    st.warning("The item and context files have not been uploaded.")
+            else:
+                if not item_df.empty:                                        
+                    if st.button(label='Replace', key='button_replace_item'):
+                        # Check if item_df has NaN values:
+                        print(f'Checking if item.csv has NaN values')
+                        if item_df.isnull().values.any():
+                            print(f'Replacing NaN values.')
+                            new_item_df = pd.DataFrame() # TODO
+                            print('The null values have been replaced.')
+                            with st.expander(label=f'Show replicated file: item.csv'):
+                                st.dataframe(new_item_df)
+                                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
+                                st.markdown(link_rating, unsafe_allow_html=True)
+                        else:
+                            new_item_df = item_df.copy()
+                            st.warning(f'The item.csv file has no null values.')                                
+                else:
+                    st.warning("The item file has not been uploaded.")
+        else:   
+            optional_value_list = [('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if other_opts != None:
+                optional_value_list = optional_value_list + other_opts                 
+            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)          
+            new_item_df = item_df.copy()
+            new_context_df = context_df.copy()
+    
+    return null_values_c, null_values_i
+
+def tab_logic_generate_up(wf_name, with_context, optional_value_list, rating_df, new_item_df, new_context_df=None):
+    # Showing the current image of the WF:
+    workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)
+    if with_context:                             
+        user_profile_df = generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df, context_df=new_context_df)                
+    else:
+        user_profile_df = generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df)   
+    
+    return user_profile_df
+
 def infer_schema(df):
     """
     :param df: original dataset
@@ -902,7 +996,6 @@ def infer_schema(df):
       
         st.markdown("""---""")
         schema_str = schema_str + '\n'
-    print(schema_str)
     return schema_str
 
 # Generate user profile:

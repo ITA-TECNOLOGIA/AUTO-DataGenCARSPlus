@@ -584,7 +584,6 @@ elif general_option == 'Pre-process a dataset':
     st.header('Load dataset')        
     if is_preprocess == 'Replicate dataset':
         # Loading dataset:
-        init_step = 'True'
         if with_context:
             user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])            
         else:
@@ -595,7 +594,7 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_replicate_dataset_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='ReplicateDataset', init_step=init_step, with_context=with_context, optional_value_list=[('NULLValues', 'True')])
+        workflow_image.show_wf(wf_name='ReplicateDataset', init_step='True', with_context=True, optional_value_list=[('NULLValues', 'True'), ('NULLValuesC', 'True'), ('NULLValuesI', 'True')])
             
         # Options tab:
         tab_replace_null_values, tab_generate_user_profile, tab_replicate_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Replicate dataset'])
@@ -603,82 +602,19 @@ elif general_option == 'Pre-process a dataset':
         new_item_df = pd.DataFrame()
         new_context_df = pd.DataFrame()        
         with tab_replace_null_values:
-            output = st.empty()  
-            with console.st_log(output.code):
-                null_values = st.checkbox("Do you want to replace the null values?", value=True)                
-                if null_values:
-                    # Showing the current image of the WF:
-                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step=init_step, with_context=with_context, optional_value_list=[('NULLValues', null_values)])
-                                    
-                    # Replacing NULL values in item or context file.
-                    if with_context:
-                        if (not item_df.empty) and (not context_df.empty):                                        
-                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item', 'context'])
-                            if st.button(label='Replace', key='button_replace_item_context'):
-                                if file_type_selectbox == 'item':
-                                    # Check if item_df has NaN values:
-                                    print(f'Checking if {file_type_selectbox}.csv has NaN values.')
-                                    if item_df.isnull().values.any():        
-                                        print(f'Replacing NaN values.')
-                                        new_item_df = pd.DataFrame() # TODO BEA, including WF Replace NULLs values
-                                        print('The null values have been replaced.')
-                                        with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
-                                            st.dataframe(new_item_df)
-                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
-                                            st.markdown(link_rating, unsafe_allow_html=True)
-                                    else:
-                                        st.write('new_item_df = item_df.copy()')
-                                        new_item_df = item_df.copy()
-                                        st.warning(f'The {file_type_selectbox}.csv file has no null values.')
-                                elif file_type_selectbox == 'context':
-                                    # Check if context_df has NaN values:
-                                    print(f'Checking if {file_type_selectbox}.csv has NaN values')
-                                    if context_df.isnull().values.any():
-                                        print(f'Replacing NaN values.')
-                                        new_context_df = pd.DataFrame() # TODO BEA, including WF Replace NULLs values
-                                        print('The null values have been replaced.')
-                                        with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
-                                            st.dataframe(new_context_df)
-                                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_context_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
-                                            st.markdown(link_rating, unsafe_allow_html=True)
-                                    else:
-                                        st.write('new_context_df = context_df.copy()')
-                                        new_context_df = context_df.copy()                                        
-                                        st.warning(f'The {file_type_selectbox}.csv file has no null values.')                                        
-                        else:
-                            st.warning("The item and context files have not been uploaded.")
-                    else:
-                        if not item_df.empty:                                        
-                            file_type_selectbox = st.selectbox(label='Select a file type:', options=['item'])
-                            if st.button(label='Replace', key='button_replace_item'):
-                                # Check if item_df has NaN values:
-                                print(f'Checking if {file_type_selectbox}.csv has NaN values')
-                                if item_df.isnull().values.any():
-                                    print(f'Replacing NaN values.')
-                                    new_item_df = pd.DataFrame() # TODO
-                                    print('The null values have been replaced.')
-                                    with st.expander(label=f'Show replicated file: {file_type_selectbox}.csv'):
-                                        st.dataframe(new_item_df)
-                                        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="{file_type_selectbox}.csv">Download</a>'
-                                        st.markdown(link_rating, unsafe_allow_html=True)
-                                else:
-                                    new_item_df = item_df.copy()
-                                    st.warning(f'The {file_type_selectbox}.csv file has no null values.')                                
-                        else:
-                            st.warning("The item file has not been uploaded.")
-                else:                    
-                    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', null_values)])          
-                    new_item_df = item_df.copy()
-                    new_context_df = context_df.copy()
+            null_values_c, null_values_i = util.tab_logic_replace_null('ReplicateDataset', with_context, item_df, context_df)
         # USER PROFILE TAB:
         user_profile_df = pd.DataFrame()
         with tab_generate_user_profile:
-            if with_context:                             
-                user_profile_df = util.generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df, context_df=new_context_df)                
-            else:
-                user_profile_df = util.generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df)                
+            optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if with_context:
+                user_profile_df = util.tab_logic_generate_up('ReplicateDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
+            else:    
+                user_profile_df = util.tab_logic_generate_up('ReplicateDataset', with_context, optional_value_list, rating_df, new_item_df)             
         # REPLICATE TAB:        
         with tab_replicate_dataset:
+            # Showing the current image of the WF:
+            workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
             output = st.empty()
             with console.st_log(output.code):
                 percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
@@ -716,28 +652,60 @@ elif general_option == 'Pre-process a dataset':
     elif is_preprocess == 'Extend dataset':
         # Loading dataset:
         init_step = 'True'
-        _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
+        _, item_df, context_df, rating_df = util.load_dataset(file_type_list=['item', 'context', 'rating'])
         
         # WF --> Extend dataset:
         st.header('Apply workflow: Extend dataset')
         # Help information:
         help_information.help_extend_dataset_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='ExtendDataset', init_step=init_step, with_context=with_context)        
-        
+        workflow_image.show_wf(wf_name='ExtendDataset', init_step=init_step, with_context=True, optional_value_list=[('NULLValues', 'True'), ('NULLValuesC', 'True'), ('NULLValuesI', 'True')])   
+
+        # Options tab:
+        tab_replace_null_values, tab_generate_user_profile, tab_extend_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Extend dataset'])     
+        # REPLACE NULL VALUES TAB:
+        new_item_df = pd.DataFrame()
+        new_context_df = pd.DataFrame()        
+        with tab_replace_null_values:
+            null_values_c, null_values_i = util.tab_logic_replace_null('ExtendDataset', with_context, item_df, context_df)
+        with tab_generate_user_profile:
+            optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if with_context:
+                user_profile_df = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
+            else:    
+                user_profile_df = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df) 
+        with tab_extend_dataset:
+            # Showing the current image of the WF:
+            workflow_image.show_wf(wf_name='ExtendDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
         st.write('TODO')
     elif is_preprocess == 'Recalculate ratings': 
         # Loading dataset:
-        init_step = 'True'        
-        _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
+        init_step = 'True' 
+        _, item_df, context_df, rating_df = util.load_dataset(file_type_list=['item', 'context', 'rating'])
 
         # WF --> Recalculate ratings:
         st.header('Apply workflow: Recalculate ratings')
         # Help information:
         help_information.help_recalculate_ratings_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='RecalculateRatings', init_step=init_step, with_context=with_context)
+        workflow_image.show_wf(wf_name='RecalculateRatings', init_step='True', with_context=True, optional_value_list=[('NULLValues', str(True)), ('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
 
+        # Options tab:
+        tab_replace_null_values, tab_generate_user_profile, tab_extend_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Extend dataset'])     
+        # REPLACE NULL VALUES TAB:
+        new_item_df = pd.DataFrame()
+        new_context_df = pd.DataFrame()        
+        with tab_replace_null_values:
+            null_values_c, null_values_i = util.tab_logic_replace_null('RecalculateRatings', with_context, item_df, context_df)
+        with tab_generate_user_profile:
+            optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if with_context:
+                user_profile_df = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
+            else:    
+                user_profile_df = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df) 
+        with tab_extend_dataset:
+            # Showing the current image of the WF:
+            workflow_image.show_wf(wf_name='ExtendDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
         st.write('TODO')
     elif is_preprocess == 'Replace NULL values':
         if with_context:
@@ -759,7 +727,12 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_replace_nulls_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step=init_step, with_context=with_context)
+        workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="True", with_context="True", optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
+        tab_replace_null_values = st.tabs(['Replace NULL values'])
+        if file_selectibox == 'context':
+            workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(False))])
+        else:
+            workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(False)), ('NULLValuesI', str(True))])
         if not df.empty:
             if st.button(label='Replace NULL Values', key='button_replace_nulls'):
                 print('Replacing NULL Values')
@@ -785,76 +758,95 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_user_profile_wf()
         # Worflow image:
-        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step=init_step, with_context=with_context)
-               
+        optional_value_list = [('NULLValues', str(True)), ('NULLValuesC', str(True)), ('NULLValuesI', str(True)), ('UPManual', 'True'), ('UPAutomatic', 'True')]
+        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step=init_step, with_context=True, optional_value_list=optional_value_list)
+
         # Workflow:
         st.header('User profile')
         # Choosing user profile generation options (manual or automatic):
-        up_option = st.selectbox(label='Choose an option to generate the user profile:', options=['Manual', 'Automatic'])        
-        # Generating the user profile manually:
-        if up_option == 'Manual':  
-            # Help information:
-            help_information.help_user_profile_manual()                     
-            if with_context:           
-                if not item_df.empty and not context_df.empty:
-                    # Adding column "id":
-                    attribute_column_list = ['user_profile_id']  
-                    # Adding relevant item attribute columns:        
-                    item_access = AccessItem(item_df)
-                    item_attribute_name_list = item_access.get_item_attribute_list()                
-                    attribute_column_list.extend(item_attribute_name_list)   
-                    item_possible_value_map = {}     
-                    for item_attribute_name in item_attribute_name_list:
-                        item_possible_value_map[item_attribute_name] = item_access.get_item_possible_value_list_from_attributte(attribute_name=item_attribute_name)
-                    # Adding relevant context attribute columns:    
-                    context_access = AccessContext(context_df)
-                    context_attribute_name_list = context_access.get_context_attribute_list()                    
-                    attribute_column_list.extend(context_attribute_name_list)
-                    context_possible_value_map = {}
-                    for context_attribute_name in context_attribute_name_list:
-                        context_possible_value_map[context_attribute_name] = context_access.get_context_possible_value_list_from_attributte(attribute_name=context_attribute_name)
-                    # Adding column "other":
-                    attribute_column_list.extend(['other'])
-                    # Introducing the number of user profiles to generate:   
-                    number_user_profile = st.number_input(label='Number of user profiles', value=4)
-                    # Generate user profile manual (with context):              
-                    user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
-                else:
-                    st.warning("The item and context files have not been uploaded.")
-            else:              
-                if not item_df.empty:
-                    # Adding column "id":
-                    attribute_column_list = ['user_profile_id']  
-                    # Adding relevant item attribute columns:        
-                    item_access = AccessItem(item_df)
-                    item_attribute_name_list = item_access.get_item_attribute_list()                
-                    attribute_column_list.extend(item_attribute_name_list)   
-                    item_possible_value_map = {}     
-                    for item_attribute_name in item_attribute_name_list:
-                        item_possible_value_map[item_attribute_name] = item_access.get_item_possible_value_list_from_attributte(attribute_name=item_attribute_name)
-                    # Adding column "other":
-                    attribute_column_list.extend(['other'])
-                    # Introducing the number of user profiles to generate:   
-                    number_user_profile = st.number_input(label='Number of user profiles', value=4)
-                    # Generate user profile manual (not context):                 
-                    user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map)
-                else:
-                    st.warning("The item file has not been uploaded.")
-        elif up_option == 'Automatic':
-            # Help information:
-            help_information.help_user_profile_automatic()            
-            if with_context:
-                # Generate user profile automatic (with context):               
-                if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
-                    user_profile_df = util.generate_user_profile_automatic(rating_df, item_df, context_df)
-                else:
-                    st.warning("The item, context and rating files have not been uploaded.")
+        up_option = st.selectbox(label='Choose an option to generate the user profile:', options=['Manual', 'Automatic'])    
+        tab_replace_null_values, tab_generate_user_profile = st.tabs(['Replace NULL values', 'Generate user profile'])
+        # REPLACE NULL VALUES TAB:
+        new_item_df = pd.DataFrame()
+        new_context_df = pd.DataFrame()        
+        with tab_replace_null_values:
+            if up_option == 'Manual':
+                upauto = False
+                upmanual = True
             else:
-                # Generate user profile automatic (not context):                     
-                if (not item_df.empty) and (not rating_df.empty):
-                    user_profile_df = util.generate_user_profile_automatic(rating_df, item_df)                
+                upauto = True
+                upmanual = False
+            if with_context:
+                null_values_c, null_values_i = util.tab_logic_replace_null('GenerateUserProfile', with_context, item_df, context_df, [('UPAutomatic', str(upauto)), ('UPManual', str(upmanual))])
+            else:
+                _, null_values_i = util.tab_logic_replace_null('GenerateUserProfile', with_context, item_df, None, [('UPAutomatic', str(upauto)), ('UPManual', str(upmanual))])
+        # USER PROFILE TAB:
+        user_profile_df = pd.DataFrame()
+        with tab_generate_user_profile:
+            # Generating the user profile manually:
+            if up_option == 'Manual':  
+                # Help information:
+                help_information.help_user_profile_manual()                     
+                if with_context:           
+                    if not item_df.empty and not context_df.empty:
+                        # Adding column "id":
+                        attribute_column_list = ['user_profile_id']  
+                        # Adding relevant item attribute columns:        
+                        item_access = AccessItem(item_df)
+                        item_attribute_name_list = item_access.get_item_attribute_list()                
+                        attribute_column_list.extend(item_attribute_name_list)   
+                        item_possible_value_map = {}     
+                        for item_attribute_name in item_attribute_name_list:
+                            item_possible_value_map[item_attribute_name] = item_access.get_item_possible_value_list_from_attributte(attribute_name=item_attribute_name)
+                        # Adding relevant context attribute columns:    
+                        context_access = AccessContext(context_df)
+                        context_attribute_name_list = context_access.get_context_attribute_list()                    
+                        attribute_column_list.extend(context_attribute_name_list)
+                        context_possible_value_map = {}
+                        for context_attribute_name in context_attribute_name_list:
+                            context_possible_value_map[context_attribute_name] = context_access.get_context_possible_value_list_from_attributte(attribute_name=context_attribute_name)
+                        # Adding column "other":
+                        attribute_column_list.extend(['other'])
+                        # Introducing the number of user profiles to generate:   
+                        number_user_profile = st.number_input(label='Number of user profiles', value=4)
+                        # Generate user profile manual (with context):              
+                        user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
+                    else:
+                        st.warning("The item and context files have not been uploaded.")
+                else:              
+                    if not item_df.empty:
+                        # Adding column "id":
+                        attribute_column_list = ['user_profile_id']  
+                        # Adding relevant item attribute columns:        
+                        item_access = AccessItem(item_df)
+                        item_attribute_name_list = item_access.get_item_attribute_list()                
+                        attribute_column_list.extend(item_attribute_name_list)   
+                        item_possible_value_map = {}     
+                        for item_attribute_name in item_attribute_name_list:
+                            item_possible_value_map[item_attribute_name] = item_access.get_item_possible_value_list_from_attributte(attribute_name=item_attribute_name)
+                        # Adding column "other":
+                        attribute_column_list.extend(['other'])
+                        # Introducing the number of user profiles to generate:   
+                        number_user_profile = st.number_input(label='Number of user profiles', value=4)
+                        # Generate user profile manual (not context):                 
+                        user_profile_df = util.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map)
+                    else:
+                        st.warning("The item file has not been uploaded.")
+            elif up_option == 'Automatic':
+                # Help information:
+                help_information.help_user_profile_automatic()            
+                if with_context:
+                    # Generate user profile automatic (with context):               
+                    if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                        user_profile_df = util.generate_user_profile_automatic(rating_df, item_df, context_df)
+                    else:
+                        st.warning("The item, context and rating files have not been uploaded.")
                 else:
-                    st.warning("The item and rating files have not been uploaded.")
+                    # Generate user profile automatic (not context):                     
+                    if (not item_df.empty) and (not rating_df.empty):
+                        user_profile_df = util.generate_user_profile_automatic(rating_df, item_df)                
+                    else:
+                        st.warning("The item and rating files have not been uploaded.")
     elif is_preprocess == 'Ratings to binary':    
         # Loading dataset:    
         init_step = 'True'
@@ -870,7 +862,7 @@ elif general_option == 'Pre-process a dataset':
         if not rating_df.empty:            
             min_rating = rating_df['rating'].min()
             max_rating = rating_df['rating'].max()
-            threshold = st.number_input(f"Binary threshold (range from {min_rating} to {max_rating})", min_value=min_rating, max_value=max_rating, value=3)
+            threshold = st.number_input(f"Binary threshold (range from {min_rating} to {max_rating})", value=3)
             df_binary = util.ratings_to_binary(rating_df, threshold)
             st.write("Converted ratings:")
             st.dataframe(df_binary.head())
@@ -899,7 +891,7 @@ elif general_option == 'Pre-process a dataset':
         # Help information:
         help_information.help_mapping_categorization_wf()
         # Showing the initial image of the WF:
-        workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_value_list=[('Num2Cat', num2cat), ('file', file)])
+        workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=True, optional_value_list=[('Num2Cat', num2cat), ('file', file)])
          
         option = st.radio(options=['From numerical to categorical', 'From categorical to numerical'], label='Select an option')
         if not df.empty:
@@ -907,7 +899,7 @@ elif general_option == 'Pre-process a dataset':
                 # Showing the image of the WF:
                 init_step = 'False'
                 num2cat = 'True'
-                workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_values=[('Num2Cat', num2cat), ('file', file)])                
+                workflow_image.show_wf(wf_name='MappingCategorization', init_step=init_step, with_context=with_context, optional_value_list=[('Num2Cat', num2cat), ('file', file)])                
                 st.header("Category Encoding")
                 # Help information:
                 help_information.help_mapping_categorization_num2cat() 

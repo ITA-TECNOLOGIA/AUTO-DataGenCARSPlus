@@ -1,6 +1,6 @@
 {
     "python.envFile": "${workspaceFolder}/.env",
-    "python.defaultInterpreterPath": "/data/conda_envs/datagencars_env/bin/python",
+    "python.defaultInterpreterPath": "C:/Users/bfranco/Anaconda3/envs/datagencars/python",
     // "python.formatting.autopep8Path": "/data/conda_envs/pct_env/bin/autopep8",
     
     "terminal.integrated.env.linux": {
