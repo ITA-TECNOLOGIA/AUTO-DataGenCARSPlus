@@ -68,7 +68,7 @@ class ReplicateDataset:
         rating_list = [] 
         for user_id in range(1, self.rating_statistics.get_number_users()+1):
             user_profile_id = user_id     
-            # print('user_id: ', user_id)
+            print('user_id: ', user_id)
             # Items:            
             original_item_id_list = self.access_rating.get_item_id_list_from_user(user_id=user_id)
             avg_items_df = self.rating_statistics.get_avg_items_by_user()

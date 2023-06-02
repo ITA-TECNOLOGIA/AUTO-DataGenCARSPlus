@@ -76,6 +76,7 @@ class GeneratorExplicitRatingFile:
             context_id_list = self.context_df['context_id'].unique().tolist()
         # Getting the number of ratings:
         number_ratings = self.access_generation_config.get_number_rating()
+        print(f'Total of ratings to generate: {number_ratings}')
         # Determinig the number of rating by user:
         number_rating_by_user = int(number_ratings/number_user)
 
