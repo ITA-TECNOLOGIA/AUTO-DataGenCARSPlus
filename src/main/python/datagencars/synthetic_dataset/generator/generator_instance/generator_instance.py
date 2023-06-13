@@ -50,5 +50,7 @@ class GeneratorInstance():
                     elif generator_type == 'DeviceGenerator':
                         attribute_generator = GeneratorDevice(self.schema_access)
                     _, attribute_value = attribute_generator.generate_attribute_value(position)
+            else:
+                attribute_value = instance[position]
             attribute_list.append(attribute_value)
         return attribute_list

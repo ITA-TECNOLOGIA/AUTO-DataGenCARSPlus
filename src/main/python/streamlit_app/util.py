@@ -11,6 +11,7 @@ import requests
 import config
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
+from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 import console
 import workflow_image
 
@@ -629,10 +630,41 @@ def generate_up(generate_up):
         st.markdown(link_rating, unsafe_allow_html=True) 
     return user_profile_df
 
+def replicate_task(with_context, rating_df, user_profile_df, new_item_df, new_context_df,percentage_rating_variation, st):
+    if with_context:      
+        st.write(new_item_df)
+        st.write(new_context_df)
+        st.write(rating_df)
+        st.write(user_profile_df)
+        print('Extracting statistics.')
+        print('Replicating the rating.csv file.')                                
+        replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df, new_context_df)
+        new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
+        with st.expander(label='Show the replicated file: rating.csv'):
+            st.dataframe(new_rating_df)
+            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
+            st.markdown(link_rating, unsafe_allow_html=True) 
+        print('Replicated data generation has finished.')
+        
+    else:            
+        # Without context:                    
+        st.write(new_item_df)                            
+        st.write(rating_df)
+        st.write(user_profile_df) 
+        print('Extracting statistics.')
+        print('Replicating the rating.csv file.')
+        replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df)
+        new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
+        with st.expander(label='Show the replicated file: rating.csv'):
+            st.dataframe(new_rating_df)
+            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
+            st.markdown(link_rating, unsafe_allow_html=True)
+        print('Replicated data generation has finished.')  
+
 # Extend dataset:
 # Recalculate ratings:
 # Replace NULL values:
-def tab_logic_replace_null(wf_name, with_context, item_df, context_df, other_opts = None):
+def tab_logic_replace_null(wf_name, with_context, item_df, context_df=None, other_opts = None):
     output = st.empty()  
     with console.st_log(output.code):
         null_values_c = True
@@ -645,7 +677,8 @@ def tab_logic_replace_null(wf_name, with_context, item_df, context_df, other_opt
             if other_opts != None:
                 optional_value_list = optional_value_list + other_opts
             workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)
-                            
+            new_item_df = pd.DataFrame()
+            new_context_df = pd.DataFrame()                      
             # Replacing NULL values in item or context file.
             if with_context:
                 if (not item_df.empty) and (not context_df.empty):                                        
@@ -667,7 +700,7 @@ def tab_logic_replace_null(wf_name, with_context, item_df, context_df, other_opt
                                 st.write('new_item_df = item_df.copy()')
                                 new_item_df = item_df.copy()
                                 st.warning(f'The item.csv file has no null values.')
-                        elif null_values_c:
+                        if null_values_c:
                             # Check if context_df has NaN values:
                             print(f'Checking if context.csv has NaN values')
                             if context_df.isnull().values.any():
@@ -711,7 +744,7 @@ def tab_logic_replace_null(wf_name, with_context, item_df, context_df, other_opt
             new_item_df = item_df.copy()
             new_context_df = context_df.copy()
     
-    return null_values_c, null_values_i
+    return null_values_c, null_values_i, new_item_df, new_context_df
 
 def tab_logic_generate_up(wf_name, with_context, optional_value_list, rating_df, new_item_df, new_context_df=None):
     # Showing the current image of the WF:

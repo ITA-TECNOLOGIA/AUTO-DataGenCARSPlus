@@ -23,6 +23,7 @@ from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_s
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
 from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
+from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from datagencars.synthetic_dataset.rating_implicit import RatingImplicit
@@ -603,13 +604,21 @@ elif general_option == 'Pre-process a dataset':
         tab_replace_null_values, tab_generate_user_profile, tab_replicate_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Replicate dataset'])
         # REPLACE NULL VALUES TAB:
         new_item_df = pd.DataFrame()
-        new_context_df = pd.DataFrame()        
+        new_context_df = pd.DataFrame()     
         with tab_replace_null_values:
-            null_values_c, null_values_i = util.tab_logic_replace_null('ReplicateDataset', with_context, item_df, context_df)
+            if with_context:
+                null_values_c, null_values_i, new_item_df, new_context_df = util.tab_logic_replace_null('ReplicateDataset', with_context, item_df, context_df)
+            else:
+                _, null_values_i, new_item_df, _ = util.tab_logic_replace_null('ReplicateDataset', with_context, item_df)
+                null_values_c = False
         # USER PROFILE TAB:
-        user_profile_df = pd.DataFrame()
         with tab_generate_user_profile:
+            #user_profile_df = pd.DataFrame()   
             optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if not null_values_i:
+                new_item_df = item_df
+            if not null_values_c and with_context:
+                new_context_df = context_df
             if with_context:
                 user_profile_df = util.tab_logic_generate_up('ReplicateDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
             else:    
@@ -618,40 +627,10 @@ elif general_option == 'Pre-process a dataset':
         with tab_replicate_dataset:
             # Showing the current image of the WF:
             workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
-            output = st.empty()
-            with console.st_log(output.code):
-                percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
-                if with_context:                   
-                    # With context:                                            
-                    if st.button(label='Replicate', key='button_replicate_cars'):
-                        st.write(item_df)
-                        st.write(context_df)
-                        st.write(rating_df)
-                        st.write(user_profile_df)
-                        print('Extracting statistics.')
-                        print('Replicating the rating.csv file.')                                
-                        replicate_cars = ReplicateDataset(rating_df,  user_profile_df, new_item_df, new_context_df)
-                        new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
-                        with st.expander(label='Show the replicated file: rating.csv'):
-                            st.dataframe(new_rating_df)
-                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
-                            st.markdown(link_rating, unsafe_allow_html=True) 
-                        print('Replicated data generation has finished.')
-                else:            
-                    # Without context:                    
-                    if st.button(label='Replicate', key='button_replicate_rs'):                        
-                        st.write(item_df)                            
-                        st.write(rating_df)
-                        st.write(user_profile_df) 
-                        print('Extracting statistics.')
-                        print('Replicating the rating.csv file.')
-                        replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df)
-                        new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
-                        with st.expander(label='Show the replicated file: rating.csv'):
-                            st.dataframe(new_rating_df)
-                            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
-                            st.markdown(link_rating, unsafe_allow_html=True)
-                        print('Replicated data generation has finished.')                  
+            percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+            output = st.empty() 
+            with console.st_log(output.code):      
+                replicate_button = st.button(label='Replicate', key = 'replicate_cars', on_click=util.replicate_task, args=(with_context, rating_df, user_profile_df, new_item_df, new_context_df,percentage_rating_variation, st))   
     elif is_preprocess == 'Extend dataset':
         # Loading dataset:
         init_step = 'True'
@@ -670,7 +649,7 @@ elif general_option == 'Pre-process a dataset':
         new_item_df = pd.DataFrame()
         new_context_df = pd.DataFrame()        
         with tab_replace_null_values:
-            null_values_c, null_values_i = util.tab_logic_replace_null('ExtendDataset', with_context, item_df, context_df)
+            null_values_c, null_values_i, new_item_df, new_context_df = util.tab_logic_replace_null('ExtendDataset', with_context, item_df, context_df)
         with tab_generate_user_profile:
             optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
             if with_context:
@@ -699,7 +678,7 @@ elif general_option == 'Pre-process a dataset':
         new_item_df = pd.DataFrame()
         new_context_df = pd.DataFrame()        
         with tab_replace_null_values:
-            null_values_c, null_values_i = util.tab_logic_replace_null('RecalculateRatings', with_context, item_df, context_df)
+            null_values_c, null_values_i, new_item_df, new_context_df = util.tab_logic_replace_null('RecalculateRatings', with_context, item_df, context_df)
         with tab_generate_user_profile:
             optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
             if with_context:
@@ -780,9 +759,9 @@ elif general_option == 'Pre-process a dataset':
                 upauto = True
                 upmanual = False
             if with_context:
-                null_values_c, null_values_i = util.tab_logic_replace_null('GenerateUserProfile', with_context, item_df, context_df, [('UPAutomatic', str(upauto)), ('UPManual', str(upmanual))])
+                null_values_c, null_values_i, new_item_df, new_context_df = util.tab_logic_replace_null('GenerateUserProfile', with_context, item_df, context_df, [('UPAutomatic', str(upauto)), ('UPManual', str(upmanual))])
             else:
-                _, null_values_i = util.tab_logic_replace_null('GenerateUserProfile', with_context, item_df, None, [('UPAutomatic', str(upauto)), ('UPManual', str(upmanual))])
+                _, null_values_i, new_item_df, _ = util.tab_logic_replace_null('GenerateUserProfile', with_context, item_df, None, [('UPAutomatic', str(upauto)), ('UPManual', str(upmanual))])
         # USER PROFILE TAB:
         user_profile_df = pd.DataFrame()
         with tab_generate_user_profile:
