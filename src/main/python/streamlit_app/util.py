@@ -630,36 +630,29 @@ def generate_up(generate_up):
         st.markdown(link_rating, unsafe_allow_html=True) 
     return user_profile_df
 
-def replicate_task(with_context, rating_df, user_profile_df, new_item_df, new_context_df,percentage_rating_variation, st):
-    if with_context:      
-        st.write(new_item_df)
-        st.write(new_context_df)
-        st.write(rating_df)
-        st.write(user_profile_df)
-        print('Extracting statistics.')
-        print('Replicating the rating.csv file.')                                
-        replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df, new_context_df)
-        new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
-        with st.expander(label='Show the replicated file: rating.csv'):
-            st.dataframe(new_rating_df)
-            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
-            st.markdown(link_rating, unsafe_allow_html=True) 
-        print('Replicated data generation has finished.')
-        
-    else:            
-        # Without context:                    
-        st.write(new_item_df)                            
-        st.write(rating_df)
-        st.write(user_profile_df) 
-        print('Extracting statistics.')
-        print('Replicating the rating.csv file.')
-        replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df)
-        new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
-        with st.expander(label='Show the replicated file: rating.csv'):
-            st.dataframe(new_rating_df)
-            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
-            st.markdown(link_rating, unsafe_allow_html=True)
-        print('Replicated data generation has finished.')  
+def replicate_task(with_context, rating_df, user_profile_df, new_item_df, new_context_df,percentage_rating_variation, output, st):
+    with console.st_log(output.code):     
+        if with_context:      
+            print('Extracting statistics.')
+            print('Replicating the rating.csv file.')                                
+            replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df, new_context_df)
+            new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)           
+            new_rating_df.to_csv("new_ratings.csv", index=False)        
+            print('Replicated data generation has finished.')        
+        else:            
+            # Without context:                    
+            st.write(new_item_df)                            
+            st.write(rating_df)
+            st.write(user_profile_df) 
+            print('Extracting statistics.')
+            print('Replicating the rating.csv file.')
+            replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df)
+            new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
+            with st.expander(label='Show the replicated file: rating.csv'):
+                st.dataframe(new_rating_df)
+                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
+                st.markdown(link_rating, unsafe_allow_html=True)
+            print('Replicated data generation has finished.')  
 
 # Extend dataset:
 # Recalculate ratings:
