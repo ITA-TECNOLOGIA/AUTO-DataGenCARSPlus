@@ -2,7 +2,7 @@ import logging
 import unittest
 
 import pandas as pd
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
+from datagencars.existing_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 
 
 class TestGenerateUserProfileDataset(unittest.TestCase):

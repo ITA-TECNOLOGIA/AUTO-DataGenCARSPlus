@@ -7,8 +7,8 @@ import pandas as pd
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_rating import AccessRating
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
+from datagencars.existing_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
+from datagencars.existing_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
 
 
 
