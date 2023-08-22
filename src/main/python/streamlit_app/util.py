@@ -9,7 +9,7 @@ import base64
 import io
 import requests
 import config
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
+from datagencars.existing_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 import console

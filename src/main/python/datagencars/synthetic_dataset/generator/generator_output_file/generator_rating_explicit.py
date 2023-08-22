@@ -2,7 +2,7 @@ import ast
 import random
 import numpy as np
 import pandas as pd
-from datagencars.existing_dataset.replicate_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
+from datagencars.existing_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
 from datagencars.synthetic_dataset.generator.access_schema.access_generation_config import AccessGenerationConfig
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.generator.access_schema.access_user_profile import AccessUserProfile
