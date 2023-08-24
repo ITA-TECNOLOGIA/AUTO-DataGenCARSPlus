@@ -7,7 +7,7 @@ from datagencars.synthetic_dataset.generator.access_schema.access_schema import 
 class TestAccessUserSchema(unittest.TestCase):
 
     def setUp(self):        
-        user_schema_file_path = 'resources/data_schema/user_schema.conf'
+        user_schema_file_path = 'resources/generate_synthetic_dataset/rating_explicit/context/restaurant/data_schema/user_schema.conf'
         with open(user_schema_file_path, 'r') as user_schema_file:
             user_schema = user_schema_file.read()            
         self.__access = AccessSchema(file_str=user_schema)
@@ -27,11 +27,11 @@ class TestAccessUserSchema(unittest.TestCase):
     def test_get_number_attributes(self):
         '''
         [global]
-        number_attributes=4
+        number_attributes=5
         '''
         number_attributes = self.__access.get_number_attributes()
         logging.info(f'number_attributes: {number_attributes}')                
-        self.assertEqual(number_attributes, 4)         
+        self.assertEqual(number_attributes, 5)         
 
     def test_get_attribute_name_list(self):
         '''
@@ -46,10 +46,13 @@ class TestAccessUserSchema(unittest.TestCase):
 
         [attribute4]
         name_attribute_4=birthdate
+
+        [attribute5]
+        name_attribute_5=user_profile_id
         '''
         attribute_name_list = self.__access.get_attribute_name_list()
         logging.info(f'attribute_name_list: {attribute_name_list}')          
-        self.assertListEqual(attribute_name_list, ['age', 'gender', 'occupation', 'birthdate'])        
+        self.assertListEqual(attribute_name_list, ['age', 'gender', 'occupation', 'birthdate', 'user_profile_id'])        
 
     def test_get_attribute_name_from_pos(self):
         '''
@@ -71,10 +74,10 @@ class TestAccessUserSchema(unittest.TestCase):
 
     def test_get_generator_type_attribute_from_pos(self):
         '''
-        [attribute1]        
-        generator_type_attribute_1=RandomAttributeGenerator
+        [attribute3]        
+        generator_type_attribute_3=RandomAttributeGenerator
         '''
-        generator_type = self.__access.get_generator_type_attribute_from_pos(position=1)
+        generator_type = self.__access.get_generator_type_attribute_from_pos(position=3)
         logging.info(f'generator_type: {generator_type}')          
         self.assertEqual(generator_type, 'RandomAttributeGenerator')
 
@@ -96,15 +99,6 @@ class TestAccessUserSchema(unittest.TestCase):
         possible_values = self.__access.get_possible_values_attribute_list_from_pos(position=2)
         logging.info(f'possible_values: {possible_values}')          
         self.assertListEqual(possible_values, ['female', 'male'])
-
-    def test_get_input_parameter_attribute_from_pos(self):
-        '''
-        [attribute5]
-        input_parameter_attribute_5=user_profile.csv
-        '''
-        input_parameter = self.__access.get_input_parameter_attribute_from_pos(position=5)
-        logging.info(f'input_parameter: {input_parameter}')          
-        self.assertEqual(input_parameter, 'user_profile.csv')
 
     def test_get_minimum_value_attribute_from_pos(self):
         '''

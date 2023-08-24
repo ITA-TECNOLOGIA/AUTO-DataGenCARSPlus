@@ -9,19 +9,20 @@ from datagencars.synthetic_dataset.generator.generator_instance.generator_instan
 
 class TestGeneratorInstanceItem(unittest.TestCase):
 
-    def setUp(self):       
+    def setUp(self):      
+        data_schema_path = "resources/generate_synthetic_dataset/rating_explicit/context/restaurant/data_schema/" 
         # item_schema.conf 
-        item_schema_file_path = 'resources/data_schema/item_schema.conf'
+        item_schema_file_path = data_schema_path + 'item_schema.conf'
         with open(item_schema_file_path, 'r') as item_schema_file:
             item_schema = item_schema_file.read()            
         schema_access = AccessSchema(file_str=item_schema)
         # generation_config.conf
-        generation_config_file_path = 'resources/data_schema/generation_config.conf'
+        generation_config_file_path = data_schema_path + 'generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()                
         generation_access = AccessGenerationConfig(file_str=generation_config)
         # item_profile.conf
-        item_profile_file_path = 'resources/data_schema/item_profile.conf'
+        item_profile_file_path = data_schema_path + 'item_profile.conf'
         with open(item_profile_file_path, 'r') as item_profile_file:
             item_profile = item_profile_file.read()   
         item_profile_access = AccessItemProfile(file_str=item_profile)

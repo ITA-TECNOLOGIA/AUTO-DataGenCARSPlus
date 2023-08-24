@@ -3,15 +3,19 @@ import unittest
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_device import GeneratorDevice
 
+
 class TestGeneratorAttributeDevice(unittest.TestCase):
+
     def setUp(self):        
-        item_schema_file_path = 'resources\data_schema_imascono\context_schema.conf'
+        item_schema_file_path = 'resources/generate_synthetic_dataset/rating_implicit/context/imascono/data_schema/context_schema.conf'
         with open(item_schema_file_path, 'r') as item_schema_file:
             item_schema = item_schema_file.read()            
         schema_access = AccessSchema(file_str=item_schema)
         self.__generator = GeneratorDevice(schema_access)
+
     def tearDown(self):
         del self.__generator
+
     def test_generate_attribute_value(self):
         '''
         [attribute1]

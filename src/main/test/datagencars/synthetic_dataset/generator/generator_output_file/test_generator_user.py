@@ -6,17 +6,18 @@ from datagencars.synthetic_dataset.generator.generator_output_file.generator_use
 
 class TestGeneratorUser(unittest.TestCase):
 
-    def setUp(self):        
+    def setUp(self):      
+        data_schema_path = 'resources/generate_synthetic_dataset/rating_explicit/context/restaurant/data_schema/'
         # user_schema.conf
-        user_schema_file_path = 'resources/data_schema/user_schema.conf'
+        user_schema_file_path = data_schema_path + 'user_schema.conf'
         with open(user_schema_file_path, 'r') as user_schema_file:
             user_schema = user_schema_file.read()        
         # generation_config.conf
-        generation_config_file_path = 'resources/data_schema/generation_config.conf'
+        generation_config_file_path = data_schema_path + 'generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()      
         # User generator:
-        self.__generator = GeneratorUserFile(generation_config, user_schema)
+        self.__generator = GeneratorUserFile(generation_config=generation_config, user_schema=user_schema)
     
     def tearDown(self):
         del self.__generator
