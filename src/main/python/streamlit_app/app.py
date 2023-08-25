@@ -1,6 +1,7 @@
 import base64
-from ast import literal_eval
 import os
+from ast import literal_eval
+from collections import defaultdict
 
 import altair as alt
 import config
@@ -15,22 +16,18 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
-from collections import defaultdict
-from ast import literal_eval
+from datagencars.existing_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
+from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_user import AccessUser
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
-from datagencars.existing_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
-from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from datagencars.synthetic_dataset.rating_implicit import RatingImplicit
-from streamlit_app import util
-from streamlit_app import help_information
-from streamlit_app import workflow_image
+from streamlit_app import help_information, util, workflow_image
 
 # Setting the main page:
 st.set_page_config(page_title='AUTO-DataGenCARS',

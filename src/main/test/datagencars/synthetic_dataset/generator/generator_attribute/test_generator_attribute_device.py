@@ -1,7 +1,7 @@
 import logging
 import unittest
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
-from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_device import GeneratorDevice
+from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute_device import GeneratorAttributeDevice
 
 
 class TestGeneratorAttributeDevice(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestGeneratorAttributeDevice(unittest.TestCase):
         with open(item_schema_file_path, 'r') as item_schema_file:
             item_schema = item_schema_file.read()            
         schema_access = AccessSchema(file_str=item_schema)
-        self.__generator = GeneratorDevice(schema_access)
+        self.__generator = GeneratorAttributeDevice(schema_access)
 
     def tearDown(self):
         del self.__generator

@@ -48,10 +48,10 @@ def generate_schema_file(schema_type):
             attribute_name = st.text_input(label="Attribute's name:", key=schema_type+'_attribute_name_'+str(position))
             value += 'name_attribute_'+str(position)+'='+attribute_name+'\n'
             # generator_type_attribute:
-            generator_type = st.selectbox(label='Generator type:', options=['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'RandomAttributeGenerator', 'DeviceGenerator', 'ObjectPositionAttributeGenerator', 'FixedAttributeGenerator'],  key=schema_type+'_generator_type_'+str(position))            
+            generator_type = st.selectbox(label='Generator type:', options=['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'RandomAttributeGenerator', 'GeneratorAttributeDevice', 'ObjectPositionAttributeGenerator', 'FixedAttributeGenerator'],  key=schema_type+'_generator_type_'+str(position))            
             # type_attribute:
             attribute_type = None
-            if generator_type=='RandomAttributeGenerator' or generator_type=='DeviceGenerator' or generator_type=='ObjectPositionAttributeGenerator' or generator_type=='FixedAttributeGenerator':
+            if generator_type=='RandomAttributeGenerator' or generator_type=='GeneratorAttributeDevice' or generator_type=='ObjectPositionAttributeGenerator' or generator_type=='FixedAttributeGenerator':
                 attribute_type = st.selectbox(label='Attribute type:', options=['String', 'List', 'AttributeComposite'], key=schema_type+'_attribute_type_'+str(position)) 
                 if attribute_type == 'String' and generator_type == 'RandomAttributeGenerator':
                     value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
@@ -62,7 +62,7 @@ def generate_schema_file(schema_type):
                     value += 'number_posible_values_attribute_'+str(position)+'='+str(number_possible_value)+'\n'
                     for i in range(number_possible_value):
                         value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(str_possible_value_list[i]).strip()+'\n'
-                elif (attribute_type == 'List' and generator_type == 'DeviceGenerator') or attribute_type == 'List' and generator_type == 'FixedAttributeGenerator':
+                elif (attribute_type == 'List' and generator_type == 'GeneratorAttributeDevice') or attribute_type == 'List' and generator_type == 'FixedAttributeGenerator':
                     value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
                     number_maximum_subattribute = st.number_input(label='Number of subattributes to generate:', value=5, key='number_maximum_subattribute_'+schema_type+'_'+str(position))
                     value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
@@ -129,8 +129,9 @@ def generate_schema_file(schema_type):
                 attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'String', 'Boolean'], key='attribute_type_'+str(position)+'_'+generator_type)
                 fixed_input = st.text_input(label='Imput the fixed value:', key='fixed_input_'+str(position))
                 value += 'input_parameter_attribute_'+str(position)+'='+str(fixed_input)+'\n'
-            elif generator_type == 'Date':                    
-                attribute_type = st.selectbox(label='Attribute type:', options=['Integer'], key='attribute_type_'+str(position)+'_'+generator_type)
+            elif generator_type == 'Date':    
+                value += 'generator_type_attribute_'+str(position)+'=DateAttributeGenerator'+'\n'                 
+                attribute_type = st.selectbox(label='Attribute type:', options=['String'], key='attribute_type_'+str(position)+'_'+generator_type)
                 st.write('Imput the range of dates (years only):')
                 date_min = st.number_input(label='From:', value=1980, key='date_min_'+str(position))
                 value += 'minimum_value_attribute_'+str(position)+'='+str(date_min)+'\n'
@@ -175,7 +176,7 @@ def generate_schema_file(schema_type):
                 input_parameter_list = input_parameter_df['place'].astype(str).values.tolist()
                 value += 'input_parameter_attribute_'+str(position)+'='+str(input_parameter_list)+'\n'
                 # Unique value?
-                unique_value = st.checkbox(label='Unique value?:', value=True, key='unique_value_'+str(position)+'_'+generator_type)
+                unique_value = st.checkbox(label='Unique value?', value=True, key='unique_value_'+str(position)+'_'+generator_type)
                 if unique_value:
                     value += 'unique_value_attribute_'+str(position)+'=True'+'\n'
                 else:
@@ -196,7 +197,7 @@ def generate_schema_file(schema_type):
                 # Generate input parameter file: input_parameter_attribute_1=name_restaurant.csv
                 ip_text_area = st.empty()
                 if address_complete_type == 'Manually':
-                    input_parameter_text_area = ip_text_area.text_area(label='Introduce address values (line by line), keeping the header: <street,number,zp,latitude,longitude>', value='street,number,zp,latitude,longitude', key='address_ip_text_area_'+str(position))   
+                    input_parameter_text_area = ip_text_area.text_area(label='Introduce address values (line by line), keeping the header: <street;number;zp;latitude;longitude>', value='street,number,zp,latitude,longitude', key='address_ip_text_area_'+str(position))   
                     input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area), sep=",")                                                 
                     input_parameter_list = input_parameter_df.astype(str).values.tolist()
                     value += 'input_parameter_attribute_'+str(position)+'='+str(input_parameter_list)+'\n'
@@ -210,81 +211,85 @@ def generate_schema_file(schema_type):
                         input_parameter_list = input_parameter_df.astype(str).values.tolist()                        
                     value += 'input_parameter_attribute_'+str(position)+'='+str(input_parameter_list)+'\n'
                 if address_complete_type == 'Search Address':
+                    # Input through a text area:
+                    input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address, for example: McDonald's, 50017, keeping header: place, postalcode", value='place, zipcode', key='address_ip_text_area_'+str(position))   
+                    # Buttons: export and import values  
+                    export_button_column, import_area_column = st.columns(2)
+                    # Export a file:
+                    with export_button_column:
+                        file_name = attribute_name+'_search_places.csv'
+                        if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='search_export_button_'+str(position)):
+                            if len(input_parameter_text_area) == 0:                                 
+                                st.warning('The file to be exported must not be empty.')
+                            else:
+                                st.success('The file has been saved with the name: '+file_name)
+                    # Import a file:
+                    with import_area_column:                        
+                        # Input through an uploaded file:
+                        if import_file := st.file_uploader(label='Import place_name list, keeping header: place', key='import_file'+str(position)):                            
+                            input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address, for example: McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(position))                            
+                    # Searching places:
                     places_list = []
-                    places_str = 'street,number,zp,latitude,longitude\n'
-                    input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value='place, zipcode', key='address_ip_text_area_'+str(position))   
-                    if import_file := st.file_uploader(label='Import place_name list, keeping header: place', key='import_file'+str(position)):                            
-                        input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(position))                            
-                    input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
-                    input_parameter_list = input_parameter_df.astype(str).values.tolist()
-                    # print(input_parameter_text_area)
-                    for place in input_parameter_list:   
-                        # print(place)
-                        # Construct the API endpoint URL
-                        if place[1] == '':
-                            url = f"https://nominatim.openstreetmap.org/search?q={place[0]}&format=json&limit=1000"
-                        else:
-                            url = f"https://nominatim.openstreetmap.org/search?q={place[0]}, {place[1]}&format=json&limit=1000"
-
-                        # Send a GET request to the API endpoint
-                        response = requests.get(url).json()
-                        # print(response)
-
-                        # If more than one result, return the first one
-                        location = response[0]
-
-                        # Extract the latitude and longitude coordinates from the first result
-                        lat = location['lat']
-                        lon = location['lon']
-
-                        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
-                        response = requests.get(url)
-                        # Extract the JSON response as a dictionary
-                        location2 = response.json()
-                        #print(location2)
-                        if location2 == None:
-                            st.write(str(place[0]) +' not found.')
-                        else:
-                            item_info=[]
-                            try:
-                                #zp = location2['address']['postcode']
-                                #print(location)
-                                name = str(location2['display_name'].split(',')[0])
-                                if name.lower() == place[0].lower():
-                                    # print('IF')
-                                    street = location2['address']['road'] 
-                                    try:
-                                        number = location2['address']['house_number']
-                                    except: 
-                                        number = 'S/N'
-                                    zp = location2['address']['postcode']
-                                    item_info.append(street)
-                                    item_info.append(number)
-                                    item_info.append(zp)
-                                    item_info.append(lat)
-                                    item_info.append(lon)
-                                    places_list.append(item_info)
-                                    # print(places_list)
-                                    places_str = places_str + item_info[0] + ', ' + item_info[1] + ', ' + item_info[2] + ', ' + str(item_info[3]) + ', ' + str(item_info[4]) + '\n'
-                                    # print(places_str)
-                            except Exception as ex:
-                                print(ex)
-                                pass
-                    
-                    ip_text_area_2 = st.empty()
-                    input_parameter_text_area_2 = ip_text_area_2.text_area(label='Address values generated', value=places_str, key='address_ip_text_area_2_'+str(position))   
-                    value += 'input_parameter_attribute_'+str(position)+'='+str(places_list)+'\n'            
-                    input_parameter_text_area = places_str
-                # Buttons: export and import values  
-                file_name = attribute_name+'_input_parameter_list.csv'
-                if input_parameter_text_area != None:
-                    link_address_values = f'<a href="data:file/csv;base64,{base64.b64encode(input_parameter_text_area.encode()).decode()}" download={file_name}> Download </a>'
-                    if st.markdown(link_address_values, unsafe_allow_html=True):
-                    #if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='address_ip_export_button_'+str(position)):
-                        if len(input_parameter_text_area) == 0:                                 
-                            st.warning('The file to be exported must not be empty.')
-                        else:
-                            st.success('The file has been saved with the name: '+file_name)
+                    places_str = 'street;number;zp;latitude;longitude\n'
+                    input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))                    
+                    input_parameter_list = input_parameter_df.astype(str).values.tolist()                                     
+                    if st.button(label="Search", key="button_search_place"):
+                        for place in input_parameter_list:
+                            # Construct the API endpoint URL
+                            if place[1] == '':
+                                url = f"https://nominatim.openstreetmap.org/search?q={place[0]}&format=json&limit=1000"
+                            else:
+                                url = f"https://nominatim.openstreetmap.org/search?q={place[0]}, {place[1]}&format=json&limit=1000"
+                            # Send a GET request to the API endpoint
+                            response = requests.get(url).json()                        
+                            # If more than one result, return the first one
+                            location = response[0]
+                            # Extract the latitude and longitude coordinates from the first result
+                            lat = location['lat']
+                            lon = location['lon']
+                            url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
+                            response = requests.get(url)
+                            # Extract the JSON response as a dictionary
+                            location2 = response.json()                                                     
+                            if location2 == None:
+                                st.write(str(place[0]) +' not found.')
+                                places_str = places_str + 'None;None;None;None;None\n'
+                            else:
+                                item_info=[]
+                                try:                                    
+                                    name = str(location2['display_name'].split(',')[0])
+                                    if name.lower() == place[0].lower():                                        
+                                        street = location2['address']['road'] 
+                                        try:
+                                            number = location2['address']['house_number']
+                                        except: 
+                                            number = 'S/N'
+                                        zp = location2['address']['postcode']
+                                        item_info.append(street)
+                                        item_info.append(number)
+                                        item_info.append(zp)
+                                        item_info.append(lat)
+                                        item_info.append(lon)
+                                        places_list.append(item_info)                                                                             
+                                        places_str = places_str + item_info[0] + '; ' + item_info[1] + '; ' + item_info[2] + '; ' + str(item_info[3]) + '; ' + str(item_info[4]) + '\n'                                        
+                                    else:
+                                        places_str = places_str + 'None;None;None;None;None\n' 
+                                        st.write(str(place[0]) +' not found.')
+                                except Exception as ex:
+                                    print(ex)
+                                    pass                            
+                        # Showing results:                                    
+                        ip_text_area_2 = st.empty()
+                        input_parameter_text_area_2 = ip_text_area_2.text_area(label='Search results:', value=places_str, key='address_ip_text_area_2_'+str(position))   
+                        value += 'input_parameter_attribute_'+str(position)+'='+str(places_list)+'\n'            
+                        input_parameter_text_area = places_str
+                        # Buttons: export and import values  
+                        file_name = attribute_name+'_input_parameter_list.csv'
+                        if input_parameter_text_area != None:
+                            link_address_values = f'<a href="data:file/csv;base64,{base64.b64encode(input_parameter_text_area.encode()).decode()}" download={file_name}> Download </a>'
+                            if st.markdown(link_address_values, unsafe_allow_html=True):                            
+                                if len(input_parameter_text_area) == 0:                                 
+                                    st.warning('The file to be exported must not be empty.')                                
             value += 'type_attribute_'+str(position)+'='+str(attribute_type)+'\n'
             # Important attributes:                
             is_important_attribute = st.checkbox(label=f'Is {attribute_name} an important attribute to include in the user profile?', value=False, key=schema_type+'_is_important_attribute_'+str(position)) 
@@ -899,7 +904,7 @@ def infer_schema(df):
                 address_complete_type = st.selectbox(label='Address complete type:', options=['Manually', 'Upload file', 'Search Address'], key='address_complete_type')
                 ip_text_area = st.empty()
                 if address_complete_type == 'Manually':
-                    input_parameter_text_area = ip_text_area.text_area(label='Introduce address values (line by line), keeping the header: <street,number,zp,latitude,longitude>', value='street,number,zp,latitude,longitude', key='address_ip_text_area_'+str(index+1))   
+                    input_parameter_text_area = ip_text_area.text_area(label='Introduce address values (line by line), keeping the header: <street;number;zp;latitude;longitude>', value='street,number,zp,latitude,longitude', key='address_ip_text_area_'+str(index+1))   
                     input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area), sep=",")                                                 
                     input_parameter_list = input_parameter_df.astype(str).values.tolist()
                     schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(input_parameter_list)+'\n'
@@ -915,9 +920,9 @@ def infer_schema(df):
                 if address_complete_type == 'Search Address':
                     places_list = []
                     places_str = 'street,number,zp,latitude,longitude\n'
-                    input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value='place, zipcode', key='address_ip_text_area_'+str(index+1))   
+                    input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address, for example: McDonald's, 50017, keeping header: place, postalcode", value='place, zipcode', key='address_ip_text_area_'+str(index+1))   
                     if import_file := st.file_uploader(label='Import place_name list, keeping header: place', key='import_file'+str(index+1)):                            
-                        input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address ex. McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(index+1))                            
+                        input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address, for example: McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(index+1))                            
                     input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
                     input_parameter_list = input_parameter_df.astype(str).values.tolist()
                     # print(input_parameter_text_area)
@@ -972,10 +977,9 @@ def infer_schema(df):
                                     # print(places_str)
                             except Exception as ex:
                                 print(ex)
-                                pass
-                    
+                                pass                    
                     ip_text_area_2 = st.empty()
-                    input_parameter_text_area_2 = ip_text_area_2.text_area(label='Address values generated', value=places_str, key='address_ip_text_area_2_'+str(index+1))   
+                    input_parameter_text_area_2 = ip_text_area_2.text_area(label='Search results:', value=places_str, key='address_ip_text_area_2_'+str(index+1))   
                     schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(places_list)+'\n'            
                     input_parameter_text_area = places_str
                 # Buttons: export and import values  
@@ -985,9 +989,7 @@ def infer_schema(df):
                     if st.markdown(link_address_values, unsafe_allow_html=True):
                     #if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='address_ip_export_button_'+str(position)):
                         if len(input_parameter_text_area) == 0:                                 
-                            st.warning('The file to be exported must not be empty.')
-                        else:
-                            st.success('The file has been saved with the name: '+file_name)
+                            st.warning('The file to be exported must not be empty.')                        
             elif atrib_generator == 'URL':
                 schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=URLAttributeGenerator\n'
                 schema_str = schema_str + 'number_maximum_subattribute_attribute_'+ str((index+1)) + '=2\n'
@@ -1014,7 +1016,7 @@ def infer_schema(df):
                 input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))
                 input_parameter_list = input_parameter_df['place'].astype(str).values.tolist()
                 schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(input_parameter_list)+'\n'
-                unique_value = st.checkbox(label='Unique value?:', value=True, key='unique_value_'+str(index+1)+'_'+attribute)
+                unique_value = st.checkbox(label='Unique value?', value=True, key='unique_value_'+str(index+1)+'_'+attribute)
                 if unique_value:
                     schema_str += 'unique_value_attribute_'+str(index+1)+'=True'+'\n'
                 else:
