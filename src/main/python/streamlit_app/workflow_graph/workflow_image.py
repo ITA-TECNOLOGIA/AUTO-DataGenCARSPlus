@@ -1,7 +1,8 @@
-import streamlit as st
 import os
+
+import streamlit as st
 from streamlit_app import config
-from streamlit_app.workflow.graph_generate import Workflow
+from streamlit_app.workflow_graph.graph_generate import Workflow
 
 
 # WORKFLOW:

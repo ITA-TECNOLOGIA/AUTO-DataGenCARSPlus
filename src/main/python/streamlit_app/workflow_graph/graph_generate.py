@@ -1,5 +1,6 @@
-from graphviz import Digraph
 import json
+
+from graphviz import Digraph
 
 
 class Workflow:
