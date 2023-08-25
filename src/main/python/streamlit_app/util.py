@@ -13,9 +13,7 @@ from datagencars.existing_dataset.generate_user_profile.generate_user_profile_da
 from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 import console
-import workflow_image
-
-
+from streamlit_app import workflow_image
 
 ####### Generate a synthetic dataset ######
 def generate_schema_file(schema_type):
@@ -537,31 +535,54 @@ def generate_user_profile_manual(number_user_profile, attribute_column_list, ite
 def generate_user_profile_automatic(rating_df, item_df, context_df=None):
     """
     """
-    output = st.empty()
-    with console.st_log(output.code):
+    try:
+        output = st.empty()
+        with console.st_log(output.code):
+            # Generate user profile, by using an original dataset:
+            generate_up_dataset = None
+            user_profile_df = pd.DataFrame()                    
+            if context_df is not None and not context_df.empty:                     
+                # With context:            
+                if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                        if st.button(label='Generate', key='button_generate_up_cars'):
+                            print('Automatically generating user profiles.')                    
+                            generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df, context_df)
+                            user_profile_df = generate_up(generate_up_dataset)                                  
+                            print('The user profile has been generated.')                                                    
+                else:
+                    st.warning("The item, context and rating files have not been uploaded.")
+            else:
+                # Without context:            
+                if (not item_df.empty) and (not rating_df.empty): 
+                    if st.button(label='Generate', key='button_generate_up_rs'):
+                        print('Automatically generating user profiles.')                    
+                        generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df)
+                        user_profile_df = generate_up(generate_up_dataset)                    
+                        print('The user profile has been generated.')
+                else:
+                    st.warning("The item and rating files have not been uploaded.")
+    except Exception:
         # Generate user profile, by using an original dataset:
         generate_up_dataset = None
         user_profile_df = pd.DataFrame()                    
         if context_df is not None and not context_df.empty:                     
             # With context:            
             if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
-                if st.button(label='Generate', key='button_generate_up_cars'):
-                    print('Automatically generating user profiles.')                    
-                    generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df, context_df)
-                    user_profile_df = generate_up(generate_up_dataset)                                  
-                    print('The user profile has been generated.')                                                    
+                print('Automatically generating user profiles.')                    
+                generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df, context_df)
+                user_profile_df = generate_up(generate_up_dataset)                                  
+                print('The user profile has been generated.')                                                    
             else:
-                st.warning("The item, context and rating files have not been uploaded.")
-        else:            
+                print("The item, context and rating files have not been uploaded.")
+        else:
             # Without context:            
             if (not item_df.empty) and (not rating_df.empty): 
-                if st.button(label='Generate', key='button_generate_up_rs'):
                     print('Automatically generating user profiles.')                    
                     generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df)
                     user_profile_df = generate_up(generate_up_dataset)                    
-                    print('The user profile has been generated.')                               
+                    print('The user profile has been generated.')
             else:
-                st.warning("The item and rating files have not been uploaded.")
+                print("The item and rating files have not been uploaded.")
     return user_profile_df
 
 ####### Pre-process a dataset #######

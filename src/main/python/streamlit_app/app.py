@@ -20,11 +20,14 @@ from datagencars.existing_dataset.generate_user_profile.generate_user_profile_da
 from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
+from datagencars.existing_dataset.replicate_dataset.access_dataset.access_rating import AccessRating
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_user import AccessUser
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
+from datagencars.synthetic_dataset.generator.access_schema.access_user_profile import AccessUserProfile
+from datagencars.existing_dataset.extend_dataset.increase_rating import IncreaseRating
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from datagencars.synthetic_dataset.rating_implicit import RatingImplicit
 from streamlit_app import help_information, util, workflow_image
@@ -611,7 +614,6 @@ elif general_option == 'Pre-process a dataset':
                 null_values_c = False
         # USER PROFILE TAB:
         with tab_generate_user_profile:
-            #user_profile_df = pd.DataFrame()   
             optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
             if not null_values_i:
                 new_item_df = item_df
@@ -637,13 +639,10 @@ elif general_option == 'Pre-process a dataset':
                 link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
                 st.markdown(link_rating, unsafe_allow_html=True)    
             os.remove('new_ratings.csv')
-        
-        
-
     elif is_preprocess == 'Extend dataset':
         # Loading dataset:
         init_step = 'True'
-        _, item_df, context_df, rating_df = util.load_dataset(file_type_list=['item', 'context', 'rating'])
+        user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
         
         # WF --> Extend dataset:
         st.header('Apply workflow: Extend dataset')
@@ -658,17 +657,49 @@ elif general_option == 'Pre-process a dataset':
         new_item_df = pd.DataFrame()
         new_context_df = pd.DataFrame()        
         with tab_replace_null_values:
-            null_values_c, null_values_i, new_item_df, new_context_df = util.tab_logic_replace_null('ExtendDataset', with_context, item_df, context_df)
-        with tab_generate_user_profile:
-            optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            # null_values_c, null_values_i, new_item_df, new_context_df = util.tab_logic_replace_null('ExtendDataset', with_context, item_df, context_df)
             if with_context:
-                user_profile_df = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
+                null_values_c, null_values_i, new_item_df, new_context_df = util.tab_logic_replace_null('ExtendDataset', with_context, item_df, context_df)
+            else:
+                _, null_values_i, new_item_df, _ = util.tab_logic_replace_null('ExtendDataset', with_context, item_df)
+                null_values_c = False
+        with tab_generate_user_profile:
+            user_profile = util.generate_user_profile_automatic(rating_df, item_df, context_df) # Old way
+            optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if not null_values_i:
+                new_item_df = item_df
+            if not null_values_c and with_context:
+                new_context_df = context_df
+            if with_context:
+                user_profile = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
             else:    
-                user_profile_df = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df) 
+                user_profile = util.tab_logic_generate_up('ExtendDataset', with_context, optional_value_list, rating_df, new_item_df) 
         with tab_extend_dataset:
             # Showing the current image of the WF:
             workflow_image.show_wf(wf_name='ExtendDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
-        st.write('TODO')
+            inc_rating = IncreaseRating(rating_df=rating_df, item_df=item_df, user_df=user_df, context_df=context_df, user_profile=user_profile)
+            option = st.selectbox('How would you like to extend the dataset?',('K ratings for all users', 'K ratings for N users'))
+            if option == 'K ratings for all users':
+                number_ratings = st.number_input('Enter the number of ratings to generate for each user:', min_value=1, step=1, value=1)
+                percentage_rating_variation = st.number_input('Enter the percentage rating variation:', min_value=0, max_value=100, step=1, value=25)
+                k = st.number_input('Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
+                
+                if st.button('Generate Ratings'):
+                    result_df = inc_rating.incremental_rating_random(number_ratings=number_ratings, percentage_rating_variation=percentage_rating_variation, k=k)
+                    st.write("Generated Ratings:")
+                    st.write(result_df)
+
+            elif option == 'K ratings for N users':
+                selected_users = st.multiselect('Select users:', user_df['user_id'])
+                number_ratings = st.number_input('Enter the number of ratings to generate for each user:', min_value=1, step=1)
+                percentage_rating_variation = st.number_input('Enter the percentage rating variation:', min_value=0, max_value=100, step=1)
+                k = st.number_input('Enter the k ratings to take in the past:', min_value=1, step=1)
+                
+                if st.button('Generate Ratings'):
+                    result_df = inc_rating.incremental_rating_by_user(user_ids=selected_users, number_ratings=number_ratings, percentage_rating_variation=percentage_rating_variation, k=k)
+                    st.write("Generated Ratings:")
+                    st.write(result_df)
+
     elif is_preprocess == 'Recalculate ratings': 
         # Loading dataset:
         init_step = 'True' 
@@ -835,11 +866,11 @@ elif general_option == 'Pre-process a dataset':
                 else:
                     # Generate user profile automatic (not context):                     
                     if (not item_df.empty) and (not rating_df.empty):
-                        user_profile_df = util.generate_user_profile_automatic(rating_df, item_df)                
+                        user_profile_df = util.generate_user_profile_automatic(rating_df, item_df)
                     else:
                         st.warning("The item and rating files have not been uploaded.")
     elif is_preprocess == 'Ratings to binary':    
-        # Loading dataset:    
+        # Loading dataset:
         init_step = 'True'
         _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
 
@@ -849,7 +880,7 @@ elif general_option == 'Pre-process a dataset':
         help_information.help_ratings_to_binary_wf()        
         # Showing the initial image of the WF:
         workflow_image.show_wf(wf_name='RatingsToBinary', init_step=init_step)
-          
+
         if not rating_df.empty:            
             min_rating = rating_df['rating'].min()
             max_rating = rating_df['rating'].max()
