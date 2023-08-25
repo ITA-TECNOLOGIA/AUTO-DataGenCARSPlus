@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from streamlit_app import config
-from workflow.graph_generate import Workflow
+from streamlit_app.workflow.graph_generate import Workflow
 
 
 # WORKFLOW:
