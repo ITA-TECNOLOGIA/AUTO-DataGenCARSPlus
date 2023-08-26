@@ -11,6 +11,40 @@ def help_implicit_rating_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a completely-synthetic dataset based on implicit ratings.""")
 
+def help_important_attribute_ranking_order():
+    st.write('Examples of importance order:')
+    st.markdown("""- ascending: ``` quality food=[bad, normal, good], global_rating=[1, 5], card=[False, True] ``` """)
+    st.markdown("""- descending: ``` quality food=[good, normal, bad], global_rating=[5, 1], card=[True, False] ``` """)
+    st.markdown("""- neutral (no important order): ``` quality food=[chinese, italian, vegetarian, international] ``` """)
+
+def help_overlapping_attribute_values():
+    st.markdown(
+    """ 
+    ```python
+    # Example 1: overlapping at the midpoint on the left and the right
+    item_profile_names = ['bad', 'normal', 'good'] 
+    overlap_midpoint_left_profile = 0 
+    overlap_midpoint_right_profile = 0 
+    good_profile =   ['good'] 
+    normal_profile =   ['normal'] 
+    bad_profile =   ['bad'] 
+    ``` 
+    """)
+    st.markdown(""" 
+    ```python
+    # Example 2: overlapping at the midpoint on the left and the right
+    item_profile_names = ['bad', 'normal', 'good']
+    overlap_midpoint_left_profile = 1
+    overlap_midpoint_right_profile = 1
+    good_item_profile =   ['good']
+    normal_item_profile =   ['bad', 'normal', 'good']
+    bad_item_profile =   ['bad']
+    ``` 
+    """)
+
+def help_user_profile_id():
+    st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[-1,1]```.""")
+
 ####### Pre-process a dataset #######
 # LOAD DATASET:
 

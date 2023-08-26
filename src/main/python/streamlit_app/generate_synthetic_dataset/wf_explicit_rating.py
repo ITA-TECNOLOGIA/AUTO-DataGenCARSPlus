@@ -45,7 +45,7 @@ def generate_synthtetic_dataset(with_context):
         # Editing schema:
         generation_config_schema = edit_schema_file(schema_file_name=config.GENERATION_CONFIG_SCHEMA_NAME, schema_value=schema_value)
         # Saving schema:
-        save_schema_file(schema_file_name=config.GENERATION_CONFIG_SCHEMA_NAME, schema_value=generation_config_schema)
+        save_file(file_name=config.GENERATION_CONFIG_SCHEMA_NAME, file_value=generation_config_schema, extension='conf')
     # TAB --> User:
     with tab_user:        
         st.header('Users')
@@ -54,11 +54,11 @@ def generate_synthtetic_dataset(with_context):
             schema_value = upload_schema_file(schema_file_name=config.USER_SCHEMA_NAME)
         else:
             # Generating the schema file: "user_schema.conf"
-            schema_value = get_schema_file(with_context=with_context, schema_type=config.USER_TYPE)
+            schema_value = get_schema_file(schema_type=config.USER_TYPE)
         # Editing schema:
         user_schema = edit_schema_file(schema_file_name=config.USER_SCHEMA_NAME, schema_value=schema_value)
         # Saving schema:
-        save_schema_file(schema_file_name=config.USER_SCHEMA_NAME, schema_value=user_schema)
+        save_file(file_name=config.USER_SCHEMA_NAME, file_value=user_schema, extension='conf')
     # TAB --> Item and Item Profile:
     with tab_item:
         st.header('Items')
@@ -67,11 +67,11 @@ def generate_synthtetic_dataset(with_context):
             schema_value = upload_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME)
         else:
             # Generating the schema file: "item_schema.conf"
-            schema_value = get_schema_file(with_context=with_context, schema_type=config.ITEM_TYPE)
+            schema_value = get_schema_file(schema_type=config.ITEM_TYPE)
         # Editing schema:
         item_schema = edit_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, schema_value=schema_value)
         # Saving schema:
-        save_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, schema_value=item_schema)
+        save_file(file_name=config.ITEM_SCHEMA_NAME, file_value=item_schema, extension='conf')
         st.markdown("""---""")
 
         # Uploading the file: "item_profile.conf"
@@ -83,7 +83,7 @@ def generate_synthtetic_dataset(with_context):
         # Editing schema:
         item_profile = edit_schema_file(schema_file_name=config.ITEM_PROFILE_SCHEMA_NAME, schema_value=item_profile_value)
         # Saving schema:
-        save_schema_file(schema_file_name=config.ITEM_PROFILE_SCHEMA_NAME, schema_value=item_profile)             
+        save_file(file_name=config.ITEM_PROFILE_SCHEMA_NAME, file_value=item_profile, extension='conf')             
     # TAB --> Context:
     if with_context:
         with tab_context:
@@ -93,11 +93,11 @@ def generate_synthtetic_dataset(with_context):
                 schema_value = upload_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME)
             else:
                 # Generating the schema file: "context_schema.conf"
-                schema_value = get_schema_file(with_context=with_context, schema_type=config.CONTEXT_TYPE)
+                schema_value = get_schema_file(schema_type=config.CONTEXT_TYPE)
             # Editing schema:
             context_schema = edit_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME, schema_value=schema_value)
             # Saving schema:
-            save_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME, schema_value=context_schema)
+            save_file(file_name=config.CONTEXT_SCHEMA_NAME, file_value=context_schema, extension='conf')
     # TAB --> User Profile:    
     with tab_user_profile:
         st.header('User profile')  
@@ -218,7 +218,7 @@ def get_schema_file(schema_type):
     # [global]   
     value = '[global]'+'\n'
     value += 'type='+config.USER_TYPE+'\n'
-    number_attribute = st.number_input(label='Number of attributes to generate:', value=1, key='number_attribute_'+config.USER_TYPE) 
+    number_attribute = st.number_input(label='Number of attributes to generate:', value=1, key='number_attribute_'+schema_type) 
     value += 'number_attributes='+str(number_attribute)+'\n'
     value += '\n'
     st.markdown("""---""")
@@ -227,66 +227,20 @@ def get_schema_file(schema_type):
         st.write('__[attribute'+str(position)+']__')
         value += '[attribute'+str(position)+']'+'\n'
         # name_attribute:     
-        attribute_name = st.text_input(label="Attribute's name:", key=config.USER_TYPE+'_attribute_name_'+str(position))
+        attribute_name = st.text_input(label="Attribute's name:", key=schema_type+'_attribute_name_'+str(position))
         value += 'name_attribute_'+str(position)+'='+attribute_name+'\n'
         # generator_type_attribute:
-        generator_type = st.selectbox(label='Generator type:', options=['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'RandomAttributeGenerator', 'GeneratorAttributeDevice', 'ObjectPositionAttributeGenerator', 'FixedAttributeGenerator'],  key=schema_type+'_generator_type_'+str(position))            
+        generator_type = st.selectbox(label='Generator type:', options=['Categorical', 'Numerical', 'Fixed', 'Date', 'URL', 'Address', 'BooleanList', 'Position', 'Device'],  key=schema_type+'_generator_type_'+str(position))            
         # type_attribute:
         attribute_type = None
-        if generator_type=='RandomAttributeGenerator' or generator_type=='GeneratorAttributeDevice' or generator_type=='ObjectPositionAttributeGenerator' or generator_type=='FixedAttributeGenerator':
-            attribute_type = st.selectbox(label='Attribute type:', options=['String', 'List', 'AttributeComposite'], key=config.USER_TYPE+'_attribute_type_'+str(position)) 
-            if attribute_type == 'String' and generator_type == 'RandomAttributeGenerator':
-                value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
-                str_text_area = st.empty()                        
-                string_text_area = str_text_area.text_area(label='Introduce new values to the list (split by comma): Poster, Sphere, Screen, NPC, Button', key='string_text_area_'+str(position))                                                            
-                str_possible_value_list = string_text_area.split(',')
-                number_possible_value = len(str_possible_value_list)
-                value += 'number_posible_values_attribute_'+str(position)+'='+str(number_possible_value)+'\n'
-                for i in range(number_possible_value):
-                    value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(str_possible_value_list[i]).strip()+'\n'
-            elif (attribute_type == 'List' and generator_type == 'GeneratorAttributeDevice') or attribute_type == 'List' and generator_type == 'FixedAttributeGenerator':
-                value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
-                number_maximum_subattribute = st.number_input(label='Number of subattributes to generate:', value=5, key='number_maximum_subattribute_'+config.USER_TYPE+'_'+str(position))
-                value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
-                for subattribute in range(1, number_maximum_subattribute+1):
-                    subattribute_name = st.text_input(label="Subattribute's name:", key=config.USER_TYPE+'_subattribute_name_'+str(position)+'_'+str(subattribute)) 
-                    value += 'name_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_name+'\n'
-                    subattribute_type = st.selectbox(label='Subattribute type:', options=['String'], key=config.USER_TYPE+'_subattribute_type_'+str(position)+'_'+str(subattribute)) 
-                    value += 'type_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_type+'\n'
-                    subattribute_input = st.text_area(label="Subattribute's input parameter:", key=config.USER_TYPE+'_subattribute_input_'+str(position)+'_'+str(subattribute)) 
-                    value += 'input_parameter_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_input+'\n'
-            elif attribute_type == 'AttributeComposite' and generator_type == 'ObjectPositionAttributeGenerator':
-                value += 'generator_type_attribute_'+str(position)+'='+generator_type+'\n'
-                number_maximum_subattribute = st.number_input(label='Number of subattributes to generate:', value=3, key='number_maximum_subattribute_'+config.USER_TYPE+'_'+str(position))
-                value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
-                for subattribute in range(1, number_maximum_subattribute+1):
-                    subattribute_name = st.text_input(label="Subattribute's name:", key=config.USER_TYPE+'_subattribute_name_'+str(position)+'_'+str(subattribute)) 
-                    value += 'name_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_name+'\n'
-                    subattribute_type = st.selectbox(label='Subattribute type:', options=['float'], key=config.USER_TYPE+'_subattribute_type_'+str(position)+'_'+str(subattribute)) 
-                    value += 'type_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_type+'\n'
-                input_parameter = st.text_area(label="Attribute's input parameter:", key=config.USER_TYPE+'_input_parameter_'+str(position)) 
-                value += 'input_parameter_attribute_'+str(position)+'='+input_parameter+'\n'
-            else:
-                st.write('This combination of generator type and attribute type is not supported in this script.')
-        elif generator_type == 'Integer/Float/String/Boolean (following a distribution)':
-            distribution_type = ''             
-            distribution_type = st.selectbox(label='Distribution type:', options=['Random', 'Gaussian'],  key=config.USER_TYPE+'_distribution_type_'+str(position)) 
-            value += 'generator_type_attribute_'+str(position)+'='+distribution_type+'AttributeGenerator'+'\n'                              
-            attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'Float', 'String', 'Boolean'], key=config.USER_TYPE+'_attribute_type_'+str(position)) 
-            if attribute_type == 'Integer':
-                # Integer:
-                integer_min = st.number_input(label='Minimum value of the attribute', value=0, key=config.USER_TYPE+'_integer_min_'+str(position)) 
-                value += 'minimum_value_attribute_'+str(position)+'='+str(integer_min)+'\n'
-                integer_max = st.number_input(label='Maximum value of the ratings', value=0, key=config.USER_TYPE+'_integer_max_'+str(position)) 
-                value += 'maximum_value_attribute_'+str(position)+'='+str(integer_max)+'\n'
-            elif attribute_type == 'Float':
-                # Float:
-                float_min = float(st.number_input(label='Minimum value of the attribute', value=0.0, key=config.USER_TYPE+'_float_min_'+str(position))) 
-                value += 'minimum_value_attribute_'+str(position)+'='+str(float_min)+'\n'
-                float_max = float(st.number_input(label='Maximum value of the ratings', value=0.0, key=config.USER_TYPE+'_float_max_'+str(position))) 
-                value += 'maximum_value_attribute_'+str(position)+'='+str(float_max)+'\n'
-            elif attribute_type == 'String':
-                # String:                        
+        # String and Boolean:
+        if generator_type == 'Categorical':                        
+            distribution_type = st.selectbox(label='Distribution type:', options=['Random', 'Gaussian'],  key=schema_type+'_distribution_type_'+str(position)) 
+            value += 'generator_type_attribute_'+str(position)+'='+f'{distribution_type}AttributeGenerator'+'\n'
+            attribute_type = st.selectbox(label='Attribute type:', options=['String', 'Boolean'], key=schema_type+'_attribute_type_'+str(position)) 
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
+            # String:
+            if attribute_type == 'String':                
                 str_text_area = st.empty()                        
                 string_text_area = str_text_area.text_area(label='Introduce new values to the list (split by comma): rainy, cloudy, sunny', key='string_text_area_'+str(position))                                                            
                 # Buttons: export and import values
@@ -305,7 +259,32 @@ def get_schema_file(schema_type):
                 number_possible_value = len(str_possible_value_list)
                 value += 'number_posible_values_attribute_'+str(position)+'='+str(number_possible_value)+'\n'
                 for i in range(number_possible_value):
-                    value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(str_possible_value_list[i]).strip()+'\n'                    
+                    value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(str_possible_value_list[i]).strip()+'\n'
+            # Boolean:
+            elif attribute_type == 'Boolean':
+                bool_possible_value_list = ['True', 'False']
+                number_possible_value = len(bool_possible_value_list)
+                value += 'number_posible_values_attribute_'+str(position)+'='+str(number_possible_value)+'\n'
+                for i, bool_value in enumerate(bool_possible_value_list):
+                    value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(bool_value)+'\n'
+                st.write(bool_possible_value_list)
+        elif generator_type == 'Numerical':                  
+            distribution_type = st.selectbox(label='Distribution type:', options=['Random', 'Gaussian'],  key=schema_type+'_distribution_type_'+str(position))             
+            value += 'generator_type_attribute_'+str(position)+'='+f'{distribution_type}AttributeGenerator'+'\n'
+            attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'Float'], key=schema_type+'_attribute_type_'+str(position)) 
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
+            # Integer:
+            if attribute_type == 'Integer':                
+                integer_min = st.number_input(label='Minimum value of the attribute', value=0, key=schema_type+'_integer_min_'+str(position)) 
+                value += 'minimum_value_attribute_'+str(position)+'='+str(integer_min)+'\n'
+                integer_max = st.number_input(label='Maximum value of the ratings', value=0, key=schema_type+'_integer_max_'+str(position)) 
+                value += 'maximum_value_attribute_'+str(position)+'='+str(integer_max)+'\n'
+            # Float:
+            elif attribute_type == 'Float':                
+                float_min = float(st.number_input(label='Minimum value of the attribute', value=0.0, key=schema_type+'_float_min_'+str(position))) 
+                value += 'minimum_value_attribute_'+str(position)+'='+str(float_min)+'\n'
+                float_max = float(st.number_input(label='Maximum value of the ratings', value=0.0, key=schema_type+'_float_max_'+str(position))) 
+                value += 'maximum_value_attribute_'+str(position)+'='+str(float_max)+'\n'                                
         elif generator_type == 'Fixed':     
             value += 'generator_type_attribute_'+str(position)+'=FixedAttributeGenerator'+'\n' 
             attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'String', 'Boolean'], key='attribute_type_'+str(position)+'_'+generator_type)
@@ -314,6 +293,7 @@ def get_schema_file(schema_type):
         elif generator_type == 'Date':    
             value += 'generator_type_attribute_'+str(position)+'=DateAttributeGenerator'+'\n'                 
             attribute_type = st.selectbox(label='Attribute type:', options=['String'], key='attribute_type_'+str(position)+'_'+generator_type)
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
             st.write('Imput the range of dates (years only):')
             date_min = st.number_input(label='From:', value=1980, key='date_min_'+str(position))
             value += 'minimum_value_attribute_'+str(position)+'='+str(date_min)+'\n'
@@ -466,22 +446,46 @@ def get_schema_file(schema_type):
                     value += 'input_parameter_attribute_'+str(position)+'='+str(places_list)+'\n'            
                     input_parameter_text_area = places_str
                     # Buttons: export and import values  
-                    file_name = attribute_name+'_input_parameter_list.csv'
-                    if input_parameter_text_area != None:
-                        link_address_values = f'<a href="data:file/csv;base64,{base64.b64encode(input_parameter_text_area.encode()).decode()}" download={file_name}> Download </a>'
-                        if st.markdown(link_address_values, unsafe_allow_html=True):                            
-                            if len(input_parameter_text_area) == 0:                                 
-                                st.warning('The file to be exported must not be empty.')                                
-        value += 'type_attribute_'+str(position)+'='+str(attribute_type)+'\n'
+                    file_name = attribute_name+'_input_parameter_list'
+                    if input_parameter_text_area != None or len(input_parameter_text_area) != 0:
+                        save_file(file_name=file_name, file_value=input_parameter_text_area, extension='csv')
+                    else:
+                        st.warning('The file to be exported must not be empty.')
+        elif generator_type == 'Device': # Marcos REVIEW!!!
+            attribute_type = st.selectbox(label='Attribute type:', options=['List'], key=schema_type+'_attribute_type_'+str(position)) 
+            # List:
+            if attribute_type == 'List':
+                value += 'generator_type_attribute_'+str(position)+'='+f'{generator_type}AttributeGenerator'+'\n'
+                number_maximum_subattribute = st.number_input(label='Number of subattributes to generate:', value=5, key='number_maximum_subattribute_'+schema_type+'_'+str(position))
+                value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
+                for subattribute in range(1, number_maximum_subattribute+1):
+                    subattribute_name = st.text_input(label="Subattribute's name:", key=schema_type+'_subattribute_name_'+str(position)+'_'+str(subattribute)) 
+                    value += 'name_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_name+'\n'
+                    subattribute_type = st.selectbox(label='Subattribute type:', options=['String'], key=schema_type+'_subattribute_type_'+str(position)+'_'+str(subattribute)) 
+                    value += 'type_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_type+'\n'
+                    subattribute_input = st.text_area(label="Subattribute's input parameter:", key=schema_type+'_subattribute_input_'+str(position)+'_'+str(subattribute)) 
+                    value += 'input_parameter_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_input+'\n'        
+        elif generator_type == 'Position': # Marcos REVIEW!!!
+            attribute_type = st.selectbox(label='Attribute type:', options=['AttributeComposite'], key=schema_type+'_attribute_type_'+str(position)) 
+            # AttributeComposite: 
+            if attribute_type == 'AttributeComposite':            
+                value += 'generator_type_attribute_'+str(position)+'='+f'Object{generator_type}AttributeGenerator'+'\n'
+                number_maximum_subattribute = st.number_input(label='Number of subattributes to generate:', value=3, key='number_maximum_subattribute_'+schema_type+'_'+str(position))
+                value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
+                for subattribute in range(1, number_maximum_subattribute+1):
+                    subattribute_name = st.text_input(label="Subattribute's name:", key=schema_type+'_subattribute_name_'+str(position)+'_'+str(subattribute)) 
+                    value += 'name_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_name+'\n'
+                    subattribute_type = st.selectbox(label='Subattribute type:', options=['float'], key=schema_type+'_subattribute_type_'+str(position)+'_'+str(subattribute)) 
+                    value += 'type_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_type+'\n'
+                input_parameter = st.text_area(label="Attribute's input parameter:", key=schema_type+'_input_parameter_'+str(position)) 
+                value += 'input_parameter_attribute_'+str(position)+'='+input_parameter+'\n'
+
         # Important attributes:                
-        is_important_attribute = st.checkbox(label=f'Is {attribute_name} an important attribute to include in the user profile?', value=False, key=config.USER_TYPE+'_is_important_attribute_'+str(position)) 
+        is_important_attribute = st.checkbox(label=f'Is {attribute_name} an important attribute to include in the user profile?', value=False, key=schema_type+'_is_important_attribute_'+str(position)) 
         value += 'important_weight_attribute_'+str(position)+'='+str(is_important_attribute)+'\n'
         if is_important_attribute:
             # Ranking order:
-            st.write('Examples of importance order:')
-            st.markdown("""- ascending: ``` quality food=[bad, normal, good], global_rating=[1, 5] ``` """)
-            st.markdown("""- descending: ``` quality food=[good, normal, bad], global_rating=[5, 1] ``` """)
-            st.markdown("""- neutral (no important order): ``` quality food=[chinese, italian, vegetarian, international] ``` """)
+            help_information.help_important_attribute_ranking_order()            
             ranking_order_original = st.selectbox(label='Select an order of importance?', options=['ascending', 'descending', 'neutral'], key="important_order_"+str(position))
             ranking_order = 'neut'
             if ranking_order_original == 'ascending':
@@ -512,11 +516,10 @@ def get_item_profile_file():
         item_profile_value += 'name_profile_'+str(i+1)+'='+str(item_profile_name).strip()+'\n'
     item_profile_value += '\n'
     # [order]
-    item_profile_value += '[order]'+'\n'            
-    st.write('Examples of importance order:')
-    st.markdown("""- ascending: ``` quality food=[bad, normal, good] ``` """)
-    st.markdown("""- descending: ``` quality food=[good, normal, bad] ``` """)
-    ranking_order_original = st.selectbox(label='Select an order of importance?', options=['descending', 'ascending'])
+    item_profile_value += '[order]'+'\n'
+    help_information.help_important_attribute_ranking_order()
+    ranking_order_original = st.selectbox(label='Select an order of importance?', options=['descending', 'ascending', 'neutral'], key="ip_important_order")
+    ranking_order = 'neut'
     if ranking_order_original == 'ascending':
         ranking_order_profile = 'asc'
     elif ranking_order_original == 'descending':
@@ -527,29 +530,7 @@ def get_item_profile_file():
     item_profile_value += '[overlap]'+'\n'            
     overlap_midpoint_left_profile = st.number_input(label='Overlapping at the midpoint on the left:', value=1, key='overlap_midpoint_left_profile')
     overlap_midpoint_right_profile = st.number_input(label='Overlapping at the midpoint on the right:', value=1, key='overlap_midpoint_right_profile')
-    st.markdown(
-    """ 
-    ```python
-    # Example 1: overlapping at the midpoint on the left and the right
-    item_profile_names = ['bad', 'normal', 'good'] 
-    overlap_midpoint_left_profile = 0 
-    overlap_midpoint_right_profile = 0 
-    good_profile =   ['good'] 
-    normal_profile =   ['normal'] 
-    bad_profile =   ['bad'] 
-    ``` 
-    """)
-    st.markdown(""" 
-    ```python
-    # Example 2: overlapping at the midpoint on the left and the right
-    item_profile_names = ['bad', 'normal', 'good']
-    overlap_midpoint_left_profile = 1
-    overlap_midpoint_right_profile = 1
-    good_item_profile =   ['good']
-    normal_item_profile =   ['bad', 'normal', 'good']
-    bad_item_profile =   ['bad']
-    ``` 
-    """)
+    help_information.help_overlapping_attribute_values()    
     item_profile_value += 'overlap_midpoint_left_profile='+str(overlap_midpoint_left_profile)+'\n'
     item_profile_value += 'overlap_midpoint_right_profile='+str(overlap_midpoint_right_profile)+'\n'
     item_profile_value += '\n' 
@@ -696,13 +677,12 @@ def generate_user_profile_manual(number_user_profile, attribute_column_list, ite
                             export_df.values[index][attribute_column_list.index(column)] = f'{str(abs(float(row[column])))}'
     else:
         st.warning("user_profile_df is empty.")
-    # Show the user profile dataframe:
-    st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[-1,1]```.""")
+    # Show the user profile dataframe:    
+    help_information.help_user_profile_id()
     st.dataframe(user_profile_df)   
     # Downloading user_profile.csv:
     if not inconsistent:
-        link_user_profile = f'<a href="data:file/csv;base64,{base64.b64encode(export_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
-        st.markdown(link_user_profile, unsafe_allow_html=True) 
+        save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=export_df, extension='csv')        
     return user_profile_df
 
 def run(generation_config_schema, user_schema, user_profile, item_schema, item_profile, with_context=False, context_schema=None):
@@ -732,12 +712,11 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                 progress_text = f'Generating data .....step {current_step + 1} from {steps}'
                 my_bar = st.progress(0, text=progress_text)                
                 if len(user_schema) != 0:
-                    st.write('user.csv')
-                    print('Generating user.csv')           
+                    st.write(f'{config.USER_TYPE}.csv')
+                    print('Generating user.csv')
                     user_file_df = generator.generate_user_file(user_schema=user_schema)
                     st.dataframe(user_file_df)
-                    link_user = f'<a href="data:file/csv;base64,{base64.b64encode(user_file_df.to_csv(index=False).encode()).decode()}" download="user.csv">Download user CSV</a>'
-                    st.markdown(link_user, unsafe_allow_html=True)              
+                    save_df(df_name=config.USER_TYPE, df_value=user_file_df, extension='csv')
                 else:
                     st.warning('The user schema file (user_schema.conf) is required.')
                 current_step = current_step + 1
@@ -747,12 +726,11 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                     # Checking the existence of the file: "item_schema.conf"            
                     my_bar.progress(int(100/steps)*current_step, f'Generating data Step {current_step + 1} from {steps}: ')
                     if len(item_schema) != 0:
-                        st.write('item.csv')
+                        st.write(f'{config.ITEM_TYPE}.csv')
                         print('Generating item.csv')                    
                         item_file_df = generator.generate_item_file(item_schema=item_schema, item_profile=item_profile, with_correlation=with_correlation_checkbox)
                         st.dataframe(item_file_df)   
-                        link_item = f'<a href="data:file/csv;base64,{base64.b64encode(item_file_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download item CSV</a>'
-                        st.markdown(link_item, unsafe_allow_html=True)
+                        save_df(df_name=config.ITEM_TYPE, df_value=item_file_df, extension='csv')
                         current_step = current_step + 1
                     else:
                         st.warning('The item schema file (item_schema.conf) is required.')
@@ -763,12 +741,11 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                         # Checking the existence of the file: "context_schema.conf"  
                         if with_context:                           
                             if context_schema:
-                                st.write('context.csv')
+                                st.write(f'{config.CONTEXT_TYPE}.csv')
                                 print('Generating context.csv')                        
                                 context_file_df = generator.generate_context_file(context_schema=context_schema)
                                 st.dataframe(context_file_df)
-                                link_context = f'<a href="data:file/csv;base64,{base64.b64encode(context_file_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download context CSV</a>'
-                                st.markdown(link_context, unsafe_allow_html=True)
+                                save_df(df_name=config.CONTEXT_TYPE, df_value=context_file_df, extension='csv')
                                 current_step = current_step + 1
                             else:
                                 st.warning('The context schema file (context_schema.conf) is required.')               
@@ -787,8 +764,8 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                                 else:
                                     rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile, item_df=item_file_df, item_schema=item_schema)
                                 st.dataframe(rating_file_df)
-                                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(rating_file_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download rating CSV</a>'
-                                st.markdown(link_rating, unsafe_allow_html=True)                                                                            
+                                save_df(df_name='rating', df_value=rating_file_df, extension='csv')
+                                                                                                        
                             else:
                                 st.warning('The configuration file (generation_config.conf) is required.')
                             print('Synthetic data generation has finished.')   
@@ -810,11 +787,25 @@ def edit_schema_file(schema_file_name, schema_value):
             schema_text_area = st.text_area(label='Current file:', value=schema_value, height=500, disabled=True, key=f'false_edit_{schema_file_name}')
     return schema_text_area
 
-def save_schema_file(schema_file_name, schema_value):
+def save_file(file_name, file_value, extension):
     """
     Save a schema file.
-    :param schema_file_name: The name of the schema file.
-    :param schema_value: The content of the schema file.
+    :param file_name: The name of the schema file.
+    :param file_value: The content of the schema file.
+    :param extension: The file extension ('*.conf' or '*.csv').
     """
-    link_generation_config = f'<a href="data:text/plain;base64,{base64.b64encode(schema_value.encode()).decode()}" download="{schema_file_name}.conf">Download</a>'
-    st.markdown(link_generation_config, unsafe_allow_html=True)
+    if extension == 'conf':
+        link_file = f'<a href="data:text/plain;base64,{base64.b64encode(file_value.encode()).decode()}" download="{file_name}.{extension}">Download</a>'
+    elif extension == 'csv':
+        link_file = f'<a href="data:file/csv;base64,{base64.b64encode(file_value.encode()).decode()}" download="{file_name}.{extension}">Download</a>'
+    st.markdown(link_file, unsafe_allow_html=True)    
+
+def save_df(df_name, df_value, extension):
+    """
+    Save a df file.
+    :param df_name: The name of the df file.
+    :param df_value: The content of the df file.
+    :param extension: The file extension ('*.csv').
+    """
+    link_df = f'<a href="data:file/csv;base64,{base64.b64encode(df_value.to_csv(index=False).encode()).decode()}" download="{df_name}.{extension}">Download</a>'
+    st.markdown(link_df, unsafe_allow_html=True)    
