@@ -217,7 +217,7 @@ def get_schema_file(schema_type):
     """
     # [global]   
     value = '[global]'+'\n'
-    value += 'type='+config.USER_TYPE+'\n'
+    value += 'type='+schema_type+'\n'
     number_attribute = st.number_input(label='Number of attributes to generate:', value=1, key='number_attribute_'+schema_type) 
     value += 'number_attributes='+str(number_attribute)+'\n'
     value += '\n'
@@ -288,6 +288,7 @@ def get_schema_file(schema_type):
         elif generator_type == 'Fixed':     
             value += 'generator_type_attribute_'+str(position)+'=FixedAttributeGenerator'+'\n' 
             attribute_type = st.selectbox(label='Attribute type:', options=['Integer', 'String', 'Boolean'], key='attribute_type_'+str(position)+'_'+generator_type)
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
             fixed_input = st.text_input(label='Imput the fixed value:', key='fixed_input_'+str(position))
             value += 'input_parameter_attribute_'+str(position)+'='+str(fixed_input)+'\n'
         elif generator_type == 'Date':    
@@ -302,6 +303,7 @@ def get_schema_file(schema_type):
         elif generator_type == 'BooleanList':       
             value += 'generator_type_attribute_'+str(position)+'=BooleanListAttributeGenerator'+'\n'              
             attribute_type = st.selectbox(label='Attribute type:', options=['List'], key='attribute_type_'+str(position)+'_'+generator_type)
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
             component_list = st.text_area(label='Introduce component values to the list (split by comma): monday, tuesday, wednesday, thursday, friday', key='component_list_'+str(position)).split(',')
             value += 'number_maximum_component_attribute_'+str(position)+'='+str(len(component_list))+'\n'
             value += 'type_component_attribute_'+str(position)+'=Boolean'+'\n'
@@ -312,6 +314,7 @@ def get_schema_file(schema_type):
         elif generator_type == 'URL':    
             value += 'generator_type_attribute_'+str(position)+'=URLAttributeGenerator'+'\n'                  
             attribute_type = st.selectbox(label='Attribute type:', options=['AttributeComposite'], key='attribute_type_'+str(position)+'_'+generator_type)  
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
             number_maximum_subattribute = 2
             value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
             value += 'name_subattribute_1'+'_attribute_'+str(position)+'=name'+'\n'
@@ -346,6 +349,7 @@ def get_schema_file(schema_type):
         elif generator_type == 'Address':     
             value += 'generator_type_attribute_'+str(position)+'=AddressAttributeGenerator'+'\n'                     
             attribute_type = st.selectbox(label='Attribute type:', options=['AttributeComposite'], key='attribute_type_'+str(position)+'_'+generator_type)
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
             address_complete_type = st.selectbox(label='Address complete type:', options=['Manually', 'Upload file', 'Search Address'], key='address_complete_type')
             number_maximum_subattribute = 5
             value += 'number_maximum_subattribute_attribute_'+str(position)+'='+str(number_maximum_subattribute)+'\n'
@@ -453,6 +457,7 @@ def get_schema_file(schema_type):
                         st.warning('The file to be exported must not be empty.')
         elif generator_type == 'Device': # Marcos REVIEW!!!
             attribute_type = st.selectbox(label='Attribute type:', options=['List'], key=schema_type+'_attribute_type_'+str(position)) 
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
             # List:
             if attribute_type == 'List':
                 value += 'generator_type_attribute_'+str(position)+'='+f'{generator_type}AttributeGenerator'+'\n'
@@ -467,6 +472,7 @@ def get_schema_file(schema_type):
                     value += 'input_parameter_subattribute_'+str(subattribute)+'_attribute_'+str(position)+'='+subattribute_input+'\n'        
         elif generator_type == 'Position': # Marcos REVIEW!!!
             attribute_type = st.selectbox(label='Attribute type:', options=['AttributeComposite'], key=schema_type+'_attribute_type_'+str(position)) 
+            value += 'type_attribute_'+str(position)+'='+f'{attribute_type}'+'\n'
             # AttributeComposite: 
             if attribute_type == 'AttributeComposite':            
                 value += 'generator_type_attribute_'+str(position)+'='+f'Object{generator_type}AttributeGenerator'+'\n'
