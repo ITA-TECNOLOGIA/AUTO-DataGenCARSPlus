@@ -267,7 +267,7 @@ def get_schema_file(schema_type):
                 value += 'number_posible_values_attribute_'+str(position)+'='+str(number_possible_value)+'\n'
                 for i, bool_value in enumerate(bool_possible_value_list):
                     value += 'posible_value_'+str(i+1)+'_attribute_'+str(position)+'='+str(bool_value)+'\n'
-                st.write(bool_possible_value_list)
+                st.text(bool_possible_value_list)
         elif generator_type == 'Numerical':                  
             distribution_type = st.selectbox(label='Distribution type:', options=['Random', 'Gaussian'],  key=schema_type+'_distribution_type_'+str(position))             
             value += 'generator_type_attribute_'+str(position)+'='+f'{distribution_type}AttributeGenerator'+'\n'
@@ -508,7 +508,8 @@ def get_item_profile_file():
     Generate the item profile file (item_profile.conf).
     :return: The content of the item profile file.
     """
-    # [global]   
+    # [global] 
+    item_profile_value=''
     item_profile_value += '[global]'+'\n'
     number_profiles = st.number_input(label='Number of profiles to generate:', value=3, key='number_profiles')
     item_profile_value += 'number_profiles='+str(number_profiles)+'\n'
@@ -778,21 +779,24 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                             my_bar.progress(100, 'Synthetic data generation has finished.')    
         else:
             st.warning('Before generating data ensure all files are correctly generated.')
-            
+   
 def edit_schema_file(schema_file_name, schema_value):
     """
     Edit the content of a schema file.
     :param schema_file_name: The name of the schema file.
     :param schema_value: The content of the schema file.
     :return: The content of the edited schema file.
-    """    
+    """
+    schema_text_area = schema_value
     with st.expander(f"Show {schema_file_name}.conf"):
-        if st.checkbox(label='Edit file?', key=f"edit_{schema_file_name}"):
-            schema_text_area = st.text_area(label='Current file:', value=schema_value, height=500, key=f'true_edit_{schema_file_name}')
-        else:               
-            schema_text_area = st.text_area(label='Current file:', value=schema_value, height=500, disabled=True, key=f'false_edit_{schema_file_name}')
-    return schema_text_area
-
+        edit_checkbox = st.checkbox(label='Edit file?', value=False, key=f"false_initial_{schema_file_name}")
+        st.warning("If you edit the file and want to save the changes made, you must disable the 'Edit file?' checkbox again.")
+        if edit_checkbox:
+            schema_text_area = st.text_area(label='Current file:', value=schema_text_area, height=500, disabled=False, key=f'true_edit_{schema_file_name}')
+        else:        
+            schema_text_area = st.text_area(label='Current file:', value=schema_text_area, height=500, disabled=True, key=f'true_edit_{schema_file_name}')            
+        return schema_text_area
+			
 def save_file(file_name, file_value, extension):
     """
     Save a schema file.

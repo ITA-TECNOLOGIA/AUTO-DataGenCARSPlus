@@ -6,6 +6,16 @@ import config
 def help_explicit_rating_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")
+        st.write('Different types of generators can be used:')
+        st.markdown("""- **Categorical**: It generates a random value (a ```string``` value from an list, or a ```boolean``` value, depending on the domain of the specific attribute). Random values are by default generated according to a ```uniform probabilistic distribution```, but it is possible to parametrize to use a ```gaussian distribution```. """)
+        st.markdown("""- **Numerical**: It generates a random value (an ```integer``` or ```float``` value in a given range, depending on the domain of the specific attribute). Random values are by default generated according to a ```uniform probabilistic distribution```, but it is possible to parametrize to use a ```gaussian distribution```. """)
+        st.markdown("""- **Fixed**: It generates fiexed values. For example, if you want the ```country``` attribute to always have the same value of ```Spain``` for all its instances.""")
+        st.markdown("""- **Date**: It allows generating random dates within a certain range of years required. """)
+        st.markdown("""- **BooleanList**: It generates an array of boolean values representing the presence or absence of a certain feature or Component (e.g., it fills with true/false the opening days of a business—```Monday```, ```Tuesday```, ```Wednesday```, ```Thursday```, ```Friday```, ```Saturday```, ```Sunday```—or the types of foods served in a restaurant—```Italian```, ```Mexican```, ```etc```., based on the average percentage of true values desired). """)
+        st.markdown("""- **URL**: It generates ```URL``` of web pages, by collecting place name values from an input data provided.""")
+        st.markdown("""- **Address**: It generates consistent values for typical attributes representing an address(```street```, ```number```, ```ZIP code```, ```latitude```, and ```longitude```) by collecting these values from an input data provided. """)
+        st.markdown("""- **Device**: It generates features of an informatic ```device``` (e.g., ```mobile phone```, ```computer```, ```tablet```, etc.) comprising five sub-attributes: ```browser name```, ```browser version```, ```device type```, ```operating system name```, ```operating system version```. Each sub-attribute is of the String type, with certain sub-attributes having specified input parameters that determine their possible values. For example, ```{'browserName': 'Chrome', 'browserVersion': '88.8378.8638.9531', 'deviceType': 'browser', 'osName': 'iOS', 'osVersion': '11.4.7'}```. """)        
+        st.markdown("""- **Position**: It generates item or user positions. The attribute value represents the three-dimensional coordinates of the user or item in a 3D space. It is a compound of three sub-attributes, ```longitude (x)```, ```latitude (y)```, and ```altitude (z)```. """)
 
 def help_implicit_rating_wf():
     with st.expander(label='Help information'):
