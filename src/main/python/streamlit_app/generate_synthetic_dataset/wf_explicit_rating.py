@@ -3,16 +3,22 @@ import io
 
 import config
 import console
+import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from streamlit_app import help_information
+from streamlit_app.preprocess_dataset.wf_util import save_df, save_file
 from streamlit_app.workflow_graph import workflow_image
 
 
-def generate_synthtetic_dataset(with_context):     
+def generate_synthtetic_dataset(with_context):
+    """
+    Generates a synthetic dataset with explicit ratings.
+    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.    
+    """ 
     # Help information:
     help_information.help_explicit_rating_wf()
 
@@ -54,7 +60,8 @@ def generate_synthtetic_dataset(with_context):
             schema_value = upload_schema_file(schema_file_name=config.USER_SCHEMA_NAME)
         else:
             # Generating the schema file: "user_schema.conf"
-            schema_value = get_schema_file(schema_type=config.USER_TYPE)
+            schema_value = get_schema_file(schema_type=config.USER_TYPE)        
+
         # Editing schema:
         user_schema = edit_schema_file(schema_file_name=config.USER_SCHEMA_NAME, schema_value=schema_value)
         # Saving schema:
@@ -215,6 +222,9 @@ def get_schema_file(schema_type):
     :param schema_type: The type of schema (user, item or context).
     :return: The content of the schema file.
     """
+    # Help information:
+    help_information.help_schema_file()
+    
     # [global]   
     value = '[global]'+'\n'
     value += 'type='+schema_type+'\n'
@@ -540,7 +550,8 @@ def get_item_profile_file():
     help_information.help_overlapping_attribute_values()    
     item_profile_value += 'overlap_midpoint_left_profile='+str(overlap_midpoint_left_profile)+'\n'
     item_profile_value += 'overlap_midpoint_right_profile='+str(overlap_midpoint_right_profile)+'\n'
-    item_profile_value += '\n' 
+    item_profile_value += '\n'
+    return item_profile_value
 
 def get_user_profile_file(user_schema, item_schema, context_schema=None):
     """
@@ -576,10 +587,11 @@ def get_user_profile_file(user_schema, item_schema, context_schema=None):
     # Introducing the number of user profiles to generate:            
     user_access = AccessSchema(file_str=user_schema)
     initial_value = len(user_access.get_possible_values_attribute_list_from_name(attribute_name='user_profile_id'))
-    number_user_profile = st.number_input(label='Number of user profiles', value=initial_value)
+    number_user_profile = st.number_input(label='Number of user profiles:', value=initial_value, disabled=True)
+    st.warning('The number of profiles has been previously defined in the ```user_profile_id``` attribute of the ```user_schema.conf``` file. If you want to change it, you must first modify the ```user_schema.conf``` file.')
                             
     # Generate user profile manual:                
-    user_profile_df = generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)                  
+    user_profile_df = generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
     return user_profile_df
 
 def generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map=None):
@@ -658,7 +670,7 @@ def generate_user_profile_manual(number_user_profile, attribute_column_list, ite
     other_value = 1
     for column in attribute_column_list:
         if column != 'user_profile_id' and column != 'other':
-            other_value = float(other_value-abs(float(user_profile_df.values[row][attribute_column_list.index(column)])))
+            other_value = float(abs(other_value-abs(float(user_profile_df.values[row][attribute_column_list.index(column)]))))
     if not user_profile_df.empty:
         user_profile_df.values[row][len(user_profile_df.columns)-1] = f"{other_value:.1f}"
     else:
@@ -684,18 +696,18 @@ def generate_user_profile_manual(number_user_profile, attribute_column_list, ite
                             export_df.values[index][attribute_column_list.index(column)] = f'{str(abs(float(row[column])))}'
     else:
         st.warning("user_profile_df is empty.")
-    # Show the user profile dataframe:    
+    # Show the user profile dataframe:
     help_information.help_user_profile_id()
-    st.dataframe(user_profile_df)   
+    st.dataframe(export_df)   # user_profile_df
     # Downloading user_profile.csv:
     if not inconsistent:
         save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=export_df, extension='csv')        
-    return user_profile_df
+    return export_df # user_profile_df
 
 def run(generation_config_schema, user_schema, user_profile, item_schema, item_profile, with_context=False, context_schema=None):
     """
     Runs the workflow related to generating a synthetic dataset with explicit ratings.
-    """
+    """    
     with_correlation_checkbox = False
     inconsistent = False                
     col_run, col_stop = st.columns(2)
@@ -724,6 +736,7 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                     user_file_df = generator.generate_user_file(user_schema=user_schema)
                     st.dataframe(user_file_df)
                     save_df(df_name=config.USER_TYPE, df_value=user_file_df, extension='csv')
+                    st.markdown("""---""")
                 else:
                     st.warning('The user schema file (user_schema.conf) is required.')
                 current_step = current_step + 1
@@ -738,6 +751,7 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                         item_file_df = generator.generate_item_file(item_schema=item_schema, item_profile=item_profile, with_correlation=with_correlation_checkbox)
                         st.dataframe(item_file_df)   
                         save_df(df_name=config.ITEM_TYPE, df_value=item_file_df, extension='csv')
+                        st.markdown("""---""")
                         current_step = current_step + 1
                     else:
                         st.warning('The item schema file (item_schema.conf) is required.')
@@ -753,6 +767,7 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                                 context_file_df = generator.generate_context_file(context_schema=context_schema)
                                 st.dataframe(context_file_df)
                                 save_df(df_name=config.CONTEXT_TYPE, df_value=context_file_df, extension='csv')
+                                st.markdown("""---""")
                                 current_step = current_step + 1
                             else:
                                 st.warning('The context schema file (context_schema.conf) is required.')               
@@ -772,7 +787,7 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                                     rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile, item_df=item_file_df, item_schema=item_schema)
                                 st.dataframe(rating_file_df)
                                 save_df(df_name='rating', df_value=rating_file_df, extension='csv')
-                                                                                                        
+                                st.markdown("""---""")                                                                                                        
                             else:
                                 st.warning('The configuration file (generation_config.conf) is required.')
                             print('Synthetic data generation has finished.')   
@@ -796,26 +811,3 @@ def edit_schema_file(schema_file_name, schema_value):
         else:        
             schema_text_area = st.text_area(label='Current file:', value=schema_text_area, height=500, disabled=True, key=f'true_edit_{schema_file_name}')            
         return schema_text_area
-			
-def save_file(file_name, file_value, extension):
-    """
-    Save a schema file.
-    :param file_name: The name of the schema file.
-    :param file_value: The content of the schema file.
-    :param extension: The file extension ('*.conf' or '*.csv').
-    """
-    if extension == 'conf':
-        link_file = f'<a href="data:text/plain;base64,{base64.b64encode(file_value.encode()).decode()}" download="{file_name}.{extension}">Download</a>'
-    elif extension == 'csv':
-        link_file = f'<a href="data:file/csv;base64,{base64.b64encode(file_value.encode()).decode()}" download="{file_name}.{extension}">Download</a>'
-    st.markdown(link_file, unsafe_allow_html=True)    
-
-def save_df(df_name, df_value, extension):
-    """
-    Save a df file.
-    :param df_name: The name of the df file.
-    :param df_value: The content of the df file.
-    :param extension: The file extension ('*.csv').
-    """
-    link_df = f'<a href="data:file/csv;base64,{base64.b64encode(df_value.to_csv(index=False).encode()).decode()}" download="{df_name}.{extension}">Download</a>'
-    st.markdown(link_df, unsafe_allow_html=True)    

@@ -195,8 +195,8 @@ class GeneratorExplicitRatingFile:
         :param context_id: The context ID.
         :return: A rating value.
         '''       
-        # Getting the attribute name list and atribute value list of the user_profile_id.
-        atribute_name_list, atribute_value_list = self.access_user_profile.get_vector_from_user_profile(user_profile_id)        
+        # Getting the attribute name list and atribute value list of the user_profile_id.        
+        atribute_name_list, atribute_value_list = self.access_user_profile.get_vector_from_user_profile(user_profile_id)
 
         # Getting the current attribute value and its possible values.
         if context_id:

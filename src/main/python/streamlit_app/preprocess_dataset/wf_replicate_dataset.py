@@ -1,15 +1,23 @@
+import streamlit as st
+from streamlit_app import help_information
+from streamlit_app.workflow_graph import workflow_image
+import pandas as pd
 
-def generate():
+
+def generate(with_context):    
     # Loading dataset:
+    st.header('Load dataset')     
     if with_context:
-        user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])            
+        user_df, item_df, context_df, rating_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
     else:
-        user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
+        user_df, item_df, __, rating_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating'])   
 
     # WF --> Replicate dataset:
-    st.header('Apply workflow: Replicate dataset')
+    st.header('Apply workflow: Replicate dataset')    
+
     # Help information:
     help_information.help_replicate_dataset_wf()
+    
     # Showing the initial image of the WF:
     workflow_image.show_wf(wf_name='ReplicateDataset', init_step='True', with_context=True, optional_value_list=[('NULLValues', 'True'), ('NULLValuesC', 'True'), ('NULLValuesI', 'True')])
         

@@ -47,33 +47,33 @@ if general_option == 'Generate a synthetic dataset':
     # elif feedback_option == 'Implicit ratings':   
     #     wf_implicit_rating.generate_synthtetic_dataset()
         
-# ####### Pre-process a dataset #######
-# elif general_option == 'Pre-process a dataset':    
-#     # Selecting a workflow option:
-#     wf_option = st.sidebar.radio(label='Select a workflow:', options=config.WF_OPTIONS)
-#     # Loading dataset:
-#     st.header('Load dataset')    
-#     # WF --> Replicate dataset:    
-#     if wf_option == 'Replicate dataset':
-#         wf_replicate_dataset.generate()
-#     # WF --> Extend dataset:
-#     elif wf_option == 'Extend dataset':
-#         wf_extend_dataset.generate()
-#     # WF --> Recalculate ratings:
-#     elif wf_option == 'Recalculate ratings': 
-#        wf_recalculate_dataset.generate()
-#     # WF --> Replace NULL values:
-#     elif wf_option == 'Replace NULL values':
-#         wf_replace_null_values.generate()     
-#     # WF --> Generate user profile:
-#     elif wf_option == 'Generate user profile':
-#         wf_generate_user_profile.generate()
-#     # WF --> Ratings to binary:
-#     elif wf_option == 'Ratings to binary':    
-#         wf_ratings_to_binary.generate()
-#     # WF --> Mapping categorization
-#     elif wf_option == 'Mapping categorization':
-#         wf_mapping_categorization.generate()
+####### Pre-process a dataset #######
+elif general_option == 'Pre-process a dataset':    
+    # Selecting a workflow option:
+    wf_option = st.sidebar.radio(label='Select a workflow:', options=config.WF_OPTIONS)
+    
+    # WF --> Replace NULL values:
+    if wf_option == 'Replace NULL values':
+        wf_replace_null_values.generate(with_context)    
+    
+    # # WF --> Generate user profile:
+    # elif wf_option == 'Generate user profile':
+    #     wf_generate_user_profile.generate()    
+    # # WF --> Replicate dataset:    
+    # elif wf_option == 'Replicate dataset':
+    #     wf_replicate_dataset.generate()
+    # # WF --> Extend dataset:
+    # elif wf_option == 'Extend dataset':
+    #     wf_extend_dataset.generate()
+    # # WF --> Recalculate ratings:
+    # elif wf_option == 'Recalculate ratings': 
+    #    wf_recalculate_dataset.generate()   
+    # # WF --> Ratings to binary:
+    # elif wf_option == 'Ratings to binary':    
+    #     wf_ratings_to_binary.generate()
+    # # WF --> Mapping categorization
+    # elif wf_option == 'Mapping categorization':
+    #     wf_mapping_categorization.generate()
 
 # ####### Analysis a dataset #######
 # elif general_option == 'Analysis a dataset':

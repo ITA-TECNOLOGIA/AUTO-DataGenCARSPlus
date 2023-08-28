@@ -5,7 +5,10 @@ import streamlit as st
 ####### Generate a synthetic dataset ######
 def help_explicit_rating_wf():
     with st.expander(label='Help information'):
-        st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")
+        st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")        
+
+def help_schema_file():
+    with st.expander(label='Help information'):
         st.write('Different types of generators can be used:')
         st.markdown("""- **Categorical**: It generates a random value (a ```string``` value from an list, or a ```boolean``` value, depending on the domain of the specific attribute). Random values are by default generated according to a ```uniform probabilistic distribution```, but it is possible to parametrize to use a ```gaussian distribution```. """)
         st.markdown("""- **Numerical**: It generates a random value (an ```integer``` or ```float``` value in a given range, depending on the domain of the specific attribute). Random values are by default generated according to a ```uniform probabilistic distribution```, but it is possible to parametrize to use a ```gaussian distribution```. """)

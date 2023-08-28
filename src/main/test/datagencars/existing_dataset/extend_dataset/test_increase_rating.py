@@ -1,6 +1,6 @@
 import unittest
 import pandas as pd
-from streamlit_app import util
+from streamlit_app.preprocess_dataset import wf_util
 from datagencars.existing_dataset.extend_dataset.increase_rating import IncreaseRating
 
 class TestIncreaseRating(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestIncreaseRating(unittest.TestCase):
 
     def test_incremental_rating_random(self):
         # Generate user profile
-        user_profile = util.generate_user_profile_automatic(self.ratings_df, self.item_df, self.context_df)
+        user_profile = wf_util.generate_user_profile_automatic(self.ratings_df, self.item_df, self.context_df)
         inc_rating = IncreaseRating(rating_df=self.ratings_df, item_df=self.item_df, user_df=self.user_df, context_df=self.context_df, user_profile=user_profile)
         result_df = inc_rating.incremental_rating_random(percentage_rating_variation=25, number_ratings=10, k=10)
         self.assertIsNotNone(result_df)

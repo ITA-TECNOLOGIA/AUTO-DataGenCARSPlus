@@ -24,7 +24,12 @@ USER_PROFILE_SCHEMA_NAME = 'user_profile'
 
 
 # Pre-process a dataset:
-WF_OPTIONS = ['Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Replace NULL values', 'Generate user profile', 'Ratings to binary', 'Mapping categorization']
+WF_OPTIONS = ['Replace NULL values', 'Generate user profile', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Ratings to binary', 'Mapping categorization']
+# WF --> Replace NULL values:
+IC_WF_REPLACE_NULL_VALUES=['item', 'context']
+I_WF_REPLACE_NULL_VALUES=['item']
+GENERATOR_OPTIONS = ['Categorical', 'Numerical', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'Device', 'Position']
+ATTRITBUTE_OPTIONS = ['Integer', 'Float', 'String', 'Boolean', 'List', 'AttributeComposite']
 
 # Analysis a dataset:
 ANLYSIS_OPTIONS = ['Visualization', 'Evaluation']
@@ -44,7 +49,3 @@ PLOTS_GRID = {'visible':True, 'color':'gray', 'linestyle':'-.', 'linewidth':0.5}
 
 # Metrics:
 SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', 'MAE', 'MSE', 'RMSE']
-
-# App Constants
-ATR_OPTS = ['Integer', 'Float', 'String', 'Boolean', 'List', 'AttributeComposite']
-GENERATOR_OPTS = ['Integer/Float/String/Boolean (following a distribution)', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList']
