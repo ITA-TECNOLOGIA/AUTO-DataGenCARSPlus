@@ -4,7 +4,7 @@ def generate():
     _, item_df, context_df, rating_df = util.load_dataset(file_type_list=['item', 'context', 'rating'])
 
     # WF --> Recalculate ratings:
-    st.header('Apply workflow: Recalculate ratings')
+    st.header('Workflow: Recalculate ratings')
     # Help information:
     help_information.help_recalculate_ratings_wf()
     # Showing the initial image of the WF:

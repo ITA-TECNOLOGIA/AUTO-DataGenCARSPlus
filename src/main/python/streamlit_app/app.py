@@ -9,7 +9,10 @@ from streamlit_app.preprocess_dataset import (wf_extend_dataset,
                                               wf_ratings_to_binary,
                                               wf_recalculate_dataset,
                                               wf_replace_null_values,
-                                              wf_replicate_dataset)
+                                              wf_replicate_dataset,
+                                              wf_util)
+import pandas as pd
+
 
 # Setting the main page:
 st.set_page_config(page_title=config.APP_TITLE,
@@ -54,11 +57,43 @@ elif general_option == 'Pre-process a dataset':
     
     # WF --> Replace NULL values:
     if wf_option == 'Replace NULL values':
-        wf_replace_null_values.generate(with_context)    
-    
-    # # WF --> Generate user profile:
-    # elif wf_option == 'Generate user profile':
-    #     wf_generate_user_profile.generate()    
+        # Setting tabs:
+        if with_context:
+            tab_replace_null_values_item, tab_replace_null_values_context = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)'])
+        else:
+            tab_replace_null_values_item = st.tabs(['Replace NULL values (item.csv)'])
+        
+        # Apply WF: "Replacing Null values":
+        if with_context:
+            # Replacing Null values in item.csv:
+            with tab_replace_null_values_item:
+                wf_replace_null_values.generate_item(with_context)
+        # Replacing Null values in context.csv (optional):
+        with tab_replace_null_values_context:
+            wf_replace_null_values.generate_context(with_context)
+
+    # WF --> Generate User Profile:
+    elif wf_option == 'Generate user profile':        
+        # Setting tabs:
+        if with_context:
+            tab_replace_null_values_item, tab_replace_null_values_context, tab_generate_user_profile = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)', 'Generate user profile'])                         
+        else:
+            tab_replace_null_values_item, tab_generate_user_profile = st.tabs(['Replace NULL values (item.csv)', 'Generate user profile'])                
+        
+        # Apply WF: "Replacing Null values":
+        if with_context:
+            # Replacing Null values in context.csv (optional):
+            with tab_replace_null_values_context:
+                wf_replace_null_values.generate_context(with_context)            
+        # Replacing Null values in item.csv (optional):        
+        with tab_replace_null_values_item:
+            wf_replace_null_values.generate_item(with_context)
+
+        # Apply WF: "Generate User Profile":
+        with tab_generate_user_profile:
+            wf_generate_user_profile.generate(with_context)
+            
+
     # # WF --> Replicate dataset:    
     # elif wf_option == 'Replicate dataset':
     #     wf_replicate_dataset.generate()

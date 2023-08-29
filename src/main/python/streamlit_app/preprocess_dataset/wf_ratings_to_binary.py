@@ -4,7 +4,7 @@ def generate():
     _, _, _, rating_df = util.load_dataset(file_type_list=['rating'])
 
     # WF --> Ratings to binary:
-    st.header('Apply workflow: Ratings to binary')
+    st.header('Workflow: Ratings to binary')
     # Help information:
     help_information.help_ratings_to_binary_wf()        
     # Showing the initial image of the WF:

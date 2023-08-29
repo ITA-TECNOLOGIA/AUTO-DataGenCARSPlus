@@ -1,5 +1,5 @@
-import config
 import streamlit as st
+from streamlit_app import config
 
 
 ####### Generate a synthetic dataset ######

@@ -31,6 +31,11 @@ I_WF_REPLACE_NULL_VALUES=['item']
 GENERATOR_OPTIONS = ['Categorical', 'Numerical', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'Device', 'Position']
 ATTRITBUTE_OPTIONS = ['Integer', 'Float', 'String', 'Boolean', 'List', 'AttributeComposite']
 
+# WF --> Generate User Profile:
+DATASET_CARS = ['user', 'item', 'context', 'rating']
+DATASET_RS = ['user', 'item', 'rating']
+UP_OPTIONS = ['Automatic', 'Manual']
+
 # Analysis a dataset:
 ANLYSIS_OPTIONS = ['Visualization', 'Evaluation']
 

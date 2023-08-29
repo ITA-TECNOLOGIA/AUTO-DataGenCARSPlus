@@ -15,7 +15,7 @@ def generate():
         file = 'C'
 
     # WF --> Mapping categorization:
-    st.header('Apply workflow: Mapping categorization')
+    st.header('Workflow: Mapping categorization')
     # Help information:
     help_information.help_mapping_categorization_wf()
     # Showing the initial image of the WF:

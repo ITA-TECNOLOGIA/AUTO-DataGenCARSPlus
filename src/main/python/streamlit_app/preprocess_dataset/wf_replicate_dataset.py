@@ -13,7 +13,7 @@ def generate(with_context):
         user_df, item_df, __, rating_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating'])   
 
     # WF --> Replicate dataset:
-    st.header('Apply workflow: Replicate dataset')    
+    st.header('Workflow: Replicate dataset')    
 
     # Help information:
     help_information.help_replicate_dataset_wf()

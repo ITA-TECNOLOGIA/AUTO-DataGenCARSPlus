@@ -7,13 +7,14 @@ import plotly.graph_objs as go
 import datagencars.evaluation.rs_surprise.evaluation as evaluation
 import base64
 import io
-import requests
+
 
 from datagencars.existing_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
 from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
 from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
-# import console
+import console
 from streamlit_app import config
+from streamlit_app.workflow_graph import workflow_image
 
 
 ####### Common methods ######
@@ -33,74 +34,27 @@ def save_file(file_name, file_value, extension):
 def save_df(df_name, df_value, extension):
     """
     Save a df file.
-    :param df_name: The name of the df file.
-    :param df_value: The content of the df file.
+    :param df_name: The df file name.
+    :param df_value: The df file content.
     :param extension: The file extension ('*.csv').
     """
     link_df = f'<a href="data:file/csv;base64,{base64.b64encode(df_value.to_csv(index=False).encode()).decode()}" download="{df_name}.{extension}">Download</a>'
     st.markdown(link_df, unsafe_allow_html=True)
 
 def show_schema_file(schema_file_name, schema_value):
+    """
+    Show the content of the specified schema file.
+    :param schema_file_name: The schema file name.
+    :param schema_value: The schema file content.
+    """
     with st.expander(f"Show {schema_file_name}.conf"):
         st.text_area(label='Current file:', value=schema_value, height=500, disabled=True, key=f'true_edit_{schema_file_name}')
 
 ####### Generate a synthetic dataset ######
-# def generate_user_profile_automatic(rating_df, item_df, context_df=None):
-    # """
-    # """
-    # try:
-    #     output = st.empty()
-    #     with console.st_log(output.code):
-    #         # Generate user profile, by using an original dataset:
-    #         generate_up_dataset = None
-    #         user_profile_df = pd.DataFrame()                    
-    #         if context_df is not None and not context_df.empty:                     
-    #             # With context:            
-    #             if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
-    #                     if st.button(label='Generate', key='button_generate_up_cars'):
-    #                         print('Automatically generating user profiles.')                    
-    #                         generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df, context_df)
-    #                         user_profile_df = generate_up(generate_up_dataset)                                  
-    #                         print('The user profile has been generated.')                                                    
-    #             else:
-    #                 st.warning("The item, context and rating files have not been uploaded.")
-    #         else:
-    #             # Without context:            
-    #             if (not item_df.empty) and (not rating_df.empty): 
-    #                 if st.button(label='Generate', key='button_generate_up_rs'):
-    #                     print('Automatically generating user profiles.')                    
-    #                     generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df)
-    #                     user_profile_df = generate_up(generate_up_dataset)                    
-    #                     print('The user profile has been generated.')
-    #             else:
-    #                 st.warning("The item and rating files have not been uploaded.")
-    # except Exception:
-    #     # Generate user profile, by using an original dataset:
-    #     generate_up_dataset = None
-    #     user_profile_df = pd.DataFrame()                    
-    #     if context_df is not None and not context_df.empty:                     
-    #         # With context:            
-    #         if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
-    #             print('Automatically generating user profiles.')                    
-    #             generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df, context_df)
-    #             user_profile_df = generate_up(generate_up_dataset)                                  
-    #             print('The user profile has been generated.')                                                    
-    #         else:
-    #             print("The item, context and rating files have not been uploaded.")
-    #     else:
-    #         # Without context:            
-    #         if (not item_df.empty) and (not rating_df.empty): 
-    #                 print('Automatically generating user profiles.')                    
-    #                 generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df)
-    #                 user_profile_df = generate_up(generate_up_dataset)                    
-    #                 print('The user profile has been generated.')
-    #         else:
-    #             print("The item and rating files have not been uploaded.")
-    # return user_profile_df
 
 ####### Pre-process a dataset #######
 # LOAD DATASET:
-def load_dataset(file_type_list):
+def load_dataset(file_type_list, wf_type):
     """
     Loads dataset files (user.csv, item.csv, context.csv and rating.csv) in dataframes.
     :param file_type_list: List of file types.
@@ -112,16 +66,16 @@ def load_dataset(file_type_list):
     rating_df = pd.DataFrame()
     # Uploading a dataset:
     if 'user' in file_type_list:
-        user_df = load_one_file(file_type='user')
+        user_df = load_one_file(file_type='user', wf_type=wf_type)
     if 'item' in file_type_list:
-        item_df = load_one_file(file_type='item')
+        item_df = load_one_file(file_type='item', wf_type=wf_type)
     if 'context' in file_type_list:
-        context_df = load_one_file(file_type='context')   
+        context_df = load_one_file(file_type='context', wf_type=wf_type)   
     if 'rating' in file_type_list:
-        rating_df = load_one_file(file_type='rating')
+        rating_df = load_one_file(file_type='rating', wf_type=wf_type)
     return user_df, item_df, context_df, rating_df
 
-def load_one_file(file_type):
+def load_one_file(file_type, wf_type):
     """
     Load only one file (user.csv, item.csv, context.csv or rating.csv).
     :param file_type: The file type.
@@ -129,8 +83,8 @@ def load_one_file(file_type):
     """
     df = pd.DataFrame()    
     with st.expander(f"Upload your {file_type}.csv file"):
-        separator = st.text_input(label=f"Enter the separator for your {file_type}.csv file (default is ';')", value=";", key='text_input_'+file_type)
-        uploaded_file = st.file_uploader(label=f"Select {file_type}.csv file", type="csv")
+        separator = st.text_input(label=f"Enter the separator for your {file_type}.csv file (default is ';')", value=";", key=f'text_input_{file_type}_{wf_type}')
+        uploaded_file = st.file_uploader(label=f"Select {file_type}.csv file", type="csv", key=f'uploaded_file_{file_type}_{wf_type}')
         if uploaded_file is not None:
             if not separator:
                 st.error('Please provide a separator.')
@@ -156,18 +110,18 @@ def load_one_file(file_type):
 
 # # WORKFLOW:
 # # Replicate dataset:
-# def generate_up(generate_up):
-#     """
-#     Generates user profiles (automatically).
-#     :param generate_up: The constructor of the user profile generator.
-#     :return: A dataframe with user profiles.
-#     """
-#     user_profile_df = generate_up.generate_user_profile()    
-#     with st.expander(label=f'Show the generated user profile file.'):
-#         st.dataframe(user_profile_df)
-#         link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(user_profile_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
-#         st.markdown(link_rating, unsafe_allow_html=True) 
-#     return user_profile_df
+def generate_up(generate_up):
+    """
+    Generates user profiles (automatically).
+    :param generate_up: The constructor of the user profile generator.
+    :return: A dataframe with user profiles.
+    """
+    user_profile_df = generate_up.generate_user_profile()    
+    with st.expander(label=f'Show the generated user profile file.'):
+        st.dataframe(user_profile_df)
+        link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(user_profile_df.to_csv(index=False).encode()).decode()}" download="user_profile.csv">Download</a>'
+        st.markdown(link_rating, unsafe_allow_html=True) 
+    return user_profile_df
 
 # def replicate_task(with_context, rating_df, user_profile_df, new_item_df, new_context_df,percentage_rating_variation, output, st):
 #     with console.st_log(output.code):     
@@ -193,90 +147,90 @@ def load_one_file(file_type):
 #                 st.markdown(link_rating, unsafe_allow_html=True)
 #             print('Replicated data generation has finished.')  
 
-# # Extend dataset:
-# # Recalculate ratings:
-# # Replace NULL values:
-# def tab_logic_replace_null(wf_name, with_context, item_df, context_df=None, other_opts = None):
-#     output = st.empty()  
-#     with console.st_log(output.code):
-#         null_values_c = True
-#         if with_context:
-#             null_values_c = st.checkbox("Do you want to replace the null values in context_file?", value=True)   
-#         null_values_i = st.checkbox("Do you want to replace the null values in item_file?", value=True)               
-#         if null_values_i or null_values_c:
-#             # Showing the current image of the WF:
-#             optional_value_list = [('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
-#             if other_opts != None:
-#                 optional_value_list = optional_value_list + other_opts
-#             workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)
-#             new_item_df = pd.DataFrame()
-#             new_context_df = pd.DataFrame()                      
-#             # Replacing NULL values in item or context file.
-#             if with_context:
-#                 if (not item_df.empty) and (not context_df.empty):                                        
-#                     if st.button(label='Replace', key='button_replace_item_context'):
-#                         if null_values_i:
-#                             # Check if item_df has NaN values:
-#                             print(f'Checking if item.csv has NaN values.')
-#                             if item_df.isnull().values.any():        
-#                                 print(f'Replacing NaN values.')
-#                                 replacenulls = ReplaceNullValues(item_df)
-#                                 schema = infer_schema(item_df)
-#                                 new_item_df = replacenulls.regenerate_item_file(schema) 
-#                                 print('The null values have been replaced.')
-#                                 with st.expander(label=f'Show replicated file: item.csv'):
-#                                     st.dataframe(new_item_df)
-#                                     link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
-#                                     st.markdown(link_rating, unsafe_allow_html=True)
-#                             else:
-#                                 st.write('new_item_df = item_df.copy()')
-#                                 new_item_df = item_df.copy()
-#                                 st.warning(f'The item.csv file has no null values.')
-#                         if null_values_c:
-#                             # Check if context_df has NaN values:
-#                             print(f'Checking if context.csv has NaN values')
-#                             if context_df.isnull().values.any():
-#                                 replacenulls = ReplaceNullValues(context_df)
-#                                 schema = infer_schema(context_df)
-#                                 new_context_df = replacenulls.regenerate_item_file(schema) 
-#                                 print('The null values have been replaced.')
-#                                 with st.expander(label=f'Show replicated file: context.csv'):
-#                                     st.dataframe(new_context_df)
-#                                     link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_context_df.to_csv(index=False).encode()).decode()}" download="context.csv">Download</a>'
-#                                     st.markdown(link_rating, unsafe_allow_html=True)
-#                             else:
-#                                 st.write('new_context_df = context_df.copy()')
-#                                 new_context_df = context_df.copy()                                        
-#                                 st.warning(f'The context.csv file has no null values.')                                        
-#                 else:
-#                     st.warning("The item and context files have not been uploaded.")
-#             else:
-#                 if not item_df.empty:                                        
-#                     if st.button(label='Replace', key='button_replace_item'):
-#                         # Check if item_df has NaN values:
-#                         print(f'Checking if item.csv has NaN values')
-#                         if item_df.isnull().values.any():
-#                             print(f'Replacing NaN values.')
-#                             new_item_df = pd.DataFrame() # TODO
-#                             print('The null values have been replaced.')
-#                             with st.expander(label=f'Show replicated file: item.csv'):
-#                                 st.dataframe(new_item_df)
-#                                 link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
-#                                 st.markdown(link_rating, unsafe_allow_html=True)
-#                         else:
-#                             new_item_df = item_df.copy()
-#                             st.warning(f'The item.csv file has no null values.')                                
-#                 else:
-#                     st.warning("The item file has not been uploaded.")
-#         else:   
-#             optional_value_list = [('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
-#             if other_opts != None:
-#                 optional_value_list = optional_value_list + other_opts                 
-#             workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)          
-#             new_item_df = item_df.copy()
-#             new_context_df = context_df.copy()
-    
-#     return null_values_c, null_values_i, new_item_df, new_context_df
+# Extend dataset:
+# Recalculate ratings:
+
+# Replace NULL values:
+
+
+def tab_replace_null(wf_name, with_context, item_df, context_df=None, other_opts=None):
+    output = st.empty()  
+    with console.st_log(output.code):
+        null_values_c = True
+        if with_context:
+            null_values_c = st.checkbox("Do you want to replace the null values in context_file?", value=True)   
+        null_values_i = st.checkbox("Do you want to replace the null values in item_file?", value=True)               
+        if null_values_i or null_values_c:
+            # Showing the current image of the WF:
+            optional_value_list = [('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if other_opts != None:
+                optional_value_list = optional_value_list + other_opts
+            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)
+            new_item_df = pd.DataFrame()
+            new_context_df = pd.DataFrame()                      
+            # Replacing NULL values in item or context file.
+            if with_context:
+                if (not item_df.empty) and (not context_df.empty):                                        
+                    if st.button(label='Replace', key='button_replace_item_context'):
+                        if null_values_i:
+                            # Check if item_df has NaN values:
+                            print(f'Checking if item.csv has NaN values.')
+                            if item_df.isnull().values.any():        
+                                print(f'Replacing NaN values.')
+                                replacenulls = ReplaceNullValues(item_df)
+                                schema = infer_schema(item_df)
+                                new_item_df = replacenulls.regenerate_item_file(schema) 
+                                print('The null values have been replaced.')
+                                with st.expander(label=f'Show replicated file: item.csv'):
+                                    st.dataframe(new_item_df)
+                                    save_df(df_name=config.ITEM_TYPE, df_value=new_item_df, extension='csv')
+                            else:
+                                # st.write('new_item_df = item_df.copy()')
+                                new_item_df = item_df.copy()
+                                st.warning(f'The item.csv file has no null values.')
+                        if null_values_c:
+                            # Check if context_df has NaN values:
+                            print(f'Checking if context.csv has NaN values')
+                            if context_df.isnull().values.any():
+                                replacenulls = ReplaceNullValues(context_df)
+                                schema = infer_schema(context_df)
+                                new_context_df = replacenulls.regenerate_item_file(schema) 
+                                print('The null values have been replaced.')
+                                with st.expander(label=f'Show replicated file: context.csv'):
+                                    st.dataframe(new_context_df)
+                                    save_df(df_name=config.CONTEXT_TYPE, df_value=new_context_df, extension='csv')                                    
+                            else:
+                                st.write('new_context_df = context_df.copy()')
+                                new_context_df = context_df.copy()                                        
+                                st.warning(f'The context.csv file has no null values.')                                        
+                else:
+                    st.warning("The item and context files have not been uploaded.")
+            else:
+                if not item_df.empty:                                        
+                    if st.button(label='Replace', key='button_replace_item'):
+                        # Check if item_df has NaN values:
+                        print(f'Checking if item.csv has NaN values')
+                        if item_df.isnull().values.any():
+                            print(f'Replacing NaN values.')
+                            new_item_df = pd.DataFrame() # TODO
+                            print('The null values have been replaced.')
+                            with st.expander(label=f'Show replicated file: item.csv'):
+                                st.dataframe(new_item_df)
+                                link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_item_df.to_csv(index=False).encode()).decode()}" download="item.csv">Download</a>'
+                                st.markdown(link_rating, unsafe_allow_html=True)
+                        else:
+                            new_item_df = item_df.copy()
+                            st.warning(f'The item.csv file has no null values.')                                
+                else:
+                    st.warning("The item file has not been uploaded.")
+        else:   
+            optional_value_list = [('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
+            if other_opts != None:
+                optional_value_list = optional_value_list + other_opts                 
+            workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)          
+            new_item_df = item_df.copy()
+            new_context_df = context_df.copy()
+    return null_values_c, null_values_i, new_item_df, new_context_df
 
 # def tab_logic_generate_up(wf_name, with_context, optional_value_list, rating_df, new_item_df, new_context_df=None):
 #     # Showing the current image of the WF:
@@ -288,288 +242,7 @@ def load_one_file(file_type):
     
 #     return user_profile_df
 
-def infer_schema(df):
-    """
-    Infer the content of the schema file.
-    :param df: The schema file.
-    :return: A dataframe with the schema information.
-    """
-    possible_types = {int:'Integer', float:'Float', bool:'Boolean', list:'List', str:'String'}
-    def infer(items):
-        try:
-            item_type = possible_types[type(items[0])]
-            if item_type == 'String' and len(items[0].replace('[','').replace(']','').split(',')) > 0:
-                item = items[0].replace('[','').replace(']','').replace('\'','').replace(' ', '').split(',')
-                try:
-                    float(item[-1])
-                    return 'AttributeComposite'
-                except:
-                    if 'www.' in items[0]:
-                        return 'AttributeComposite'
-                    else:
-                        return 'List'
-            else:
-                return item_type
-        except Exception as ex:
-            print(ex)
-            return 'Unknown'        
-    schema = pd.DataFrame()
-    attributes = df.columns[1:]
-    schema['Attribute'] = attributes
-    types = list()
-    generator = list()
-    min_vals = list()
-    max_vals = list()
-    fix_vals = list()
-    item_vals = list()
-    values_list_vals = list()
-    for attribute in attributes:        
-        items = list(set(df[attribute].drop_duplicates().dropna()))
-        # Infer types
-        item_type = infer(items)
-        min_val = 0
-        max_val = 0
-        fix_val = ''
-        values_list2=list()
-        # Infer rest of info
-        if item_type == 'Integer':
-            if len(items) >= 2:
-                item_generator = 'Numerical'
-                min_val = int(min(items))
-                max_val = int(max(items))
-            else:
-                item_generator = 'Fixed'
-                min_val = int(items[0])
-                max_val = int(items[0])
-        elif item_type == 'Float':
-            if len(items) >= 2:
-                item_generator = 'Numerical'
-                min_val = float(min(items))
-                max_val = float(max(items))
-            else:
-                item_generator = 'Fixed'
-                min_val = float(items[0])
-                max_val = float(items[0])            
-        if item_type == 'String':
-            if len(items) >= 2:
-                item_generator = 'Categorical'
-            else:
-                item_generator = 'Fixed'
-                fix_val = items[0]
-        if item_type == 'Boolean':
-            item_generator = 'Categorical'
-        if item_type == 'List':
-            values_list=''
-            for elem in items:
-                values_list += ',' + elem.replace('[', '').replace(']','').replace(' ','').replace('\'','')
-            values_list2 = list(set(values_list[1:].split(',')))
-            item_generator = 'BooleanList'
-        if item_type == 'AttributeComposite':
-            if 'www.' in items[0]:
-                item_generator = 'URL'
-            else:
-                item_generator = 'Address'
-        types.append(item_type)
-        generator.append(item_generator)
-        min_vals.append(min_val)
-        max_vals.append(max_val)
-        fix_vals.append(fix_val)
-        item_vals.append(items)
-        values_list_vals.append(values_list2)
-    schema['TypeAttribute'] = types
-    schema['GeneratorType'] = generator
-    schema['Min_val'] = min_vals
-    schema['Max_val'] = max_vals
-    schema['Fix_val'] = fix_vals
-    schema['Item_vals'] = item_vals
-    schema['Values_list_vals'] = values_list_vals
-    schema_str = '[global] \ntype=context \nnumber_attributes=' + str(len(schema)) +'\n'
-    for index, row in schema.iterrows():
-        schema_str = schema_str + '[attribute' + str(int(index+1)) + ']\n'
-        attribute = row['Attribute']
-        schema_str = schema_str + 'name_attribute_' + str(int(index+1)) + '=' + attribute + '\n'
-        st.write(f'[{attribute}]')
-        atrib_generator = st.selectbox(label='Generator type:', options=config.GENERATOR_OPTIONS, key = attribute+'generator', index=config.GENERATOR_OPTIONS.index(row['GeneratorType']))
-        atrib_type = st.selectbox(label='Attribute type:', options=config.ATTRITBUTE_OPTIONS, key=attribute+'_attribute_type_', index=config.ATTRITBUTE_OPTIONS.index(row['TypeAttribute']))
-        schema_str = schema_str + 'type_attribute_' + str(int(index+1)) + '=' + atrib_type + '\n'
-        if atrib_type == 'Float':
-            if atrib_generator == 'Fixed':
-                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=FixedAttributeGenerator\n'
-                fixed_val = st.number_input(label='Fixed value of the attribute', value=float(row['Min_val']), key=attribute+'_fixed_val')
-                schema_str = schema_str + 'input_parameter_attribute_' + str((index+1)) + '=' + str(fixed_val) + '\n'
-            else:
-                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
-                integer_min = st.number_input(label='Minimum value of the attribute', value=float(row['Min_val']), key=attribute+'_integer_min')
-                integer_max = st.number_input(label='Maximum value of the attribute', value=float(row['Max_val']), key=attribute+'_integer_max')
-                schema_str = schema_str + 'minimum_value_attribute_' + str((index+1)) + '=' + str((integer_min)) + '\n'
-                schema_str = schema_str + 'maximum_value_attribute_' + str((index+1)) + '=' + str((integer_max)) + '\n'
-        if atrib_type == 'Integer':
-            if atrib_generator == 'Fixed':
-                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=FixedAttributeGenerator\n'
-                fixed_val = st.number_input(label='Fixed value of the attribute', value=int(row['Min_val']), key=attribute+'_fixed_val')
-                schema_str = schema_str + 'input_parameter_attribute_' + str((index+1)) + '=' + str(fixed_val) + '\n'
-            else:
-                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
-                integer_min = st.number_input(label='Minimum value of the attribute', value=int(row['Min_val']), key=attribute+'_integer_min')
-                integer_max = st.number_input(label='Maximum value of the attribute', value=int(row['Max_val']), key=attribute+'_integer_max')
-                schema_str = schema_str + 'minimum_value_attribute_' + str((index+1)) + '=' + str((integer_min)) + '\n'
-                schema_str = schema_str + 'maximum_value_attribute_' + str((index+1)) + '=' + str((integer_max)) + '\n'
-        if atrib_type == 'String':
-            if atrib_generator == 'Fixed':
-                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=FixedAttributeGenerator\n'
-                schema_str = schema_str + 'input_parameter_attribute_' + str(index+1) + '=' + row['Fix_val'] + '\n'
-                fixed_val = st.text_input(label='Fixed value of the attribute', value=row['Fix_val'], key=attribute+'_fixed_val')
-            else:
-                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
-                schema_str = schema_str + 'number_posible_values_attribute_'+ str((index+1)) + '=' + str(len(row['Item_vals'])) + '\n'
-                for index2, elem in enumerate(row['Item_vals']):
-                    schema_str = schema_str + 'posible_value_' + str(index2+1) + '_attribute_' + str(index+1) + '=' + elem + '\n'
-                fixed_val = st.text_input(label="Introduce new values to the list (split by comma): ['rainy', 'cloudy', 'sunny']", value=row['Item_vals'], key=attribute+'_list_val')
-        if atrib_type == 'Boolean':
-            schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=RandomAttributeGenerator\n'
-        if atrib_type == 'List':
-            schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=BooleanListAttributeGenerator\n'
-            schema_str = schema_str + 'type_component_attribute_' + str(int(index+1)) + '=Boolean\n'
-            schema_str = schema_str + 'number_maximum_component_attribute_'+ str((index+1)) + '=' + str(len(row['Item_vals'])) + '\n'
-            for index2, elem in enumerate(row['Values_list_vals']):
-                schema_str = schema_str + 'component_' + str(index2+1) + '_attribute_' + str(index+1) + '=' + elem + '\n'
-            fixed_val = st.text_input(label="Introduce new values to the list (split by comma): ['rainy', 'cloudy', 'sunny']", value=row['Values_list_vals'][:], key=attribute+'_list_val')
-            input_parameter_val = st.number_input(label='Number of boolean values to generate for these components', value=1, key=attribute+'_input_param_val')
-            schema_str = schema_str + 'input_parameter_attribute_' + str(int(index+1)) + '=' + str(input_parameter_val) + '\n'
-        if atrib_type == 'AttributeComposite':
-            if atrib_generator == 'Address':
-                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=AddressAttributeGenerator\n'
-                schema_str = schema_str + 'number_maximum_subattribute_attribute_'+ str((index+1)) + '=5\n'
-                schema_str = schema_str + 'name_subattribute_1_attribute_'+ str((index+1)) + '=street\n'
-                schema_str = schema_str + 'name_subattribute_2_attribute_'+ str((index+1)) + '=number\n'
-                schema_str = schema_str + 'name_subattribute_3_attribute_'+ str((index+1)) + '=zp\n'
-                schema_str = schema_str + 'name_subattribute_4_attribute_'+ str((index+1)) + '=latitude\n'
-                schema_str = schema_str + 'name_subattribute_5_attribute_'+ str((index+1)) + '=longitude\n'
-                schema_str = schema_str + 'type_subattribute_1_attribute_'+ str((index+1)) + '=String\n'
-                schema_str = schema_str + 'type_subattribute_2_attribute_'+ str((index+1)) + '=String\n'
-                schema_str = schema_str + 'type_subattribute_3_attribute_'+ str((index+1)) + '=String\n'
-                schema_str = schema_str + 'type_subattribute_4_attribute_'+ str((index+1)) + '=String\n'
-                schema_str = schema_str + 'type_subattribute_5_attribute_'+ str((index+1)) + '=String\n'
-                # Generate input parameter file: input_parameter_attribute_1=name_restaurant.csv
-                address_complete_type = st.selectbox(label='Address complete type:', options=['Manually', 'Upload file', 'Search Address'], key='address_complete_type')
-                ip_text_area = st.empty()
-                if address_complete_type == 'Manually':
-                    input_parameter_text_area = ip_text_area.text_area(label='Introduce address values (line by line), keeping the header: <street;number;zp;latitude;longitude>', value='street,number,zp,latitude,longitude', key='address_ip_text_area_'+str(index+1))   
-                    input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area), sep=",")                                                 
-                    input_parameter_list = input_parameter_df.astype(str).values.tolist()
-                    schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(input_parameter_list)+'\n'
-                if address_complete_type == 'Upload file':
-                    input_parameter_text_area = None
-                    input_parameter_list = []
-                    import_split = st.text_input(label='Specifies the type of separator to read the file (; , # tab)', key='import_split')
-                    if import_file := st.file_uploader(label='Import list', key='import_file'+str(index+1)):                            
-                        input_parameter_text_area = ip_text_area.text_area(label='Introduce address values below <street,number,zp,latitude,longitude> (line by line):', value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(index+1))                            
-                        input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area), sep=import_split)                                                 
-                        input_parameter_list = input_parameter_df.astype(str).values.tolist()                        
-                    schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(input_parameter_list)+'\n'
-                if address_complete_type == 'Search Address':
-                    places_list = []
-                    places_str = 'street,number,zp,latitude,longitude\n'
-                    input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address, for example: McDonald's, 50017, keeping header: place, postalcode", value='place, zipcode', key='address_ip_text_area_'+str(index+1))   
-                    if import_file := st.file_uploader(label='Import place_name list, keeping header: place', key='import_file'+str(index+1)):                            
-                        input_parameter_text_area = ip_text_area.text_area(label="Introduce place_name to search address, for example: McDonald's, 50017, keeping header: place, postalcode", value=import_file.getvalue().decode("utf-8"), key='import_address_ip_text_area_'+str(index+1))                            
-                    input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))     
-                    input_parameter_list = input_parameter_df.astype(str).values.tolist()
-                    # print(input_parameter_text_area)
-                    for place in input_parameter_list:   
-                        # print(place)
-                        # Construct the API endpoint URL
-                        if place[1] == '':
-                            url = f"https://nominatim.openstreetmap.org/search?q={place[0]}&format=json&limit=1000"
-                        else:
-                            url = f"https://nominatim.openstreetmap.org/search?q={place[0]}, {place[1]}&format=json&limit=1000"
-                        # Send a GET request to the API endpoint
-                        response = requests.get(url).json()
-                        # print(response)
-                        # If more than one result, return the first one
-                        location = response[0]
-                        # Extract the latitude and longitude coordinates from the first result
-                        lat = location['lat']
-                        lon = location['lon']
-                        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json"
-                        response = requests.get(url)
-                        # Extract the JSON response as a dictionary
-                        location2 = response.json()
-                        #print(location2)
-                        if location2 == None:
-                            st.write(str(place[0]) +' not found.')
-                        else:
-                            item_info=[]
-                            try:
-                                #zp = location2['address']['postcode']
-                                #print(location)
-                                name = str(location2['display_name'].split(',')[0])
-                                if name.lower() == place[0].lower():
-                                    # print('IF')
-                                    street = location2['address']['road'] 
-                                    try:
-                                        number = location2['address']['house_number']
-                                    except: 
-                                        number = 'S/N'
-                                    zp = location2['address']['postcode']
-                                    item_info.append(street)
-                                    item_info.append(number)
-                                    item_info.append(zp)
-                                    item_info.append(lat)
-                                    item_info.append(lon)
-                                    places_list.append(item_info)
-                                    # print(places_list)
-                                    places_str = places_str + item_info[0] + ', ' + item_info[1] + ', ' + item_info[2] + ', ' + str(item_info[3]) + ', ' + str(item_info[4]) + '\n'
-                                    # print(places_str)
-                            except Exception as ex:
-                                print(ex)
-                                pass                    
-                    ip_text_area_2 = st.empty()
-                    input_parameter_text_area_2 = ip_text_area_2.text_area(label='Search results:', value=places_str, key='address_ip_text_area_2_'+str(index+1))   
-                    schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(places_list)+'\n'            
-                    input_parameter_text_area = places_str
-                # Buttons: export and import values  
-                file_name = attribute+'_input_parameter_list.csv'
-                if input_parameter_text_area != None:
-                    link_address_values = f'<a href="data:file/csv;base64,{base64.b64encode(input_parameter_text_area.encode()).decode()}" download={file_name}> Download </a>'
-                    if st.markdown(link_address_values, unsafe_allow_html=True):
-                    #if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='address_ip_export_button_'+str(position)):
-                        if len(input_parameter_text_area) == 0:                                 
-                            st.warning('The file to be exported must not be empty.')                        
-            elif atrib_generator == 'URL':
-                schema_str = schema_str + 'generator_type_attribute_' + str((index+1)) + '=URLAttributeGenerator\n'
-                schema_str = schema_str + 'number_maximum_subattribute_attribute_'+ str((index+1)) + '=2\n'
-                schema_str = schema_str + 'name_subattribute_1_attribute_'+ str((index+1)) + '=name\n'
-                schema_str = schema_str + 'name_subattribute_2_attribute_'+ str((index+1)) + '=url\n'
-                schema_str = schema_str + 'type_subattribute_1_attribute_'+ str((index+1)) + '=String\n'
-                schema_str = schema_str + 'type_subattribute_2_attribute_'+ str((index+1)) + '=String\n'
-                # Generate input parameter file: input_parameter_attribute_1=name_restaurant.csv
-                ip_text_area = st.empty()
-                input_parameter_text_area = ip_text_area.text_area(label='Introduce values (a value by line), keeping the header: <place>', value='place', key='url_ip_text_area_'+str(index+1))   
-                # Buttons: export and import values  
-                export_button_column, import_area_column = st.columns(2)
-                with export_button_column:
-                    file_name = attribute +'_input_parameter_list.csv'
-                    if st.download_button(label='Export list', data=input_parameter_text_area, file_name=file_name, key='ip_export_button_'+str(index+1)):
-                        if len(input_parameter_text_area) == 0:                                 
-                            st.warning('The file to be exported must not be empty.')
-                        else:
-                            st.success('The file has been saved with the name: '+file_name)
-                with import_area_column:
-                    input_parameter_list = []
-                    if import_file := st.file_uploader(label='Import list', key='import_file'+str(index+1)):                                
-                        input_parameter_text_area = ip_text_area.text_area(label='Introduce values (a value by line), keeping the header: <place>', value=import_file.getvalue().decode("utf-8"), key='import_url_ip_text_area_'+str(index+1))                    
-                input_parameter_df=pd.read_csv(io.StringIO(input_parameter_text_area))
-                input_parameter_list = input_parameter_df['place'].astype(str).values.tolist()
-                schema_str += 'input_parameter_attribute_'+str(index+1)+'='+str(input_parameter_list)+'\n'
-                unique_value = st.checkbox(label='Unique value?', value=True, key='unique_value_'+str(index+1)+'_'+attribute)
-                if unique_value:
-                    schema_str += 'unique_value_attribute_'+str(index+1)+'=True'+'\n'
-                else:
-                    schema_str += 'unique_value_attribute_'+str(index+1)+'=False'+'\n'      
-        st.markdown("""---""")
-        schema_str = schema_str + '\n'
-    return schema_str
+
 
 # # Generate user profile:
 # # Ratings to binary:
@@ -1020,11 +693,3 @@ def infer_schema(df):
 #             params[key] = None
 #     return params
 
-
-# # item_df:
-# item_file_path = 'resources/existing_dataset/context/sts/item.csv'
-# item_df = pd.read_csv(item_file_path, encoding='utf-8', index_col=False, sep=';')
-# # context_df:
-# context_file_path = 'resources/existing_dataset/context/sts/context.csv'
-# context_df = pd.read_csv(context_file_path, encoding='utf-8', index_col=False, sep=';')
-# infer_schema(df=item_df)

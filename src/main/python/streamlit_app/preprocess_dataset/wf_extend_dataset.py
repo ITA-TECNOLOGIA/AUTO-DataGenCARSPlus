@@ -4,7 +4,7 @@ def generate():
     user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
     
     # WF --> Extend dataset:
-    st.header('Apply workflow: Extend dataset')
+    st.header('Workflow: Extend dataset')
     # Help information:
     help_information.help_extend_dataset_wf()
     # Showing the initial image of the WF:
