@@ -1,15 +1,14 @@
-import base64
 import io
 
 import config
 import console
-import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from streamlit_app import help_information
+from streamlit_app.preprocess_dataset import wf_generate_user_profile
 from streamlit_app.preprocess_dataset.wf_util import save_df, save_file
 from streamlit_app.workflow_graph import workflow_image
 
@@ -582,7 +581,7 @@ def get_user_profile_file(user_schema, item_schema, context_schema=None):
         for context_attribute_name in context_attribute_name_list:
             context_possible_value_map = context_access_schema.get_possible_values_attribute_list_from_name(attribute_name=context_attribute_name)
     # Adding column "other":
-    attribute_column_list.extend(['other'])         
+    attribute_column_list.extend(['other']) 
 
     # Introducing the number of user profiles to generate:            
     user_access = AccessSchema(file_str=user_schema)
@@ -591,118 +590,8 @@ def get_user_profile_file(user_schema, item_schema, context_schema=None):
     st.warning('The number of profiles has been previously defined in the ```user_profile_id``` attribute of the ```user_schema.conf``` file. If you want to change it, you must first modify the ```user_schema.conf``` file.')
                             
     # Generate user profile manual:                
-    user_profile_df = generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
+    user_profile_df = wf_generate_user_profile.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
     return user_profile_df
-
-def generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map=None):
-    """
-    Generate manually a user profile.
-    :param number_user_profile:
-    :param attribute_column_list:
-    :param item_possible_value_map:
-    :param context_possible_value_map:
-    :return: 
-    """    
-    user_profile_df = None    
-    inconsistent = False
-    # Randomly fill a dataframe and cache it:
-    weight_np = np.zeros(shape=(number_user_profile, len(attribute_column_list)), dtype=str)
-    @st.cache(allow_output_mutation=True)    
-    def get_dataframe():
-        df = pd.DataFrame(weight_np, columns=attribute_column_list)
-        for column in df.columns:
-            df[column] = 0
-        df['user_profile_id'] = df.index+1
-        df['other'] = 1
-        df = df.astype(str)
-        return df            
-    user_profile_df = get_dataframe()
-    export_df = user_profile_df.copy()
-    # Create row, column, and value inputs:
-    col_row, col_col, col_val = st.columns(3)
-    with col_row:
-        # Choosing the row index:
-        row = st.number_input('row (profile)', max_value=user_profile_df.shape[0]) #, value=1
-    with col_col:
-        # Choosing the column index:
-        attribute_column_list_box = attribute_column_list.copy()
-        attribute_column_list_box.remove('other')
-        attribute_column_list_box.remove('user_profile_id')
-        if len(attribute_column_list_box) > 0:
-            selected_attribute = st.selectbox(label='column (attribute)', options=attribute_column_list_box)
-            attribute_position = attribute_column_list_box.index(selected_attribute)                           
-            col = attribute_position
-            # Getting possible values, in order to facilitate the importance ranking:
-            if selected_attribute in item_possible_value_map:
-                item_possible_value_list = item_possible_value_map[selected_attribute]
-                st.warning(item_possible_value_list)    
-            elif selected_attribute in context_possible_value_map:    
-                context_possible_value_list = context_possible_value_map[selected_attribute]
-                st.warning(context_possible_value_list)       
-    with col_val:   
-        # Inserting weight value:
-        value = st.text_input(label='weight (with range [-1,1])', value=0)      
-        # Checking attribute weights:                    
-        # Float number:
-        if ('.' in str(value)) or (',' in str(value)):
-            # Negative number:
-            if float(value) < -1.0:
-                st.warning('The ```weight``` must be greater than -1.')  
-            else:
-                # Range [0-1]:
-                if float(value) > 1.0:
-                    st.warning('The ```weight``` value must be in the range ```[-1,1]```.')  
-        else:
-            # Negative number:
-            if int(value) < -1:
-                st.warning('The ```weight``` must be greater than -1.')  
-            else:
-                # Range [0-1]:
-                if (int(value) > 1):
-                    st.warning('The ```weight``` value must be in the range ```[-1,1]```.')
-
-    # Change the entry at (row, col) to the given weight value:
-    if not user_profile_df.empty:
-        print(user_profile_df.values[row][col+1])
-        user_profile_df.values[row][col+1] = str(value)
-    else:
-        st.warning("user_profile_df is empty.")
-    other_value = 1
-    for column in attribute_column_list:
-        if column != 'user_profile_id' and column != 'other':
-            other_value = float(abs(other_value-abs(float(user_profile_df.values[row][attribute_column_list.index(column)]))))
-    if not user_profile_df.empty:
-        user_profile_df.values[row][len(user_profile_df.columns)-1] = f"{other_value:.1f}"
-    else:
-        st.warning("user_profile_df is empty.")
-    if not user_profile_df.empty:
-        if float(user_profile_df.values[row][len(user_profile_df.columns)-1]) < 0 or float(user_profile_df.values[row][len(user_profile_df.columns)-1]) > 1:
-            st.warning('Values in a row for user must equal 1')
-            inconsistent = True
-        else:
-            for index, row in user_profile_df.iterrows():
-                for column in user_profile_df.columns:
-                    if column != 'user_profile_id' and column != 'other':
-                        if float(row[column]) > 0:
-                            export_df.values[index][attribute_column_list.index(column)] = f'(+)|{str(abs(float(row[column])))}'
-                        elif float(row[column]) < 0:
-                            export_df.values[index][attribute_column_list.index(column)] = f'(-)|{str(abs(float(row[column])))}'
-                        else:
-                            export_df.values[index][attribute_column_list.index(column)] = f'0'
-                    if column == 'other':
-                        if float(row[column]) == 0:
-                            export_df.values[index][attribute_column_list.index(column)] = f'0'
-                        else:
-                            export_df.values[index][attribute_column_list.index(column)] = f'{str(abs(float(row[column])))}'
-    else:
-        st.warning("user_profile_df is empty.")
-    # Show the user profile dataframe:
-    help_information.help_user_profile_id()
-    st.dataframe(export_df)   # user_profile_df
-    # Downloading user_profile.csv:
-    if not inconsistent:
-        save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=export_df, extension='csv')        
-    return export_df # user_profile_df
 
 def run(generation_config_schema, user_schema, user_profile, item_schema, item_profile, with_context=False, context_schema=None):
     """

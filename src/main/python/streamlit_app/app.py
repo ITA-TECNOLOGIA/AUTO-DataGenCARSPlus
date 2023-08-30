@@ -62,15 +62,14 @@ elif general_option == 'Pre-process a dataset':
             tab_replace_null_values_item, tab_replace_null_values_context = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)'])
         else:
             tab_replace_null_values_item = st.tabs(['Replace NULL values (item.csv)'])
-        
         # Apply WF: "Replacing Null values":
-        if with_context:
-            # Replacing Null values in item.csv:
-            with tab_replace_null_values_item:
-                wf_replace_null_values.generate_item(with_context)
         # Replacing Null values in context.csv (optional):
-        with tab_replace_null_values_context:
-            wf_replace_null_values.generate_context(with_context)
+        if with_context:
+            with tab_replace_null_values_context:
+                wf_replace_null_values.generate_context(with_context)                
+        # Replacing Null values in item.csv:
+        with tab_replace_null_values_item:
+            wf_replace_null_values.generate_item(with_context)        
 
     # WF --> Generate User Profile:
     elif wf_option == 'Generate user profile':        
@@ -88,7 +87,6 @@ elif general_option == 'Pre-process a dataset':
         # Replacing Null values in item.csv (optional):        
         with tab_replace_null_values_item:
             wf_replace_null_values.generate_item(with_context)
-
         # Apply WF: "Generate User Profile":
         with tab_generate_user_profile:
             wf_generate_user_profile.generate(with_context)

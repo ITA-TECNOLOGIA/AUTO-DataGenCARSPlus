@@ -4,12 +4,11 @@ import random
 
 import numpy as np
 import pandas as pd
+from datagencars.existing_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
+from datagencars.existing_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_rating import AccessRating
-from datagencars.existing_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
-from datagencars.existing_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
-
 
 
 class GenerateUserProfileDataset(GenerateUserProfile):
@@ -42,18 +41,18 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         self.access_rating = AccessRating(rating_df)  
         self.calculate_att_rating = CalculateAttributeRating()      
 
-    def generate_user_profile(self):
+    def generate_user_profile(self, item_attribute_list, context_attribute_list=None):
         '''
         Gets the value of the weights (or unknown variables) by using LSMR method to generate the user profile.
+        :param item_attribute_list: List of item attribute names.
+        :param context_attribute_list: List of context attribute names.
         :return: A dataframe with the automatically generated user profile.
         '''
-        # Getting attribute names:
-        item_attribute_name_list = self.access_item.get_item_attribute_list()
-        if self.is_context:
-            context_attribute_name_list = self.access_context.get_context_attribute_list()
-            attribute_list = ['user_profile_id']+item_attribute_name_list+context_attribute_name_list+['other']
+        # Getting attribute names:        
+        if self.is_context:            
+            attribute_list = ['user_profile_id']+item_attribute_list+context_attribute_list+['other']
         else:
-            attribute_list = ['user_profile_id']+item_attribute_name_list+['other']        
+            attribute_list = ['user_profile_id']+item_attribute_list+['other']        
         # Initialiting user profile dataframe:
         user_profile_df = pd.DataFrame(columns=attribute_list)
         # Getting user ID list:
@@ -61,7 +60,7 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         # Determining weigth vectors by user:
         for user_id in user_id_list:
             # Determining the x vector:
-            a_matrix, rank_vector = self.get_a_matrix(user_id)
+            a_matrix, rank_vector = self.get_a_matrix(user_id, item_attribute_list, context_attribute_list)
             b_vector = self.get_b_vector(user_id)
             x_vector = self.get_x_weigths(A=a_matrix.to_numpy(), b=b_vector)[0].tolist()
             not_nan_x_vector = [0.0 if np.isnan(x) else x for x in x_vector]
@@ -85,19 +84,19 @@ class GenerateUserProfileDataset(GenerateUserProfile):
                 if (x != 0.0) and (idx != len(weight_vector)-1): # ignoring the value of attribute 'other' because it must not have importance_rank.
                     rank_weigth_list.append(rank_vector[idx]+'|'+str(x))
                 else:
-                    rank_weigth_list.append(str(x))            
+                    rank_weigth_list.append(str(x))         
             user_profile_df.loc[len(user_profile_df)] = [int(user_id)]+rank_weigth_list # +[sum(weight_vector)]
         return user_profile_df
 
-    def get_a_matrix(self, user_id):  # sourcery skip: extract-duplicate-method, extract-method, for-append-to-extend, inline-immediately-returned-variable, low-code-quality, merge-list-append, move-assign-in-block, use-dictionary-union
+    def get_a_matrix(self, user_id, item_attribute_list, context_attribute_list):  # sourcery skip: extract-duplicate-method, extract-method, for-append-to-extend, inline-immediately-returned-variable, low-code-quality, merge-list-append, move-assign-in-block, use-dictionary-union
         '''
         Gets the matrix A.
         :param user_id: The user ID of the current user.
+        :param item_attribute_list: List of item attribute names.
+        :param context_attribute_list: List of context attribute names.
         :return: The matrix A.
         '''        
-        # Analysing ITEMS by user_id:
-        # Getting item attibute names:
-        item_attribute_name_list = self.access_item.get_item_attribute_list()
+        # Analysing ITEMS by user_id:        
         # Getting item_id_list from user_id:
         item_id_list = self.access_rating.get_item_id_list_from_user(user_id)
         # Getting item values and their possible values:
@@ -105,18 +104,16 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         item_value_list = []
         for item_id in item_id_list:
             value_list = []
-            for item_atribute_name in item_attribute_name_list:
+            for item_atribute_name in item_attribute_list:
                 item_value = self.access_item.get_item_value_from_item_attributte(item_id, attribute_name=item_atribute_name)
                 item_possible_value_list = self.access_item.get_item_possible_value_list_from_attributte(attribute_name=item_atribute_name)                
                 item_value_possible_dict[item_atribute_name] = item_possible_value_list
                 value_list.append(item_value)
             item_value_list.append(tuple(value_list))
-        df_item_attribute_value = pd.DataFrame(item_value_list, columns=item_attribute_name_list)
+        df_item_attribute_value = pd.DataFrame(item_value_list, columns=item_attribute_list)
 
         # Analysing CONTEXTS by user_id:
-        if self.is_context:
-            # Getting context attibute names:
-            context_attribute_name_list = self.access_context.get_context_attribute_list()
+        if self.is_context:            
             # Getting context_id_list from user_id:
             context_id_list = self.access_rating.get_context_id_list_from_user(user_id)
             # Getting context values and their possible values:
@@ -124,13 +121,13 @@ class GenerateUserProfileDataset(GenerateUserProfile):
             context_value_list = []
             for context_id in context_id_list:
                 value_list = []
-                for context_atribute_name in context_attribute_name_list:
+                for context_atribute_name in context_attribute_list:
                     context_value = self.access_context.get_context_value_from_context_attributte(context_id, attribute_name=context_atribute_name)
                     context_possible_value_list = self.access_context.get_context_possible_value_list_from_attributte(attribute_name=context_atribute_name)                
                     context_value_possible_dict[context_atribute_name] = context_possible_value_list
                     value_list.append(context_value)
                 context_value_list.append(tuple(value_list))
-            df_context_attribute_value = pd.DataFrame(context_value_list, columns=context_attribute_name_list)
+            df_context_attribute_value = pd.DataFrame(context_value_list, columns=context_attribute_list)
             value_possible_dict = {**item_value_possible_dict, **context_value_possible_dict}            
             df_attribute_value = pd.concat([df_item_attribute_value, df_context_attribute_value], axis=1)   
         else:
@@ -141,9 +138,9 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         minimum_value_rating = self.access_rating.get_min_rating()
         maximum_value_rating = self.access_rating.get_max_rating()      
         if self.is_context:  
-            attribute_list = item_attribute_name_list+context_attribute_name_list
+            attribute_list = item_attribute_list+context_attribute_list
         else:
-            attribute_list = item_attribute_name_list
+            attribute_list = item_attribute_list
         # Initializing the matrix A[MxN]:
         a_matrix = pd.DataFrame(columns=attribute_list)        
         rank_vector = []

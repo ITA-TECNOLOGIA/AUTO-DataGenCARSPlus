@@ -10,18 +10,21 @@ GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-pro
 
 # Generate a synthetic dataset:
 RATING_FEEDBACK_OPTIONS = ['Explicit ratings', 'Implicit ratings']
+# user:
 USER_TYPE = 'user'
-ITEM_TYPE = 'item'
-CONTEXT_TYPE = 'context'
-ITEM_PROFILE_TYPE = 'item profile'
 USER_PROFILE_TYPE = 'user profile'
-GENERATION_CONFIG_SCHEMA_NAME = 'generation_config'
-USER_SCHEMA_NAME = 'user_schema'
-ITEM_SCHEMA_NAME = 'item_schema'
-CONTEXT_SCHEMA_NAME = 'context_schema'
-ITEM_PROFILE_SCHEMA_NAME = 'item_profile'
 USER_PROFILE_SCHEMA_NAME = 'user_profile'
-
+USER_SCHEMA_NAME = 'user_schema'
+# item:
+ITEM_TYPE = 'item'
+ITEM_PROFILE_TYPE = 'item profile'
+ITEM_PROFILE_SCHEMA_NAME = 'item_profile'
+ITEM_SCHEMA_NAME = 'item_schema'
+# context:
+CONTEXT_TYPE = 'context'
+CONTEXT_SCHEMA_NAME = 'context_schema'
+# generation config:
+GENERATION_CONFIG_SCHEMA_NAME = 'generation_config'
 
 # Pre-process a dataset:
 WF_OPTIONS = ['Replace NULL values', 'Generate user profile', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Ratings to binary', 'Mapping categorization']
