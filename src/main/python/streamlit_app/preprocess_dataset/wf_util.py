@@ -73,7 +73,9 @@ def load_dataset(file_type_list, wf_type):
         context_df = load_one_file(file_type='context', wf_type=wf_type)   
     if 'rating' in file_type_list:
         rating_df = load_one_file(file_type='rating', wf_type=wf_type)
-    return user_df, item_df, context_df, rating_df
+    if 'user profile' in file_type_list:
+        user_profile_df = load_one_file(file_type='user_profile', wf_type=wf_type)
+    return user_df, item_df, context_df, rating_df, user_profile_df
 
 def load_one_file(file_type, wf_type):
     """
@@ -112,29 +114,7 @@ def load_one_file(file_type, wf_type):
 # # Replicate dataset:
 
 
-# def replicate_task(with_context, rating_df, user_profile_df, new_item_df, new_context_df,percentage_rating_variation, output, st):
-#     with console.st_log(output.code):     
-#         if with_context:      
-#             print('Extracting statistics.')
-#             print('Replicating the rating.csv file.')                                
-#             replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df, new_context_df)
-#             new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)           
-#             new_rating_df.to_csv("new_ratings.csv", index=False)        
-#             print('Replicated data generation has finished.')        
-#         else:            
-#             # Without context:                    
-#             st.write(new_item_df)                            
-#             st.write(rating_df)
-#             st.write(user_profile_df) 
-#             print('Extracting statistics.')
-#             print('Replicating the rating.csv file.')
-#             replicate_cars = ReplicateDataset(rating_df, user_profile_df, new_item_df)
-#             new_rating_df = replicate_cars.replicate_dataset(percentage_rating_variation)                        
-#             with st.expander(label='Show the replicated file: rating.csv'):
-#                 st.dataframe(new_rating_df)
-#                 link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
-#                 st.markdown(link_rating, unsafe_allow_html=True)
-#             print('Replicated data generation has finished.')  
+
 
 # Extend dataset:
 # Recalculate ratings:

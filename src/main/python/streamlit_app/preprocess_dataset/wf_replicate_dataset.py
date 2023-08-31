@@ -1,61 +1,82 @@
-import streamlit as st
-from streamlit_app import help_information
-from streamlit_app.workflow_graph import workflow_image
+import console
 import pandas as pd
+import streamlit as st
+from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
+from streamlit_app import help_information
+from streamlit_app.preprocess_dataset import wf_util
+from streamlit_app.workflow_graph import workflow_image
 
 
-def generate(with_context):    
-    # Loading dataset:
-    st.header('Load dataset')     
-    if with_context:
-        user_df, item_df, context_df, rating_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
-    else:
-        user_df, item_df, __, rating_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating'])   
-
+def generate(with_context, null_values_i, null_values_c):
+    """
+    Replicates a existing rating file.
+    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
+    :param null_values_i: It is True if the NULL values are replaced in the item.csv file, and False otherwise.
+    :param null_values_c: It is True if the NULL values are replaced in the context.csv file, and False otherwise.
+    :return: The replicated rating dataframe.
+    """
     # WF --> Replicate dataset:
-    st.header('Workflow: Replicate dataset')    
-
+    st.header('Workflow: Replicate dataset')  
     # Help information:
-    help_information.help_replicate_dataset_wf()
-    
+    help_information.help_replicate_dataset_wf()    
     # Showing the initial image of the WF:
     workflow_image.show_wf(wf_name='ReplicateDataset', init_step='True', with_context=True, optional_value_list=[('NULLValues', 'True'), ('NULLValuesC', 'True'), ('NULLValuesI', 'True')])
-        
-    # Options tab:
-    tab_replace_null_values, tab_generate_user_profile, tab_replicate_dataset  = st.tabs(['Replace NULL values', 'Generate user profile', 'Replicate dataset'])
-    # REPLACE NULL VALUES TAB:
-    new_item_df = pd.DataFrame()
-    new_context_df = pd.DataFrame()     
-    with tab_replace_null_values:
-        if with_context:
-            null_values_c, null_values_i, new_item_df, new_context_df = util.tab_logic_replace_null('ReplicateDataset', with_context, item_df, context_df)
-        else:
-            _, null_values_i, new_item_df, _ = util.tab_logic_replace_null('ReplicateDataset', with_context, item_df)
-            null_values_c = False
-    # USER PROFILE TAB:
-    with tab_generate_user_profile:
-        optional_value_list = [('NULLValues', str(null_values_c & null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))]
-        if not null_values_i:
-            new_item_df = item_df
-        if not null_values_c and with_context:
-            new_context_df = context_df
-        if with_context:
-            user_profile_df = util.tab_logic_generate_up('ReplicateDataset', with_context, optional_value_list, rating_df, new_item_df, new_context_df)         
-        else:    
-            user_profile_df = util.tab_logic_generate_up('ReplicateDataset', with_context, optional_value_list, rating_df, new_item_df)             
-    # REPLICATE TAB:        
-    with tab_replicate_dataset:
-        new_rating_df = pd.DataFrame()
-        # Showing the current image of the WF:
-        workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
-        percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
-        output = st.empty()  
-        replicate_button = st.button(label='Replicate', key = 'replicate_cars', on_click=util.replicate_task, args=(with_context, rating_df, user_profile_df, new_item_df, new_context_df,percentage_rating_variation, output, st))   
 
-    if os.path.exists('new_ratings.csv'):
-        new_rating_df = pd.read_csv('new_ratings.csv')
-        with st.expander(label='Show the replicated file: rating.csv'):
-            st.dataframe(new_rating_df)
-            link_rating = f'<a href="data:file/csv;base64,{base64.b64encode(new_rating_df.to_csv(index=False).encode()).decode()}" download="rating.csv">Download</a>'
-            st.markdown(link_rating, unsafe_allow_html=True)    
-        os.remove('new_ratings.csv')
+    # Loading dataset:
+    st.header('Load dataset')
+    if with_context:
+        __, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'])
+    else:
+        __, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'])   
+    
+    # Showing the current image of the WF:
+    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i))])
+    
+    # Replicating dataset:
+    output = st.empty()
+    percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+    new_rating_df = pd.DataFrame()
+    if with_context:
+        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, output, context_df)
+    else:
+        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, output)
+    
+    # Show the replicated rating file:
+    st.dataframe(new_rating_df)
+    # Downloading replicated rating.csv:
+    wf_util.save_df(df_name='rating', df_value=new_rating_df, extension='csv')
+    return new_rating_df
+
+def button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, output, context_df=None):
+    """
+    Executes a button to replicate a dataset (rating file).
+    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
+    :param rating_df: The rating dataframe to replicate.
+    :param user_profile_df: The user profile (automatically generated).
+    :param item_df: The item dataframe (it can be with or without NULL values).
+    :param percentage_rating_variation: The percentage rating variation.
+    :param output: The console output.
+    :param context_df: The context dataframe (it can be with or without NULL values).
+    :return: The replicated rating dataframe.
+    """
+    if st.button(label='Replicate', key='replicate_dataset'):
+        with console.st_log(output.code):  
+            # With context:
+            if with_context:
+                print('Extracting statistics.')
+                print('Replicating the rating.csv file.')
+                replicate = ReplicateDataset(rating_df, user_profile_df, item_df, context_df)
+            else:
+                # Without context:
+                print('Extracting statistics.')
+                print('Replicating the rating.csv file.')
+                replicate = ReplicateDataset(rating_df, user_profile_df, item_df)
+            # Replicating dataset:
+            new_rating_df = replicate.replicate_dataset(percentage_rating_variation)
+            print('Replicated data generation has finished.')
+            with st.expander(label='Show the replicated file: rating.csv'):
+                # Showing the replicated rating file:
+                st.dataframe(new_rating_df)    
+                # Saving the replicated rating file:
+                wf_util.save_df(df_name='rating', df_value=new_rating_df, extension='csv')   
+    return new_rating_df

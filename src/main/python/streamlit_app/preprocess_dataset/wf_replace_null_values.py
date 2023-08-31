@@ -10,6 +10,24 @@ from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
 
+def generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context=None):
+    """
+    Generates a new item or context file without NULL values.
+    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
+    :param tab_replace_null_values_item: The tab corresponding to replacement of NULL values in the item file.
+    :param tab_replace_null_values_context: The tab corresponding to replacement of NULL values in the context file.
+    """
+    # Replacing Null values in context.csv (optional):
+    new_item_df = pd.DataFrame()
+    new_context_df = pd.DataFrame()
+    if with_context:
+        with tab_replace_null_values_context:
+            new_context_df = generate_context(with_context)                
+    # Replacing Null values in item.csv:
+    with tab_replace_null_values_item:
+        new_item_df = generate_item(with_context)    
+    return new_item_df, new_context_df
+    
 def generate_item(with_context):
     """
     Replaces NULL values in the item schema files.
@@ -33,12 +51,12 @@ def generate_item(with_context):
             # Showing the WF image, by replacing null values in item.csv:
             workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(False)), ('NULLValuesI', str(True))])
             # Loading item.csv file:
-            _, item_df, _, _ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_replace_nulls')
+            __, item_df, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_replace_nulls')
             # Infering context schema from item.csv:
             item_schema = infer_schema(df=item_df)
             # Showing the inferred schema:
             wf_util.show_schema_file(schema_file_name=config.ITEM_TYPE, schema_value=item_schema)        
-            # Replacing null values:            
+            # Replacing null values:
             new_item_df = button_replace_null_values(schema_type=config.ITEM_TYPE, df=item_df, schema=item_schema)      
     return new_item_df
 
@@ -66,7 +84,7 @@ def generate_context(with_context):
                 # Showing the WF image, by replacing null values in context.csv:
                 workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(False))])            
                 # Loading context.csv file:        
-                _, _, context_df, _ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_replace_nulls')
+                __, __, context_df, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_replace_nulls')
                 # Infering context schema from context.csv:
                 context_schema = infer_schema(df=context_df)
                 # Showing the inferred schema:
@@ -359,6 +377,13 @@ def infer_schema(df):
     return schema_str
 
 def button_replace_null_values(schema_type, df, schema):
+    """
+    Executes a button to replace NULL values in the df entered as parameter (item or context file).
+    :param schema_type: The schema type (item or context schema).
+    :param df: The item or context dataframe with NULL values.
+    :param schema: The item or context schema inferred from item or context dataframe.
+    :return: The new item or context dataframe without NULL values.
+    """
     new_df = pd.DataFrame()    
     if not df.empty:
         if st.button(label='Replace NULL Values', key=f'button_replace_nulls_{schema_type}'):
@@ -372,7 +397,7 @@ def button_replace_null_values(schema_type, df, schema):
                 df_name = config.CONTEXT_TYPE
             # Show the new item schema file with replaced null values:    
             st.dataframe(new_df)
-            # Downloading new item.csv:            
+            # Downloading new item.csv:
             wf_util.save_df(df_name=df_name, df_value=new_df, extension='csv')          
     else:
         st.warning(f"The {schema_type} schema file have not been uploaded.")

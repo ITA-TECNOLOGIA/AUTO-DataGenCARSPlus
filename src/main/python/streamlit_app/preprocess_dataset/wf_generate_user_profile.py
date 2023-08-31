@@ -28,14 +28,14 @@ def generate(with_context):
     # Loading dataset:   
     st.write('Upload the following files: ')     
     if with_context:
-        user_df, item_df, context_df, rating_df = wf_util.load_dataset(file_type_list=config.DATASET_CARS, wf_type='wf_up')        
+        __, item_df, context_df, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_CARS, wf_type='wf_up')        
         # Getting the attribute names:    
         access_context = AccessContext(context_df=context_df)
         all_context_attribute_list = access_context.get_context_attribute_list()
         relevant_context_attribute_list = set_attribute_list(file_type=config.CONTEXT_TYPE, attribute_list=all_context_attribute_list)              
     else:
         context_df = pd.DataFrame()
-        user_df, item_df, __, rating_df = wf_util.load_dataset(file_type_list=config.DATASET_RS, wf_type='wf_up')    
+        __, item_df, __, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_RS, wf_type='wf_up')    
     # Getting the item attribute names:
     access_item = AccessItem(item_df=item_df)
     all_item_attribute_list = access_item.get_item_attribute_list()      
@@ -43,18 +43,19 @@ def generate(with_context):
     # Choosing user profile generation options (manual or automatic):
     up_options = st.selectbox(label='Choose an option to generate the user profile:', options=config.UP_OPTIONS)    
     # Automatic generation of the user profile:
+    user_profile_df = pd.DataFrame()
     if up_options == 'Automatic':
         # Help information:
         help_information.help_user_profile_automatic()
         # Generating user profiles:
         if with_context:
             if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
-                generate_user_profile_automatic(item_attribute_list=relevant_item_attribute_list, rating_df=rating_df, item_df=item_df, context_df=context_df, context_attribute_list=relevant_context_attribute_list)
+                user_profile_df = generate_user_profile_automatic(item_attribute_list=relevant_item_attribute_list, rating_df=rating_df, item_df=item_df, context_df=context_df, context_attribute_list=relevant_context_attribute_list)
             else:
                 st.warning('The item, context and rating files must be uploaded.')
         else:
             if (not item_df.empty) and (not rating_df.empty):            
-                generate_user_profile_automatic(item_attribute_list=relevant_item_attribute_list, rating_df=rating_df, item_df=item_df)
+                user_profile_df = generate_user_profile_automatic(item_attribute_list=relevant_item_attribute_list, rating_df=rating_df, item_df=item_df)
             else:
                 st.warning('The item and rating files must be uploaded.')
     # Manual generation of the user profile:
@@ -75,12 +76,13 @@ def generate(with_context):
                 for context_attribute in relevant_context_attribute_list:
                     context_possible_value_map[context_attribute] = access_context.get_context_possible_value_list_from_attributte(attribute_name=context_attribute)                    
                 attribute_column_list = ['user_profile_id']+relevant_item_attribute_list+relevant_context_attribute_list+['other']
-                generate_user_profile_manual(number_user_profile=int(number_user_profile), attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map, context_possible_value_map=context_possible_value_map)
+                user_profile_df = generate_user_profile_manual(number_user_profile=int(number_user_profile), attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map, context_possible_value_map=context_possible_value_map)
             else:
                 attribute_column_list = ['user_profile_id']+relevant_item_attribute_list+['other']
-                generate_user_profile_manual(number_user_profile=int(number_user_profile), attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map)    
+                user_profile_df = generate_user_profile_manual(number_user_profile=int(number_user_profile), attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map)    
         else:
             st.warning('The files must be uploaded.')
+    return user_profile_df
     
 def generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map=None):
     """
@@ -119,7 +121,7 @@ def generate_user_profile_manual(number_user_profile, attribute_column_list, ite
         attribute_column_list_box.remove('user_profile_id')
         if len(attribute_column_list_box) > 0:
             selected_attribute = st.selectbox(label='column (attribute)', options=attribute_column_list_box)
-            attribute_position = attribute_column_list_box.index(selected_attribute)                           
+            attribute_position = attribute_column_list_box.index(selected_attribute)
             col = attribute_position
             # Getting possible values, in order to facilitate the importance ranking:
             if selected_attribute in item_possible_value_map:
@@ -127,7 +129,7 @@ def generate_user_profile_manual(number_user_profile, attribute_column_list, ite
                 st.warning(item_possible_value_list)    
             elif selected_attribute in context_possible_value_map:    
                 context_possible_value_list = context_possible_value_map[selected_attribute]
-                st.warning(context_possible_value_list)       
+                st.warning(context_possible_value_list)
     with col_val:   
         # Inserting weight value:
         value = st.text_input(label='weight (with range [-1,1])', value=0)      
