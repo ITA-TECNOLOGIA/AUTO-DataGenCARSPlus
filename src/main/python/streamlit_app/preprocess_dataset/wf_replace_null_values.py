@@ -9,25 +9,25 @@ from streamlit_app import config, console, help_information
 from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
-
 def generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context=None):
     """
-    Generates a new item or context file without NULL values.
+    Replaces NULL values in the item or context files.
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
-    :param tab_replace_null_values_item: The tab corresponding to replacement of NULL values in the item file.
-    :param tab_replace_null_values_context: The tab corresponding to replacement of NULL values in the context file.
+    :param tab_replace_null_values_item: The tab related to the replacement of NULL values in the item file.
+    :param tab_replace_null_values_context: The tab related to the replacement of NULL values in the context file.
+    :return: The item and context files with replaced NULL values.
     """
-    # Replacing Null values in context.csv (optional):
     new_item_df = pd.DataFrame()
     new_context_df = pd.DataFrame()
     if with_context:
+        # Replacing NULL values in context.csv:
         with tab_replace_null_values_context:
-            new_context_df = generate_context(with_context)                
-    # Replacing Null values in item.csv:
+            new_context_df = generate_context(with_context)
+    # Replacing NULL values in item.csv:
     with tab_replace_null_values_item:
-        new_item_df = generate_item(with_context)    
+        new_item_df = generate_item(with_context)
     return new_item_df, new_context_df
-    
+        
 def generate_item(with_context):
     """
     Replaces NULL values in the item schema files.
@@ -395,10 +395,11 @@ def button_replace_null_values(schema_type, df, schema):
             elif schema_type == 'context':
                 new_df = replace_null_values.regenerate_context_file(context_schema=schema)
                 df_name = config.CONTEXT_TYPE
-            # Show the new item schema file with replaced null values:    
-            st.dataframe(new_df)
-            # Downloading new item.csv:
-            wf_util.save_df(df_name=df_name, df_value=new_df, extension='csv')          
+            with st.expander(label=f'Show the replaced file: {schema_type}.csv'):
+                # Show the new item schema file with replaced null values:    
+                st.dataframe(new_df)
+                # Downloading new item.csv:
+                wf_util.save_df(df_name=df_name, df_value=new_df, extension='csv')          
     else:
         st.warning(f"The {schema_type} schema file have not been uploaded.")
     return new_df

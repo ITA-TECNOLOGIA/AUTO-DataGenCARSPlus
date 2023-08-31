@@ -10,7 +10,7 @@ from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
 
-def generate(with_context):
+def generate(with_context, null_values_i, null_values_c, only_automatic=False):
     """
     Generates the user profile.
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -19,41 +19,46 @@ def generate(with_context):
     st.header('Workflow: Generate user profile')
     # Help information:
     help_information.help_user_profile_wf()
-    # Worflow image:
-    init_step = 'True'
+    # Worflow image:    
     optional_value_list = [('NULLValues', str(True)), ('NULLValuesC', str(True)), ('NULLValuesI', str(True)), ('UPManual', 'True'), ('UPAutomatic', 'True')]
-    workflow_image.show_wf(wf_name='GenerateUserProfile', init_step=init_step, with_context=True, optional_value_list=optional_value_list)
+    workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='True', with_context=True, optional_value_list=optional_value_list)
     st.markdown("""---""")
 
     # Loading dataset:   
     st.write('Upload the following files: ')     
     if with_context:
-        __, item_df, context_df, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_CARS, wf_type='wf_up')        
+        __, item_df, context_df, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_CARS, wf_type='wf_user_profile')        
         # Getting the attribute names:    
         access_context = AccessContext(context_df=context_df)
         all_context_attribute_list = access_context.get_context_attribute_list()
         relevant_context_attribute_list = set_attribute_list(file_type=config.CONTEXT_TYPE, attribute_list=all_context_attribute_list)              
     else:
         context_df = pd.DataFrame()
-        __, item_df, __, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_RS, wf_type='wf_up')    
+        __, item_df, __, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_RS, wf_type='wf_user_profile')    
     # Getting the item attribute names:
     access_item = AccessItem(item_df=item_df)
     all_item_attribute_list = access_item.get_item_attribute_list()      
     relevant_item_attribute_list = set_attribute_list(file_type=config.ITEM_TYPE, attribute_list=all_item_attribute_list)
     # Choosing user profile generation options (manual or automatic):
-    up_options = st.selectbox(label='Choose an option to generate the user profile:', options=config.UP_OPTIONS)    
+    if only_automatic:
+        up_options = st.selectbox(label='Choose an option to generate the user profile:', options=['automatic'])
+    else:
+        up_options = st.selectbox(label='Choose an option to generate the user profile:', options=config.UP_OPTIONS)
     # Automatic generation of the user profile:
     user_profile_df = pd.DataFrame()
     if up_options == 'Automatic':
         # Help information:
         help_information.help_user_profile_automatic()
+        # Showing the current image of the WF:
+        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i)), ('UPManual', 'False'), ('UPAutomatic', 'True')])
+    
         # Generating user profiles:
-        if with_context:
+        if with_context:            
             if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
                 user_profile_df = generate_user_profile_automatic(item_attribute_list=relevant_item_attribute_list, rating_df=rating_df, item_df=item_df, context_df=context_df, context_attribute_list=relevant_context_attribute_list)
             else:
                 st.warning('The item, context and rating files must be uploaded.')
-        else:
+        else:            
             if (not item_df.empty) and (not rating_df.empty):            
                 user_profile_df = generate_user_profile_automatic(item_attribute_list=relevant_item_attribute_list, rating_df=rating_df, item_df=item_df)
             else:
@@ -62,22 +67,24 @@ def generate(with_context):
     elif up_options == 'Manual':
         if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
             # Help information:
-            help_information.help_user_profile_manual()
-            
+            help_information.help_user_profile_manual()  
+            # Showing the current image of the WF:
+            workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(null_values_c or null_values_i)), ('NULLValuesC', str(null_values_c)), ('NULLValuesI', str(null_values_i)), ('UPManual', 'True'), ('UPAutomatic', 'False')]) 
+
             # Getting the number of user profiles to be generated:
             number_user_profile = st.number_input(label='Specifies the number of user profiles to be generated:', value=3, key='number_user_profile')
             # Getting the item attribute value possibles:
             item_possible_value_map = {}
             for item_attribute in relevant_item_attribute_list:
                 item_possible_value_map[item_attribute] = access_item.get_item_possible_value_list_from_attributte(attribute_name=item_attribute)        
-            if with_context:                
+            if with_context:
                 # Getting the context attribute value possibles:
                 context_possible_value_map = {}
                 for context_attribute in relevant_context_attribute_list:
                     context_possible_value_map[context_attribute] = access_context.get_context_possible_value_list_from_attributte(attribute_name=context_attribute)                    
                 attribute_column_list = ['user_profile_id']+relevant_item_attribute_list+relevant_context_attribute_list+['other']
                 user_profile_df = generate_user_profile_manual(number_user_profile=int(number_user_profile), attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map, context_possible_value_map=context_possible_value_map)
-            else:
+            else:                
                 attribute_column_list = ['user_profile_id']+relevant_item_attribute_list+['other']
                 user_profile_df = generate_user_profile_manual(number_user_profile=int(number_user_profile), attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map)    
         else:

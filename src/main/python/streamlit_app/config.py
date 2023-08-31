@@ -25,6 +25,8 @@ CONTEXT_TYPE = 'context'
 CONTEXT_SCHEMA_NAME = 'context_schema'
 # generation config:
 GENERATION_CONFIG_SCHEMA_NAME = 'generation_config'
+# rating:
+RATING_TYPE = 'rating'
 
 # Pre-process a dataset:
 WF_OPTIONS = ['Replace NULL values', 'Generate user profile', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Ratings to binary', 'Mapping categorization']

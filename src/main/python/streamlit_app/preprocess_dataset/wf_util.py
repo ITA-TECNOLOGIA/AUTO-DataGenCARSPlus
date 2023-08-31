@@ -64,6 +64,7 @@ def load_dataset(file_type_list, wf_type):
     item_df = pd.DataFrame()
     context_df = pd.DataFrame()
     rating_df = pd.DataFrame()
+    user_profile_df = pd.DataFrame()
     # Uploading a dataset:
     if 'user' in file_type_list:
         user_df = load_one_file(file_type='user', wf_type=wf_type)
