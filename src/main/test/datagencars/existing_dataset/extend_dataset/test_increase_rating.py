@@ -1,49 +1,84 @@
+import logging
 import unittest
+
 import pandas as pd
-from streamlit_app.preprocess_dataset import wf_util
 from datagencars.existing_dataset.extend_dataset.increase_rating import IncreaseRating
+
 
 class TestIncreaseRating(unittest.TestCase):
 
     def setUp(self):
-        # Mock data for testing
+        # CARS:
+        dataset_cars_path = 'resources/existing_dataset/context/sts/'        
+        # rating_df:
+        rating_file_path = dataset_cars_path + 'ratings.csv'
+        self.rating_df = pd.read_csv(rating_file_path, encoding='utf-8', index_col=False, sep=';')
+        # user_profile_df:
+        user_profile_file_path = dataset_cars_path + 'user_profile.csv'
+        user_profile_df = pd.read_csv(user_profile_file_path, encoding='utf-8', index_col=False, sep=',')
+        # item_df:
+        item_file_path = dataset_cars_path + 'item.csv'
+        item_df = pd.read_csv(item_file_path, encoding='utf-8', index_col=False, sep=';')
+        # context_df:
+        context_file_path = dataset_cars_path + 'context.csv'
+        context_df = pd.read_csv(context_file_path, encoding='utf-8', index_col=False, sep=';')
+
+        # RS:
+        dataset_rs_path = 'resources/existing_dataset/without_context/sts/'
+        # rating_df:
+        rating_file_path = dataset_rs_path + 'ratings.csv'
+        self.rating_df_rs = pd.read_csv(rating_file_path, encoding='utf-8', index_col=False, sep=';')
+        # user_profile_df (RS):
+        user_profile_file_path = dataset_rs_path + 'user_profile.csv'
+        user_profile_df_rs = pd.read_csv(user_profile_file_path, encoding='utf-8', index_col=False, sep=',')
+        # item_df:
+        item_file_path = dataset_rs_path + 'item.csv'
+        item_df_rs = pd.read_csv(item_file_path, encoding='utf-8', index_col=False, sep=';')        
+
+        # Dataset extension generator:        
+        self.__generator_cars = IncreaseRating(rating_df=self.rating_df, user_profile_df=user_profile_df, item_df=item_df, context_df=context_df)
+        self.__generator_rs = IncreaseRating(rating_df=self.rating_df_rs, user_profile_df=user_profile_df_rs, item_df=item_df_rs)
+    
+    def tearDown(self):
+        del self.__generator_cars
+        del self.__generator_rs
+
+    def test_extend_rating_random_cars(self):        
+        number_rating=1
+        percentage_rating_variation=25
+        k=10
+        new_rating_df = self.__generator_cars.extend_rating_random(number_rating, percentage_rating_variation, k)           
+        logging.info(f'Shape of rating_df: {self.rating_df.shape[0]}')
+        logging.info(f'Shape of extended rating_df: {new_rating_df.shape[0]}') 
+        self.assertEqual(self.rating_df.shape[0] + number_rating, new_rating_df.shape[0])
+    
+    def test_extend_rating_random_rs(self):        
+        number_rating=1
+        percentage_rating_variation=25
+        k=10
+        new_rating_df = self.__generator_rs.extend_rating_random(number_rating, percentage_rating_variation, k)           
+        logging.info(f'Shape of rating_df: {self.rating_df.shape[0]}')
+        logging.info(f'Shape of extended rating_df: {new_rating_df.shape[0]}') 
+        self.assertEqual(self.rating_df.shape[0] + number_rating, new_rating_df.shape[0])
         
-        self.user_df = pd.DataFrame({
-            'user_id': [1, 2, 3, 4, 5],
-        })
+    def test_extend_rating_by_user_cars(self):        
+        number_rating=1
+        percentage_rating_variation=25
+        k=10
+        new_rating_df = self.__generator_cars.extend_rating_by_user(number_rating, percentage_rating_variation, k)
+        logging.info(f'Shape of rating_df: {self.rating_df.shape[0]}')
+        logging.info(f'Shape of extended rating_df: {new_rating_df.shape[0]}') 
+        self.assertEqual(new_rating_df.shape[0], 2859)
+    
+    def test_extend_rating_by_user_rs(self):        
+        number_rating=1
+        percentage_rating_variation=25
+        k=10
+        new_rating_df = self.__generator_rs.extend_rating_by_user(number_rating, percentage_rating_variation, k)
+        logging.info(f'Shape of rating_df: {self.rating_df.shape[0]}')
+        logging.info(f'Shape of extended rating_df: {new_rating_df.shape[0]}') 
+        self.assertEqual(new_rating_df.shape[0], 2859)
 
-        self.item_df = pd.DataFrame({
-            'item_id': [1, 2, 3, 4, 5],
-            'category1': [6, 7, 8, 9, 10],
-            'category2': [11, 12, 13, 14, 15],
-            'category3': [16, 17, 18, 19, 20],
-        })
-
-        self.context_df = pd.DataFrame({
-            'context_id': [1, 2, 3, 4],
-        })
-
-        self.ratings_df = pd.DataFrame({
-            'user_id': [1, 2, 3, 4, 5],
-            'item_id': [1, 2, 3, 4, 5],
-            'context_id': [1, 2, 3, 4, 2],
-            'rating': [4, 4, 3, 2, 2]
-        })
-
-    def test_incremental_rating_random(self):
-        # Generate user profile
-        user_profile = wf_util.generate_user_profile_automatic(self.ratings_df, self.item_df, self.context_df)
-        inc_rating = IncreaseRating(rating_df=self.ratings_df, item_df=self.item_df, user_df=self.user_df, context_df=self.context_df, user_profile=user_profile)
-        result_df = inc_rating.incremental_rating_random(percentage_rating_variation=25, number_ratings=10, k=10)
-        self.assertIsNotNone(result_df)
-        self.assertTrue(len(result_df) > 0)
-
-    # def test_incremental_rating_by_user(self):
-    #     inc_rating = IncreaseRating(rating_df=self.ratings_df, item_df=self.item_df, user_df=self.user_df, context_df=self.context_df)
-    #     user_ids = [1, 2]
-    #     result_df = inc_rating.incremental_rating_by_user(user_ids, percentage_rating_variation=25, number_ratings=10, k=10)
-    #     self.assertIsNotNone(result_df)
-    #     self.assertTrue(len(result_df) > 0)
 
 if __name__ == '__main__':
     unittest.main()

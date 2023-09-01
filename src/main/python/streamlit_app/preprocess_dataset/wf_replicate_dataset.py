@@ -9,7 +9,7 @@ from streamlit_app.workflow_graph import workflow_image
 
 def generate(with_context, null_values_i, null_values_c=None):
     """
-    Replicates a existing rating file.
+    Replicates an existing rating file.
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
     :param null_values_i: It is True if the NULL values are replaced in the item.csv file, and False otherwise.
     :param null_values_c: It is True if the NULL values are replaced in the context.csv file, and False otherwise.
@@ -38,14 +38,15 @@ def generate(with_context, null_values_i, null_values_c=None):
     # Replicating dataset:
     output = st.empty()
     percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+    k = st.number_input('Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
     new_rating_df = pd.DataFrame()
     if with_context:
-        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, output, context_df)
+        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output, context_df)
     else:
-        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, output)
+        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output)
     return new_rating_df
 
-def button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, output, context_df=None):
+def button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output, context_df=None):
     """
     Executes a button to replicate a dataset (rating file).
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -66,7 +67,7 @@ def button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, 
                     print('Extracting statistics.')
                     print('Replicating the rating.csv file.')               
                     replicate_constructor = ReplicateDataset(rating_df, user_profile_df, item_df, context_df)                                        
-                    new_rating_df = replicate_constructor.replicate_dataset(percentage_rating_variation)
+                    new_rating_df = replicate_constructor.replicate_dataset(percentage_rating_variation, k)
                     print('Replicated data generation has finished.')
                     with st.expander(label=f'Show the replicated file: {config.RATING_TYPE}.csv'):
                         # Showing the replicated rating file:
@@ -81,7 +82,7 @@ def button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, 
                     print('Extracting statistics.')
                     print('Replicating the rating.csv file.')
                     replicate_constructor = ReplicateDataset(rating_df, user_profile_df, item_df)                                            
-                    new_rating_df = replicate_constructor.replicate_dataset(percentage_rating_variation)
+                    new_rating_df = replicate_constructor.replicate_dataset(percentage_rating_variation, k)
                     print('Replicated data generation has finished.')
                     with st.expander(label=f'Show the replicated file: {config.RATING_TYPE}.csv'):
                         # Showing the replicated rating file:

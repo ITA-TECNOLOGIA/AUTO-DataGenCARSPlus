@@ -44,8 +44,6 @@ UP_OPTIONS = ['Automatic', 'Manual']
 # Analysis a dataset:
 ANLYSIS_OPTIONS = ['Visualization', 'Evaluation']
 
-
-
 # -------------------------------------------------------------------------------
 # Images or icons:
 USER_PROFILE = 'resources/icons/user_profile.png'

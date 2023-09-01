@@ -4,7 +4,7 @@ import io
 import pandas as pd
 import requests
 import streamlit as st
-from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
+from datagencars.existing_dataset.replace_null_values.replace_null_values import ReplaceNullValues
 from streamlit_app import config, console, help_information
 from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image

@@ -121,12 +121,39 @@ elif general_option == 'Pre-process a dataset':
             else:
                 wf_replicate_dataset.generate(with_context, null_values_i)
 
-    # # WF --> Extend dataset:
-    # elif wf_option == 'Extend dataset':
-    #     wf_extend_dataset.generate()
-    # # WF --> Recalculate ratings:
-    # elif wf_option == 'Recalculate ratings': 
-    #    wf_recalculate_dataset.generate()   
+    # WF --> Extend dataset:
+    elif wf_option == 'Extend dataset':
+        null_values_i = True
+        null_values_c = True
+        if with_context:
+            # Setting tabs:
+            tab_replace_null_values_item, tab_replace_null_values_context, tab_generate_user_profile, tab_extend_dataset = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)', 'Generate user profile', 'Extend dataset'])
+            # Apply WF: "Replace NULL values":            
+            new_item_df, new_context_df = wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)
+            if new_item_df.empty:
+                null_values_i = False
+            if new_context_df.empty:
+                null_values_c = False
+        else:
+            tab_replace_null_values_item, tab_generate_user_profile, tab_extend_dataset = st.tabs(['Replace NULL values (item.csv)', 'Generate user profile', 'Extend dataset'])
+            # Apply WF: "Replace NULL values":
+            new_item_df, __ = wf_replace_null_values.generate(with_context, tab_replace_null_values_item)            
+            if new_item_df.empty:
+                null_values_i = False
+        # Apply WF: "Generate User Profile":            
+        with tab_generate_user_profile:
+            wf_generate_user_profile.generate(with_context, null_values_i, null_values_c, only_automatic=True)
+        # Apply WF: "Extend Dataset":
+        with tab_extend_dataset:
+            if with_context:
+                wf_extend_dataset.generate(with_context, null_values_i, null_values_c)
+            else:
+                wf_extend_dataset.generate(with_context, null_values_i)       
+
+    # WF --> Recalculate ratings:
+    elif wf_option == 'Recalculate ratings': 
+       wf_recalculate_dataset.generate()
+
     # # WF --> Ratings to binary:
     # elif wf_option == 'Ratings to binary':    
     #     wf_ratings_to_binary.generate()

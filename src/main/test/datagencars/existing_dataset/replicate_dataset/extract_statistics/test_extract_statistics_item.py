@@ -9,7 +9,7 @@ class TestExtractStatisticsItem(unittest.TestCase):
 
     def setUp(self):             
         # item.csv
-        item_file_path = 'resources/dataset_sts/item.csv'
+        item_file_path = 'resources/existing_dataset/context/sts/item.csv'
         item_df = pd.read_csv(item_file_path, encoding='utf-8', index_col=False, sep=';')        
         # Extract Statistics of Item:
         self.__extract = ExtractStatisticsUIC(uic_df=item_df)

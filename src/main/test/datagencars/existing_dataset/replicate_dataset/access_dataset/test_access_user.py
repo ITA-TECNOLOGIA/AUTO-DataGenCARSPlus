@@ -9,7 +9,7 @@ class TestAccessUser(unittest.TestCase):
 
     def setUp(self):             
         # user.csv
-        user_file_path = 'resources/dataset_sts/user.csv'
+        user_file_path = 'resources/existing_dataset/context/sts/user.csv'
         user_df = pd.read_csv(user_file_path, encoding='utf-8', index_col=False, sep=';')        
         # Access user:
         self.__access = AccessUser(user_df)
