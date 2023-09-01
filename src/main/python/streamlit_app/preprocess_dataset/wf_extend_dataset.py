@@ -55,6 +55,10 @@ def button_extend_dataset(with_context, rating_df, user_profile_df, item_df, num
     :param rating_df: The rating dataframe to replicate.
     :param user_profile_df: The user profile (automatically generated).
     :param item_df: The item dataframe (it can be with or without NULL values).
+    :param number_rating: The number of ratings to generate for each user.
+    :param percentage_rating_variation: The percentage of rating variation.
+    :param k: The k ratings to take in the past.
+    :param option: The option selected by user ('N ratings for randomly selected users' or 'N ratings by user').
     :param output: The console output.
     :param context_df: The context dataframe (it can be with or without NULL values).
     :return: The extended rating dataframe.
@@ -87,7 +91,10 @@ def button_extend_dataset(with_context, rating_df, user_profile_df, item_df, num
 def extend_dataset(increase_constructor, number_rating, percentage_rating_variation, k, option):
     """
     Extends dataset.
-    :param increase_constructor: The constructor.
+    :param increase_constructor: The object to extend the dataset.
+    :param percentage_rating_variation: The percentage of rating variation.
+    :param k: The k ratings to take in the past.
+    The option selected by user ('N ratings for randomly selected users' or 'N ratings by user').
     :return: The extended rating dataframe.
     """
     # Extending dataset:
