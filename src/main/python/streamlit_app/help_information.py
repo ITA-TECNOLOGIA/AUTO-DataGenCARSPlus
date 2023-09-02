@@ -134,11 +134,12 @@ def help_user_profile_automatic():
         st.image(image=config.USER_PROFILE, use_column_width=True, output_format="auto")
 
 # Ratings to binary:
-def help_ratings_to_binary_wf():
+def help_cast_ratings_wf():
     with st.expander(label='Help information'):
-        st.markdown("""This tool allows you to convert ratings to binary values. For example, if you have a dataset with ratings from ```1``` to ```5```, you can convert them to ```0``` and ```1```, where ```0``` represents a negative rating and ```1``` a positive one.""")
-        st.markdown("""The tool will convert the ratings to binary values using a threshold. For example, if you set the threshold to ```3```, all ratings equal or greater than ```3``` will be converted to ```1```, and all ratings less than ```3``` will be converted to ```0```.""")
-
+        st.markdown("""This tool allows you to cast your vote by applying one of the following strategies:""")
+        st.markdown(""" - **Preferencial to Binary**: Transforms ratings based on value ranges (e.g., [1-5]) to binary values (e.g., [0-1]), by applying a threshold. For example, if you have a dataset with ratings from ```1``` to ```5```, you can convert them to ```0``` and ```1```, where ```0``` represents a negative rating and ```1``` a positive one.""")
+        st.markdown(""" - **Binary to Preferencial**:  Transforms binary ratings (0/1) to preferential ratings (1-5) based on a specified scale and theshold.""")
+        
 # Mapping categorization:
 def help_mapping_categorization_wf():
     with st.expander(label='Help information'):

@@ -125,16 +125,7 @@ def load_one_file(file_type, wf_type):
 
 # # Generate user profile:
 # # Ratings to binary:
-# def ratings_to_binary(df, threshold=3):
-#     """
-#     Transforms ratings based on value ranges (e.g., [1-5]) to binary values (e.g., [0-1]), by applying a threshold.
-#     :param threshold: The rating threshold.
-#     :return: A dataframe with binary ratings.
-#     """
-#     def binary_rating(rating):
-#         return 1 if rating >= threshold else 0
-#     df['rating'] = df['rating'].apply(binary_rating)
-#     return df
+
 # # Mapping categorization:
 
 # ####### Analysis a dataset #######

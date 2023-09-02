@@ -1,18 +1,16 @@
 import config
+import pandas as pd
 import streamlit as st
 from streamlit_app.analysis_dataset import evaluation, visualization
 from streamlit_app.generate_synthetic_dataset import (wf_explicit_rating,
                                                       wf_implicit_rating)
-from streamlit_app.preprocess_dataset import (wf_extend_dataset,
+from streamlit_app.preprocess_dataset import (wf_cast_rating,
+                                              wf_extend_dataset,
                                               wf_generate_user_profile,
                                               wf_mapping_categorization,
-                                              wf_ratings_to_binary,
                                               wf_recalculate_dataset,
                                               wf_replace_null_values,
-                                              wf_replicate_dataset,
-                                              wf_util)
-import pandas as pd
-
+                                              wf_replicate_dataset)
 
 # Setting the main page:
 st.set_page_config(page_title=config.APP_TITLE,
@@ -179,9 +177,10 @@ elif general_option == 'Pre-process a dataset':
             else:
                 wf_recalculate_dataset.generate(with_context, null_values_i)      
 
-    # # WF --> Ratings to binary:
-    # elif wf_option == 'Ratings to binary':    
-    #     wf_ratings_to_binary.generate()
+    # WF --> Cast Rating (Binary to Preferencial / Preferencial to Binary):
+    elif wf_option == 'Cast ratings':
+        wf_cast_rating.generate()
+
     # # WF --> Mapping categorization
     # elif wf_option == 'Mapping categorization':
     #     wf_mapping_categorization.generate()

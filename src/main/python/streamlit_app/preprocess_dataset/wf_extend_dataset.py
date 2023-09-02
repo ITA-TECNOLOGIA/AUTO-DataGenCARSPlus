@@ -37,10 +37,10 @@ def generate(with_context, null_values_i, null_values_c):
 
     # Extending dataset:
     output = st.empty()    
-    number_rating = st.number_input('Enter the number of ratings to extend in the rating file:', min_value=1, step=1, value=1)
+    number_rating = st.number_input(label='Enter the number of ratings to extend in the rating file:', min_value=1, step=1, value=1)
     percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
-    k = st.number_input('Enter the k ratings to take in the past:', min_value=1, step=1, value=10)    
-    option = st.selectbox('How would you like to extend the dataset?',('Select one option', 'N ratings for randomly selected users', 'N ratings by user'))
+    k = st.number_input(label='Enter the k ratings to take in the past:', min_value=1, step=1, value=10)    
+    option = st.selectbox(label='How would you like to extend the dataset?', options=['Select one option', 'N ratings for randomly selected users', 'N ratings by user'])
     new_rating_df = pd.DataFrame()
     if with_context:
         new_rating_df = button_extend_dataset(with_context, rating_df, user_profile_df, item_df, number_rating, percentage_rating_variation, k, option, output, context_df)

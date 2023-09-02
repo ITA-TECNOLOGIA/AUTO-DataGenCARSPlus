@@ -43,7 +43,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         del self.__generator_cars
         del self.__generator_rs
     
-    def test_greplicate_dataset_cars(self):
+    def test_replicate_dataset_cars(self):
         '''        
         Replicate a CARS dataset.
         '''        
@@ -51,7 +51,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         logging.info(f'rating_file: {rating_file}')
         self.assertEqual(rating_file.shape[0], 2534)
 
-    def test_greplicate_dataset_rs(self):
+    def test_replicate_dataset_rs(self):
         '''        
         Replicate a RS dataset.
         '''        
