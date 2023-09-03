@@ -8,12 +8,16 @@ from streamlit_app.workflow_graph import workflow_image
 
 
 def generate():
+    """
+    Processes and converts different types of ratings (binary or preferencial) in a DataFrame.
+    :return: The modified rating DataFrame after the Cast Ratings workflow.
+    """
     # WF --> Cast Ratings:
     st.header('Workflow: Cast Ratings')
     # Help information:
-    help_information.help_cast_ratings_wf()
+    help_information.help_cast_rating_wf()
     # Showing the initial image of the WF:
-    workflow_image.show_wf(wf_name='RatingsToBinary', init_step=True)
+    workflow_image.show_wf(wf_name='CastRating', init_step=True)
 
     # Loading dataset:
     st.write('Upload the following files: ')    

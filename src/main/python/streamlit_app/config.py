@@ -29,7 +29,7 @@ GENERATION_CONFIG_SCHEMA_NAME = 'generation_config'
 RATING_TYPE = 'rating'
 
 # Pre-process a dataset:
-WF_OPTIONS = ['Replace NULL values', 'Generate user profile', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Cast ratings', 'Mapping categorization']
+WF_OPTIONS = ['Replace NULL values', 'Generate user profile', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Cast ratings', 'Data converter']
 # WF --> Replace NULL values:
 IC_WF_REPLACE_NULL_VALUES=['item', 'context']
 I_WF_REPLACE_NULL_VALUES=['item']
@@ -40,6 +40,9 @@ ATTRITBUTE_OPTIONS = ['Integer', 'Float', 'String', 'Boolean', 'List', 'Attribut
 DATASET_CARS = ['user', 'item', 'context', 'rating']
 DATASET_RS = ['user', 'item', 'rating']
 UP_OPTIONS = ['Automatic', 'Manual']
+
+# WF --> Converter data:
+CONVERTER_DATA_OPTIONS = ['From numerical to categorical', 'From categorical to numerical']
 
 # Analysis a dataset:
 ANLYSIS_OPTIONS = ['Visualization', 'Evaluation']

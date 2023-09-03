@@ -1220,7 +1220,7 @@
      ],
      "legend":["I", "C", "R", "UP"]        
    },   
-    {"workflow_name": "RatingsToBinary", 
+    {"workflow_name": "CastRating", 
      "nodes" : [
         {"node_name": "BEGIN", 
          "optional" : "False"}, 
@@ -1241,7 +1241,7 @@
      ],
      "legend":["R", "Threshold"]
     },
-    {"workflow_name": "MappingCategorization", 
+    {"workflow_name": "DataConverter", 
      "nodes" : [
         {"node_name": "BEGIN", 
          "optional" : "False"}, 

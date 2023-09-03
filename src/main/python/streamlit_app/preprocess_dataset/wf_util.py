@@ -5,16 +5,8 @@
 # import datagencars.evaluation.rs_surprise.evaluation as evaluation
 import base64
 
-# from datagencars.existing_dataset.replicate_dataset.replicate_dataset import ReplicateDataset
-# import console
 import pandas as pd
 import streamlit as st
-# from datagencars.existing_dataset.generate_user_profile.generate_user_profile_dataset import GenerateUserProfileDataset
-# from datagencars.existing_dataset.replace_null_values import ReplaceNullValues
-# from streamlit_app import config
-# from streamlit_app.workflow_graph import workflow_image
-
-# import io
 
 
 ####### Common methods ######
@@ -107,26 +99,6 @@ def load_one_file(file_type, wf_type):
                     df = None
     return df
 
-# WORKFLOW:
-# Replicate dataset:
-# Extend dataset:
-# Recalculate ratings:
-# Replace NULL values:
-
-# def tab_logic_generate_up(wf_name, with_context, optional_value_list, rating_df, new_item_df, new_context_df=None):
-#     # Showing the current image of the WF:
-#     workflow_image.show_wf(wf_name=wf_name, init_step='False', with_context=with_context, optional_value_list=optional_value_list)
-#     if with_context:                             
-#         user_profile_df = generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df, context_df=new_context_df)                
-#     else:
-#         user_profile_df = generate_user_profile_automatic(rating_df=rating_df, item_df=new_item_df)   
-    
-#     return user_profile_df
-
-# # Generate user profile:
-# # Ratings to binary:
-
-# # Mapping categorization:
 
 # ####### Analysis a dataset #######
 # # VISUALIZATION:

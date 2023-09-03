@@ -59,30 +59,28 @@ def help_user_profile_id():
     st.markdown(""" Please, note that the ```user_profile_id``` column must start at ```1```, while the rest of values must be in the range ```[-1,1]```.""")
 
 ####### Pre-process a dataset #######
-# LOAD DATASET:
-
-# WORKFLOW:
-# Replicate dataset:
+# WORKFLOWS:
+# WF --> Replicate dataset:
 def help_replicate_dataset_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
 
-# Extend dataset:
+# WF --> Extend dataset:
 def help_extend_dataset_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a dataset of ratings incrementally.""")
 
-# Recalculate ratings:
+# WF --> Recalculate ratings:
 def help_recalculate_ratings_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to recalculate ratings in a dataset.""")
 
-# Replace NULL values:
+# WF --> Replace NULL values:
 def help_replace_nulls_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to complete unknown contextual information.""")
 
-# Generate user profile:
+# WF --> Generate user profile:
 def help_user_profile_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate an user profile automatically or manually.""")
@@ -133,25 +131,25 @@ def help_user_profile_automatic():
         st.write('Example of user profile matrix:')
         st.image(image=config.USER_PROFILE, use_column_width=True, output_format="auto")
 
-# Ratings to binary:
-def help_cast_ratings_wf():
+# WF --> Cast rating:
+def help_cast_rating_wf():
     with st.expander(label='Help information'):
         st.markdown("""This tool allows you to cast your vote by applying one of the following strategies:""")
         st.markdown(""" - **Preferencial to Binary**: Transforms ratings based on value ranges (e.g., [1-5]) to binary values (e.g., [0-1]), by applying a threshold. For example, if you have a dataset with ratings from ```1``` to ```5```, you can convert them to ```0``` and ```1```, where ```0``` represents a negative rating and ```1``` a positive one.""")
         st.markdown(""" - **Binary to Preferencial**:  Transforms binary ratings (0/1) to preferential ratings (1-5) based on a specified scale and theshold.""")
         
-# Mapping categorization:
-def help_mapping_categorization_wf():
+# WF --> Data converter:
+def help_data_converter_wf():
     with st.expander(label='Help information'):
-        st.markdown("""TODO""")
+        st.markdown(""" Converts data between numerical and categorical representations. """)
 
-def help_mapping_categorization_num2cat():
+def help_numerical_to_categorical():
     with st.expander(label='Help information'):
         st.markdown("""This workflow allows you to convert numerical values to categorical values. For example, you can convert the numerical values of a rating scale to the corresponding categories of the scale (e.g. ```1-2 -> Bad```, ```3-4 -> Average```, ```5 -> Good```).""")
         st.markdown("""To use this tool, you need to upload a CSV file containing the numerical values to convert. Then, you need to specify the mapping for each numerical value. For example, you could to specify the following mappings: numerical values ```1```, ```2```, ```3```, ```4``` and ```5``` to categories ```Bad```, ```Average```, ```Good```, ```Very good``` and ```Excellent```, respectively.""")
         st.markdown("""Objects and datetime values are ignored.""")   
 
-def help_mapping_categorization_cat2num():
+def help_categorical_to_numerical():
     with st.expander(label='Help information'):
         st.markdown("""This workflow allows you to convert categorical values into numerical values.""")
         st.markdown("""For example, you can convert the categorical values of a rating scale to the corresponding numerical values of the scale (e.g. ```Bad -> 1```, ```Average -> 2```, ```Good -> 3```, ```Very good -> 4```, ```Excellent -> 5```).""")

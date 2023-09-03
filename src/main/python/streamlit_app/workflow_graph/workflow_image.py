@@ -4,11 +4,17 @@ import streamlit as st
 from streamlit_app import config
 from streamlit_app.workflow_graph.graph_generate import Workflow
 
-
 # WORKFLOW:
 wf = Workflow(config.WORKFLOWS_DESCRIPTION)
 
 def show_wf(wf_name, init_step, with_context=None, optional_value_list=None):
+    """
+    Display a workflow with an expander and image.
+    :param wf_name: The name of the workflow to display.
+    :param init_step: The initial step of the workflow.
+    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
+    :param optional_value_list: Optional key-value pairs to include in the workflow parameters.    
+    """
     with st.expander(label='Workflow'):
         json_opt_params = {
             'CARS': str(with_context),            

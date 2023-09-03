@@ -4,10 +4,9 @@ import streamlit as st
 from streamlit_app.analysis_dataset import evaluation, visualization
 from streamlit_app.generate_synthetic_dataset import (wf_explicit_rating,
                                                       wf_implicit_rating)
-from streamlit_app.preprocess_dataset import (wf_cast_rating,
+from streamlit_app.preprocess_dataset import (wf_cast_rating, wf_data_converter,
                                               wf_extend_dataset,
                                               wf_generate_user_profile,
-                                              wf_mapping_categorization,
                                               wf_recalculate_dataset,
                                               wf_replace_null_values,
                                               wf_replicate_dataset)
@@ -181,9 +180,9 @@ elif general_option == 'Pre-process a dataset':
     elif wf_option == 'Cast ratings':
         wf_cast_rating.generate()
 
-    # # WF --> Mapping categorization
-    # elif wf_option == 'Mapping categorization':
-    #     wf_mapping_categorization.generate()
+    # WF --> Data converter:
+    elif wf_option == 'Data converter':
+        wf_data_converter.generate(with_context)
 
 # ####### Analysis a dataset #######
 # elif general_option == 'Analysis a dataset':

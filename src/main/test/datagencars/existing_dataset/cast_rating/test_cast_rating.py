@@ -28,7 +28,7 @@ class TestCastRating(unittest.TestCase):
         rating_binary_rs_file_path = dataset_binary_rs_path + 'ratings.csv'
         rating_df_binary_rs = pd.read_csv(rating_binary_rs_file_path, encoding='utf-8', index_col=False, sep=',')
        
-        # Dataset replication generator:        
+        # Dataset casting generator:        
         self.__generator_preferencial_cars = CastRating(rating_df=rating_df_preferencial_cars)
         self.__generator_binary_cars = CastRating(rating_df=rating_df_binary_cars)
         self.__generator_preferencial_rs = CastRating(rating_df=rating_df_preferencial_rs)
