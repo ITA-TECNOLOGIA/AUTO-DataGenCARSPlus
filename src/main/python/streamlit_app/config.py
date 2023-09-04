@@ -56,7 +56,18 @@ PLOTS_GRID = {'visible':True, 'color':'gray', 'linestyle':'-.', 'linewidth':0.5}
 ANLYSIS_OPTIONS = ['Visualization', 'Evaluation']
 # Visualization:
 VISUALIZATION_OPTIONS = ['Explicit ratings', 'Implicit ratings']
+
 # Evaluation:
+# RS:
+BASIC_RS=['BaselineOnly', 'NormalPredictor']
+CF_RS = ['KNNBasic', 'KNNWithMeans', 'KNNWithZScore', 'KNNBaseline', 'SVD', 'SVDpp', 'NMF', 'SlopeOne', 'CoClustering']
+CB_RS = ['PENDING TODO']
+# Cross validation:
+CROSS_VALIDATION_STRATEGIES = ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut"] # , "PredefinedKFold", "train_test_split"
 # Metrics:
-SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', 'MAE', 'MSE', 'RMSE']
+BINARY_RATING_METRICS = ["Precision", "Recall", "F1_Score", "AUC_ROC"]
+DEFAULT_BINARY_RATING_METRICS = ["Precision", "Recall", "F1_Score"]
+PREFERENCIAL_RATING_METRICS = ["MAE", "Precision", "Recall", "F1_Score", "RMSE", "MSE", "FCP", "MAP", "NDCG"]
+DEFAULT_PREFERENCIAL_RATING_METRICS = ["MAE", "Precision", "Recall", "F1_Score"]
+# SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', 'MAE', 'MSE', 'RMSE']
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------

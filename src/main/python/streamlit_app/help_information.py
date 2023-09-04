@@ -157,4 +157,48 @@ def help_categorical_to_numerical():
 
 ####### Analysis a dataset #######
 # VISUALIZATION:
+
 # EVALUATION:
+def help_rs_algoritms(recommender_name_list):
+    with st.expander(label='Help information'):                    
+        for recommender_name in recommender_name_list:                        
+            if recommender_name == 'BaselineOnly':
+                st.markdown("""- ``` BaselineOnly ```: Algorithm predicting the baseline estimate for given user and item.""")
+            if recommender_name == 'NormalPredictor':
+                st.markdown("""- ``` NormalPredictor ```: Algorithm predicting a random rating based on the distribution of the training set, which is assumed to be normal.""")
+            if recommender_name == 'KNNBasic':
+                st.markdown("""- ``` KNNBasic ```: A basic collaborative filtering algorithm derived from a basic nearest neighbors approach.""")
+            if recommender_name == 'KNNWithMeans':
+                st.markdown("""- ``` KNNWithMeans ```: A basic collaborative filtering algorithm, taking into account the mean ratings of each user.""")
+            if recommender_name == 'KNNWithZScore':
+                st.markdown("""- ``` KNNWithZScore ```: A basic collaborative filtering algorithm, taking into account the z-score normalization of each user.""")
+            if recommender_name == 'KNNBaseline':
+                st.markdown("""- ``` KNNBaseline ```: A basic collaborative filtering algorithm taking into account a baseline rating.""")
+            if recommender_name == 'SVD':
+                st.markdown("""- ``` SVD ```: The famous SVD algorithm, as popularized by Simon Funk during the Netflix Prize. When baselines are not used, this is equivalent to Probabilistic Matrix Factorization""")
+            if recommender_name == 'SVDpp':
+                st.markdown("""- ``` SVDpp ```: The SVD++ algorithm, an extension of SVD taking into account implicit ratings.""")
+            if recommender_name == 'NMF':
+                st.markdown("""- ``` NMF ```:  A collaborative filtering algorithm based on Non-negative Matrix Factorization.""")
+            if recommender_name == 'SlopeOne':
+                st.markdown("""- ``` SlopeOne ```: A simple yet accurate collaborative filtering algorithm. This is a straightforward implementation of the SlopeOne algorithm [LM07]. [LM07] Daniel Lemire and Anna Maclachlan. [Slope one predictors for online rating-based collaborative filtering](https://arxiv.org/abs/cs/0702144). 2007.""")
+            if recommender_name == 'CoClustering':
+                st.markdown("""- ``` CoClustering ```: A collaborative filtering algorithm based on co-clustering. This is a straightforward implementation of [GM05]. [GM05] Thomas George and Srujana Merugu. [A scalable collaborative filtering framework based on co-clustering](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.113.6458&rep=rep1&type=pdf). 2005.""")
+        st.markdown("""These algorithms are implemented in the [surprise](https://github.com/NicolasHug/Surprise) python library.""")                                             
+
+def help_classification_algoritms(classifier_name_list):
+    with st.expander(label='Help information'): 
+        for classifier_name in classifier_name_list:
+            if classifier_name == 'KNeighborsClassifier':
+                st.markdown("""- ``` KNeighborsClassifier ```: Classifier implementing the k-nearest neighbors vote.""")
+            if classifier_name == 'SVC':
+                st.markdown("""- ``` SVC ```: C-Support Vector Classification. The implementation is based on libsvm.""")
+            if classifier_name == 'GaussianNB':
+                st.markdown("""- ``` GaussianNB ```: Gaussian Naive Bayes.""")
+            if classifier_name == 'RandomForestClassifier':
+                st.markdown("""- ``` RandomForestClassifier ```: A random forest classifier. A random forest is a meta estimator that fits a number of decision tree classifiers on various sub-samples of the dataset and uses averaging to improve the predictive accuracy and control over-fitting.""")
+            if classifier_name == 'KMeans':
+                st.markdown("""- ``` KMeans ```: K-Means clustering.""")
+            if classifier_name == 'HistGradientBoostingClassifier':
+                st.markdown("""- ``` HistGradientBoostingClassifier ```: Histogram-based Gradient Boosting Classification Tree. This estimator has native support for missing values (NaNs).""")
+        st.markdown("""These algorithms are implemented in the [scikit-learn](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning) python library.""")

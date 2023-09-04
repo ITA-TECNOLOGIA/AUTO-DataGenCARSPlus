@@ -1,8 +1,8 @@
 import config
 import pandas as pd
 import streamlit as st
-from streamlit_app.analysis_dataset import evaluation
-from streamlit_app.analysis_dataset.visualization import visualization
+from streamlit_app.analysis_dataset.evaluation import st_evaluation
+from streamlit_app.analysis_dataset.visualization import st_visualization
 from streamlit_app.generate_synthetic_dataset import (wf_explicit_rating,
                                                       wf_implicit_rating)
 from streamlit_app.preprocess_dataset import (wf_cast_rating,
@@ -193,11 +193,11 @@ elif general_option == 'Analysis a dataset':
 
     # Visualization:
     if analysis_option == 'Visualization':
-        visualization.generation(with_context)
+        st_visualization.generate(with_context)
 
     # Evaluation:    
     elif analysis_option == 'Evaluation':
-        evaluation.generation(with_context)
+        st_evaluation.generate(with_context)
 
 #     if "lars" and "side_lars" in st.session_state:
 #         lars = st.session_state["lars"]
