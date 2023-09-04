@@ -1,4 +1,7 @@
-# import streamlit as st
+import streamlit as st
+
+def generation(with_context):
+    pass
 
 
 # st.header('Evaluation')  

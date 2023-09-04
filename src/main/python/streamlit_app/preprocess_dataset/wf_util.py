@@ -46,13 +46,14 @@ def load_dataset(file_type_list, wf_type):
     """
     Loads dataset files (user.csv, item.csv, context.csv and rating.csv) in dataframes.
     :param file_type_list: List of file types.
+    :param wf_type: The file type.
     :return: Dataframes related to the uploaded dataset files.
     """
     user_df = pd.DataFrame()
     item_df = pd.DataFrame()
     context_df = pd.DataFrame()
     rating_df = pd.DataFrame()
-    user_profile_df = pd.DataFrame()
+    user_profile_df = pd.DataFrame()    
     # Uploading a dataset:
     if 'user' in file_type_list:
         user_df = load_one_file(file_type='user', wf_type=wf_type)
@@ -63,7 +64,7 @@ def load_dataset(file_type_list, wf_type):
     if 'rating' in file_type_list:
         rating_df = load_one_file(file_type='rating', wf_type=wf_type)
     if 'user profile' in file_type_list:
-        user_profile_df = load_one_file(file_type='user_profile', wf_type=wf_type)
+        user_profile_df = load_one_file(file_type='user_profile', wf_type=wf_type)    
     return user_df, item_df, context_df, rating_df, user_profile_df
 
 def load_one_file(file_type, wf_type):
@@ -100,71 +101,8 @@ def load_one_file(file_type, wf_type):
     return df
 
 
-# ####### Analysis a dataset #######
-# # VISUALIZATION:
-# def plot_column_attributes_count(data, column, sort):
-#     """
-#     Plot the number of values by attribute.
-#     :param data: TODO
-#     :param column: TODO
-#     :param sort: TODO
-#     """
-#     if sort == 'asc':
-#         sort_field = alt.EncodingSortField('count', order='ascending')
-#     elif sort == 'desc':
-#         sort_field = alt.EncodingSortField('count', order='descending') 
-#     else:
-#         sort_field = None
-#     chart = alt.Chart(data).mark_bar().encode(
-#         x=alt.X(column + ':O', title='Attribute values', sort=sort_field),
-#         y=alt.Y('count:Q', title='Count'),
-#         tooltip=[column, 'count']
-#     ).interactive()
-#     st.altair_chart(chart, use_container_width=True)
-            
-# def print_statistics_by_attribute(statistics):
-#     """
-#     Prints in streamlit statistics by attribute.
-#     :param statistics: The statistics.    
-#     """
-#     for stat in statistics:
-#         st.subheader(stat[0])
-#         st.write('Average: ', stat[1])
-#         st.write('Standard deviation: ', stat[2])
-#         col1, col2 = st.columns(2)
-#         with col1:
-#             st.write('Frequencies:')
-#             st.dataframe(stat[3])
-#         with col2:
-#             st.write('Percentages:')
-#             st.dataframe(stat[4])
-
-# def correlation_matrix(df, label):
-#     """
-#     Determines the correlation matrix.
-#     :param label: TODO
-#     :param df: TODO
-#     :return: A correlation matrix.
-#     """
-#     corr_matrix = pd.DataFrame()
-#     columns_id = df.filter(regex='_id$').columns.tolist()
-#     columns_not_id = [col for col in df.columns if col not in columns_id]
-#     data_types = []
-#     for col in columns_not_id:     
-#         data_types.append({"Attribute": col, "Data Type": str(df[col].dtype)})
-#         break    
-#     selected_columns = st.multiselect("Select columns to analyze", columns_not_id, key='cm_'+label)
-#     method = st.selectbox("Select a method", ['pearson', 'kendall', 'spearman'], key='method_'+label)
-#     if st.button("Generate correlation matrix", key='button_'+label) and selected_columns:
-#         with st.spinner("Generating correlation matrix..."):
-#             merged_df_selected = df[selected_columns].copy()
-#             # Categorize non-numeric columns using label encoding:
-#             for col in merged_df_selected.select_dtypes(exclude=[np.number]):
-#                 merged_df_selected[col], _ = merged_df_selected[col].factorize()            
-#             corr_matrix = merged_df_selected.corr(method=method)     
-#     return corr_matrix       
-
-# # EVALUATION:
+####### Analysis a dataset #######
+# EVALUATION:
 # def select_params(algorithm):
 #     """
 #     Select parameters of the specified recommendation algorithm.

@@ -1,10 +1,12 @@
 import config
 import pandas as pd
 import streamlit as st
-from streamlit_app.analysis_dataset import evaluation, visualization
+from streamlit_app.analysis_dataset import evaluation
+from streamlit_app.analysis_dataset.visualization import visualization
 from streamlit_app.generate_synthetic_dataset import (wf_explicit_rating,
                                                       wf_implicit_rating)
-from streamlit_app.preprocess_dataset import (wf_cast_rating, wf_data_converter,
+from streamlit_app.preprocess_dataset import (wf_cast_rating,
+                                              wf_data_converter,
                                               wf_extend_dataset,
                                               wf_generate_user_profile,
                                               wf_recalculate_dataset,
@@ -184,26 +186,22 @@ elif general_option == 'Pre-process a dataset':
     elif wf_option == 'Data converter':
         wf_data_converter.generate(with_context)
 
-# ####### Analysis a dataset #######
-# elif general_option == 'Analysis a dataset':
-#     # Loading a dataset:
-#     st.header('Load dataset')
-#     if with_context:
-#         user_df, item_df, context_df, rating_df = util.load_dataset(file_type_list=['user', 'item', 'context', 'rating'])
-#     else:
-#         user_df, item_df, __, rating_df = util.load_dataset(file_type_list=['user', 'item', 'rating'])
-#     # 
+####### Analysis a dataset #######
+elif general_option == 'Analysis a dataset':    
+    # Selecting a analysis option:
+    analysis_option = st.sidebar.radio(label='Select one option:', options=config.ANLYSIS_OPTIONS)
+
+    # Visualization:
+    if analysis_option == 'Visualization':
+        visualization.generation(with_context)
+
+    # Evaluation:    
+    elif analysis_option == 'Evaluation':
+        evaluation.generation(with_context)
+
 #     if "lars" and "side_lars" in st.session_state:
 #         lars = st.session_state["lars"]
 #         side_lars = st.session_state["side_lars"]
 #         if lars and side_lars:
 #             behavior_df = util.load_one_file('behavior')
-#     # Selecting a analysis option:
-#     analysis_option = st.sidebar.radio(label='Select one option:', options=config.ANLYSIS_OPTIONS)
-#     # Visualization:
-#     if analysis_option == 'Visualization':
-#         visualization
-#     # Evaluation:    
-#     elif analysis_option == 'Evaluation':
-#         evaluation
   
