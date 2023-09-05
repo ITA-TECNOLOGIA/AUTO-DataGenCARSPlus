@@ -14,7 +14,10 @@ def evaluate():
     st.header('Evaluation of traditional RS')
 
     # Loading rating file:
+    st.write('Upload the following file: ')
     rating_df = wf_util.load_one_file(config.RATING_TYPE, wf_type='evaluation_rs')
+    if 'context_id' in rating_df.columns:
+        st.error(f'The uploaded {config.RATING_TYPE} file must not contain contextual information (context_id).')
     st.sidebar.markdown("""---""")
 
     if not rating_df.empty:

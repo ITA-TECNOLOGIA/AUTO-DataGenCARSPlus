@@ -107,7 +107,7 @@ def help_user_profile_manual():
         * **Example 1:** The user with ```user_profile_id=2```,  with a ```weight=0.2``` in the attribute ```other```, considers that ```20%``` of the ratings provided by the user of that profile, is due to unknown factors. 
         * **Example 2:** The user with ```user_profile_id=3```, with a ```weight=1``` in the attribute ```other```, represents users who behave in a completely unpredictable way. This is because the ratings provided by users cannot be explained by any of the attributes that define the user profile. """)
         st.write('Example of user profile matrix:')
-        st.image(image=config.USER_PROFILE, use_column_width=True, output_format="auto")
+        st.image(image=config.USER_PROFILE_IMAGE, use_column_width=True, output_format="auto")
 
 def help_user_profile_automatic():
     with st.expander(label='Help information'):
@@ -129,7 +129,7 @@ def help_user_profile_automatic():
         * **Example 1:** The user with ```user_profile_id=2```,  with a ```weight=0.2``` in the attribute ```other```, considers that ```20%``` of the ratings provided by the user of that profile, is due to unknown factors. 
         * **Example 2:** The user with ```user_profile_id=3```, with a ```weight=1``` in the attribute ```other```, represents users who behave in a completely unpredictable way. This is because the ratings provided by users cannot be explained by any of the attributes that define the user profile. """)
         st.write('Example of user profile matrix:')
-        st.image(image=config.USER_PROFILE, use_column_width=True, output_format="auto")
+        st.image(image=config.USER_PROFILE_IMAGE, use_column_width=True, output_format="auto")
 
 # WF --> Cast rating:
 def help_cast_rating_wf():
@@ -159,6 +159,21 @@ def help_categorical_to_numerical():
 # VISUALIZATION:
 
 # EVALUATION:
+def help_contextual_modeling_paradigm():
+    with st.expander(label='Help information'):
+        st.markdown(""" In the contextual modeling paradigm, the contextual information is used directly in the modeling technique as part of the estimation of ratings. """)
+        st.image(image=config.CM_IMAGE, use_column_width=True, output_format="auto")
+
+def help_prefiltering_paradigm():
+    with st.expander(label='Help information'):
+        st.markdown(""" In the pre-filtering paradigm, the contextual information is used to filter the data before applying traditional recommendation algorithms. """)
+        st.image(image=config.PREFILTERING_IMAGE, use_column_width=True, output_format="auto")
+
+def help_postfiltering_paradigm():
+    with st.expander(label='Help information'):
+        st.markdown(""" In the post-filtering paradigm, the contextual information is considered only in the final step of the process. So, contextual information is initially ignored and the rat-ings are predicted using any conventional 2D recommendation system, taking all the potential items to recommend into account. Afterwards, the resulting set of recommendations is adjusted (contextualized) for each user by using contextual information. """)
+        st.image(image=config.POSTFILTERING_IMAGE, use_column_width=True, output_format="auto")
+
 def help_rs_algoritms(recommender_name_list):
     with st.expander(label='Help information'):                    
         for recommender_name in recommender_name_list:                        

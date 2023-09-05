@@ -39,7 +39,7 @@ I_WF_REPLACE_NULL_VALUES=['item']
 GENERATOR_OPTIONS = ['Categorical', 'Numerical', 'Fixed', 'URL', 'Address', 'Date', 'BooleanList', 'Device', 'Position']
 ATTRITBUTE_OPTIONS = ['Integer', 'Float', 'String', 'Boolean', 'List', 'AttributeComposite']
 # WF --> Generate User Profile:
-USER_PROFILE = 'resources/icons/user_profile.png'
+USER_PROFILE_IMAGE = 'resources/icons/user_profile.png'
 DATASET_CARS = ['user', 'item', 'context', 'rating']
 DATASET_RS = ['user', 'item', 'rating']
 UP_OPTIONS = ['Automatic', 'Manual']
@@ -62,6 +62,15 @@ VISUALIZATION_OPTIONS = ['Explicit ratings', 'Implicit ratings']
 BASIC_RS=['BaselineOnly', 'NormalPredictor']
 CF_RS = ['KNNBasic', 'KNNWithMeans', 'KNNWithZScore', 'KNNBaseline', 'SVD', 'SVDpp', 'NMF', 'SlopeOne', 'CoClustering']
 CB_RS = ['PENDING TODO']
+# CARS:
+PARDIGM_OTPIONS = ["Contextual Modeling", "Pre-filtering", "Post-filtering"]
+# CARS --> Contextual Modeling:
+CLASSIFIER_OPTIONS = ["KNeighborsClassifier", "SVC", "GaussianNB", "RandomForestClassifier", "KMeans", "HistGradientBoostingClassifier"]
+CM_IMAGE = 'resources/icons/cm_paradigm.png'
+# CARS --> Pre-filtering:
+PREFILTERING_IMAGE = 'resources/icons/pre_paradigm.png'
+# CARS --> Post-filtering:
+POSTFILTERING_IMAGE = 'resources/icons/post_paradigm.png'
 # Cross validation:
 CROSS_VALIDATION_STRATEGIES = ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut"] # , "PredefinedKFold", "train_test_split"
 # Metrics:
@@ -69,5 +78,5 @@ BINARY_RATING_METRICS = ["Precision", "Recall", "F1_Score", "AUC_ROC"]
 DEFAULT_BINARY_RATING_METRICS = ["Precision", "Recall", "F1_Score"]
 PREFERENCIAL_RATING_METRICS = ["MAE", "Precision", "Recall", "F1_Score", "RMSE", "MSE", "FCP", "MAP", "NDCG"]
 DEFAULT_PREFERENCIAL_RATING_METRICS = ["MAE", "Precision", "Recall", "F1_Score"]
-# SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', 'MAE', 'MSE', 'RMSE']
+SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', 'MAE', 'MSE', 'RMSE']
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------

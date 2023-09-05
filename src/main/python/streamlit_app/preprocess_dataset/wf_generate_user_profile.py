@@ -199,7 +199,7 @@ def generate_user_profile_manual(number_user_profile, attribute_column_list, ite
     st.dataframe(export_df)
     # Downloading user_profile.csv:
     if not inconsistent:
-        wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=export_df, extension='csv')        
+        wf_util.save_df(df_name=config.USER_PROFILE_IMAGE_SCHEMA_NAME, df_value=export_df, extension='csv')        
     return export_df 
 
 def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, context_df=None, context_attribute_list=None):
@@ -224,7 +224,7 @@ def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, con
                         user_profile_df = generate_up_dataset.generate_user_profile(item_attribute_list, context_attribute_list)
                         with st.expander(label=f'Show the generated user profile file.'):
                             st.dataframe(user_profile_df)
-                            wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')                             
+                            wf_util.save_df(df_name=config.USER_PROFILE_IMAGE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')                             
                         print('The user profile has been generated.')                                                    
             else:
                 st.warning("The item, context and rating files have not been uploaded.")
@@ -237,7 +237,7 @@ def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, con
                     user_profile_df = generate_up_dataset.generate_user_profile(item_attribute_list)
                     with st.expander(label=f'Show the generated user profile file.'):
                         st.dataframe(user_profile_df)
-                        wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')  
+                        wf_util.save_df(df_name=config.USER_PROFILE_IMAGE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')  
                     print('The user profile has been generated.')
             else:
                 st.warning("The item and rating files have not been uploaded.")    
