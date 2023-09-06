@@ -1,4 +1,5 @@
 import pandas as pd
+import plotly.graph_objs as go
 import streamlit as st
 from datagencars.evaluation import sklearn_helpers
 from streamlit_app import config, help_information
@@ -12,92 +13,25 @@ def evaluate_cm_paradigm(rating_df):
     :param item_df: The item dataframe to extract candidate features (item attributtes) of the classifier.
     :param context_df: The context dataframe to extract candidate features (context attributtes) of the classifier.
     """
-    # Building the knowledge base:
-    
+    # Building the knowledge base:    
     knowledge_base_df = build_knowledge_base(rating_df)
-    print('Building a knowledge base.')
-    
-    # Selecting and building classification algorithms:    
-    classifier_list = select_classifier()
-    print('Selecting and building classification algorithms.')
-    
-    
-       
-    
-    # # CROSS VALIDATION:
-    # st.sidebar.markdown('**Split strategy selection**')
-    # strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "ShuffleSplit", "LeaveOneOut"]) # , "PredefinedKFold", "train_test_split", "RepeatedKFold", 
-    # strategy_params = select_split_strategy_contextual(strategy)
-    # strategy_instance = sklearn_helpers.create_split_strategy(strategy, strategy_params)
-    # st.sidebar.markdown("""---""")
-    
-    # # METRICS:
-    # st.sidebar.markdown('**Metrics selection**')  
-    # metrics = st.sidebar.multiselect("Select one or more metrics", config.SCIKIT_LEARN_METRICS, default="Precision")
-    # st.sidebar.markdown("""---""")
-    
-    # # EVALUATION:
-    # st.sidebar.markdown('**Target user**')
-    # # Extract unique user_ids and add "All users" option
-    # user_ids = sorted(rating_df['user_id'].unique().tolist())
-    # user_options = ["All users"] + user_ids
-    # selected_users = st.sidebar.multiselect("Select one or more users or 'All users'", options=user_options, default="All users")
-    # if st.sidebar.button("Evaluate"):
-    #     if "All users" in selected_users:
-    #         target_user_ids = None
-    #     else:
-    #         target_user_ids = selected_users                            
-    #     fold_results_df = sklearn_helpers.evaluate(merged_df, classifier_list, strategy_instance, metrics, target_user_ids)
-    #     st.session_state["fold_results"] = fold_results_df #Save the results dataframe in the session state
-    
-    # # RESULTS:
-    # if "fold_results" in st.session_state:
-    #     # Results (folds):
-    #     fold_results_df = st.session_state["fold_results"]
-    #     st.subheader("Detailed evaluation results (folds and means)")
-    #     # Showing result dataframe by folds:
-    #     st.dataframe(fold_results_df)        
-    #     # Save dataframe:
-    #     wf_util.save_df(df_name='fold_evaluation_results', df_value=fold_results_df, extension='csv')
-
-    #     # Results (means):
-    #     metric_list = fold_results_df.columns[3:].tolist()                 
-    #     mean_results_df = fold_results_df.groupby(['User','Algorithm'])[metric_list].mean().reset_index()
-    #     # Showing result dataframe by mean:
-    #     st.dataframe(mean_results_df)    
-    #     # Save dataframe:                
-    #     wf_util.save_df(df_name='mean_evaluation_results', df_value=mean_results_df, extension='csv') 
         
-    #     # Evaluation figures:
-    #     st.subheader("Evaluation graphs (folds and means)")
-    #     with_fold = st.selectbox(label="Select one option to plot", options=['Means', 'Folds']) 
-    #     col_algorithm, col_metric, col_user = st.columns(3)
-    #     with col_algorithm:
-    #         st.session_state['selected_algorithm_list'] = st.multiselect(label="Select an algorithm", options=fold_results_df["Algorithm"].unique().tolist())
-    #     with col_metric:                            
-    #         st.session_state['selected_metric_list'] = st.multiselect(label="Select a metric", options=metric_list)
-    #     with col_user:                                                        
-    #         st.session_state['selected_users_list'] = st.multiselect(label="Select a user", options=selected_users)  
-    #     # Increasing the maximum value of the Y-axis:
-    #     increment_yaxis = st.number_input("How to increment the maximum value of the Y-axis", min_value=0.0, max_value=10.0, value=0.5, step=0.1)
-    #     # Plotting the graph (by using the "Means" option):
-    #     if with_fold == 'Means':                             
-    #         # Showing graph:               
-    #         if st.button(label='Show graph'):
-    #             visualize_graph_mean_cars(fold_results_df, st.session_state['selected_algorithm_list'], st.session_state['selected_metric_list'], st.session_state['selected_users_list'], increment_yaxis)
-    #             # Filtering the dataframe (with means) by the algorithms and metrics selected by the user:
-    #             df = mean_results_df.loc[mean_results_df['Algorithm'].isin(st.session_state['selected_algorithm_list']), ['User', 'Algorithm']+st.session_state['selected_metric_list']]
-    #             with st.expander(label='Data to plot in the graphic'):
-    #                 st.dataframe(df)
-    #     elif with_fold == 'Folds': # Plotting the graph (by using the "Folds" option):                            
-    #         # Showing graph:               
-    #         if st.button(label='Show graph'):                                
-    #             visualize_graph_fold_cars(fold_results_df, st.session_state['selected_algorithm_list'], st.session_state['selected_metric_list'], st.session_state['selected_users_list'], increment_yaxis)
-    #             # Filtering the dataframe (with means) by the algorithms and metrics selected by the user:                                
-    #             df = fold_results_df.loc[fold_results_df['Algorithm'].isin(st.session_state['selected_algorithm_list']), ['User', 'Fold', 'Algorithm']+st.session_state['selected_metric_list']]
-    #             with st.expander(label='Data to plot in the graphic'):
-    #                 st.dataframe(df)
+    # Selecting and building classification algorithms:    
+    classifier_list = select_classification_algorithm()
 
+    # Selecting the split strategy:
+    split_strategy, split_strategy_parameter_dict = select_split_strategy()
+    split_strategy_instance = sklearn_helpers.create_split_strategy(strategy=split_strategy, strategy_params=split_strategy_parameter_dict)
+
+    # Selecting evaluation metrics:
+    metric_list = select_evaluation_metric()
+
+    # Evaluating classification algorithm:
+    evaluation_result_df, selected_users = evaluate(knowledge_base_df, classifier_list, split_strategy_instance, metric_list)
+    
+    # Showing evaluation results:
+    show_evaluation_result(evaluation_result_df, selected_users)
+      
 def build_knowledge_base(rating_df):
     """
     Builds the knowledge base to the classifier que será usado en el contextual modeling paradigm.
@@ -113,6 +47,7 @@ def build_knowledge_base(rating_df):
     # Building the knowledge base:
     knowledge_base_df = pd.DataFrame()
     if (not item_df.empty) and (not context_df.empty):
+        st.sidebar.markdown("""---""")
         st.sidebar.markdown('**Contextual features selection**')
         # Selecting contextual features:
         item_feature_df = select_contextual_features(df=item_df, label=config.ITEM_TYPE)                    
@@ -130,11 +65,11 @@ def build_knowledge_base(rating_df):
             column_name_to_move = 'rating'
             # Create a new DataFrame with the desired column at the end
             new_rating_column_order = [col for col in knowledge_base_df.columns if col != column_name_to_move] + [column_name_to_move]
-            knowledge_base_df = knowledge_base_df[new_rating_column_order]            
+            knowledge_base_df = knowledge_base_df[new_rating_column_order]         
+            print('The knowledge base has been built.')   
         # Showing the knowledge base built:
         with st.expander(label='Show the knowledge base built'):
-            st.dataframe(knowledge_base_df)                    
-        st.sidebar.markdown("""---""")
+            st.dataframe(knowledge_base_df)
     else:
         st.warning("The item and context files have not been uploaded.")
     return knowledge_base_df
@@ -154,11 +89,12 @@ def select_contextual_features(df, label):
     else:
         return pd.DataFrame()
     
-def select_classifier():
+def select_classification_algorithm():
     """
     Selects a classification algorithm.
 
-    """        
+    """
+    st.sidebar.markdown("""---""")
     st.sidebar.markdown('**Classifier selection**')
     st.sidebar.write("-0.5 values will be replaced with None") # why?
 
@@ -179,7 +115,8 @@ def select_classifier():
         # Built classifier:                            
         classifier_instance = sklearn_helpers.create_algorithm(classifier_name, replaced_classification_parameters_map)
         classifier_list.append(classifier_instance)
-        st.sidebar.markdown("""---""")
+    print(f'The classification algorithm {classifier_list} have been selected.')
+    st.sidebar.markdown("""---""")
     return classifier_list
 
 def replace_with_none_values(classification_parameters_map):
@@ -256,3 +193,173 @@ def select_classification_parameters_map(classification_algorithm):
                 "max_leaf_nodes": st.sidebar.slider("Max leaf nodes", 10, 200, 31, step=1),
                 "max_depth": st.sidebar.slider("Max depth", 1, 50, 15, step=1),
                 "l2_regularization": st.sidebar.slider("L2 regularization", 0.0, 1.0, 0.0, step=0.01)}
+    
+def select_split_strategy():
+    """
+    Selects split strategies (ShuffleSplit, KFold or LeaveOneOut) to evaluate classification algorithm.
+    :return: A dictionary with parameter values. 
+    """
+    st.sidebar.markdown('**Split strategy selection**')
+    split_strategy = st.sidebar.selectbox("Select a strategy", ["KFold", "ShuffleSplit", "LeaveOneOut"]) # , "PredefinedKFold", "train_test_split", "RepeatedKFold",
+    split_strategy_parameter_dict = {}
+    if split_strategy == "ShuffleSplit":
+        n_splits = st.sidebar.number_input("Number of splits", 2, 100, 10)
+        train_size = st.sidebar.slider("Train set size (0.0 to 1.0)", 0.01, 1.0, 0.2, step=0.01)
+        split_strategy_parameter_dict = {"n_splits": n_splits, "train_size": train_size}
+    elif split_strategy == "KFold":
+        n_splits = st.sidebar.number_input("Number of folds", 2, 100, 5)
+        split_strategy_parameter_dict = {"n_splits": n_splits, "shuffle": st.sidebar.checkbox("Shuffle?")}
+    elif split_strategy == "LeaveOneOut":
+        st.sidebar.markdown("""Cross-validation iterator where each user has exactly one rating in the testset. Contrary to other cross-validation strategies, LeaveOneOut does not guarantee that all folds will be different, although this is still very likely for sizeable datasets.""")
+        split_strategy_parameter_dict = {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
+                                   "min_n_ratings": st.sidebar.number_input("Minimum number of ratings for each user (trainset)", min_value=0, max_value=10000, value=0)}            
+    print(f'The split strategy ({split_strategy}) has been selected.')
+    return split_strategy, split_strategy_parameter_dict
+
+def select_evaluation_metric():  
+    """
+    Selects evaluation metrics.
+    :return: A list with the evaluation metrics.
+    """  
+    st.sidebar.markdown('**Metrics selection**')  
+    metric_list = st.sidebar.multiselect("Select one or more metrics", config.SCIKIT_LEARN_METRICS, default="Precision")
+    print(f'The evaluation metrics ({metric_list}) have been selected.')
+    st.sidebar.markdown("""---""")
+    return metric_list
+
+def evaluate(knowledge_base_df, classifier_list, split_strategy_instance, metric_list):
+    """
+    Evaluation a classification algorithm.
+    :param knowledge_base_df: The knowledge base.
+    :param classifier_list: The list of classifiers to evaluate.
+    :param split_strategy_instance: A object of the split strategy to use during the evaluation.
+    :param metric_list: The list of metrics to use during the evaluation.
+    :return: A dataframe with evaluation results.
+    """
+    st.sidebar.markdown('**Target user**')
+    evaluation_result_df = pd.DataFrame()
+    selected_users = []
+    if not knowledge_base_df.empty:
+        # Extract unique user_ids and add "All users" option:
+        user_ids = sorted(knowledge_base_df['user_id'].unique().tolist())
+        user_options = ["All users"] + user_ids
+        selected_users = st.sidebar.multiselect("Select one or more users or 'All users'", options=user_options, default="All users")
+        if st.sidebar.button("Evaluate"):
+            if "All users" in selected_users:
+                target_user_ids = None
+            else:
+                target_user_ids = selected_users                            
+            evaluation_result_df = sklearn_helpers.evaluate(knowledge_base_df, classifier_list, split_strategy_instance, metric_list, target_user_ids)
+            # Save the results dataframe in the session state:
+            st.session_state["evaluation_result_df"] = evaluation_result_df
+            print('The contextual modeling paradigm has been evaluated.')
+    return evaluation_result_df, selected_users
+
+def show_evaluation_result(evaluation_result_df, selected_users):
+    """
+    Showing evaluation results.
+    :param evaluation_result_df: The dataframe with evaluation results.    
+    """ 
+    if "evaluation_result_df" in st.session_state:
+        # Results (folds):
+        evaluation_result_df = st.session_state["evaluation_result_df"]
+        st.subheader("Detailed evaluation results (folds and means)")
+        # Showing result dataframe by folds:
+        st.dataframe(evaluation_result_df)
+        # Save dataframe:
+        wf_util.save_df(df_name='fold_evaluation_results', df_value=evaluation_result_df, extension='csv')
+
+        # Results (means):
+        metric_list = evaluation_result_df.columns[3:].tolist()                 
+        mean_results_df = evaluation_result_df.groupby(['User','Algorithm'])[metric_list].mean().reset_index()
+        # Showing result dataframe by mean:
+        st.dataframe(mean_results_df)    
+        # Save dataframe:                
+        wf_util.save_df(df_name='mean_evaluation_results', df_value=mean_results_df, extension='csv') 
+        
+        # Evaluation figures:
+        st.subheader("Evaluation graphs (folds and means)")
+        with_fold = st.selectbox(label="Select one option to plot", options=['Means', 'Folds']) 
+        col_algorithm, col_metric, col_user = st.columns(3)
+        with col_algorithm:
+            algorithm_list = evaluation_result_df["Algorithm"].unique().tolist()
+            st.session_state['selected_algorithm_list'] = st.multiselect(label="Select an algorithm", options=algorithm_list, default=algorithm_list)
+        with col_metric:                            
+            st.session_state['selected_metric_list'] = st.multiselect(label="Select a metric", options=metric_list, default=metric_list)
+        with col_user:                                                
+            
+            # user_list = evaluation_result_df["User"].unique().tolist()
+            st.session_state['selected_users_list'] = st.multiselect(label="Select a user", options=selected_users, default=selected_users)  
+        # Increasing the maximum value of the Y-axis:
+        increment_yaxis = st.number_input("How to increment the maximum value of the Y-axis", min_value=0.0, max_value=10.0, value=0.5, step=0.1)
+        # Plotting the graph (by using the "Means" option):
+        if with_fold == 'Means':                             
+            # Showing graph:               
+            if st.button(label='Show graph'):
+                draw_graph_by_mean(evaluation_result_df, st.session_state['selected_algorithm_list'], st.session_state['selected_metric_list'], st.session_state['selected_users_list'], increment_yaxis)
+                # Filtering the dataframe (with means) by the algorithms and metrics selected by the user:
+                df = mean_results_df.loc[mean_results_df['Algorithm'].isin(st.session_state['selected_algorithm_list']), ['User', 'Algorithm']+st.session_state['selected_metric_list']]
+                with st.expander(label='Data to plot in the graphic'):
+                    st.dataframe(df)
+        elif with_fold == 'Folds': # Plotting the graph (by using the "Folds" option):                            
+            # Showing graph:               
+            if st.button(label='Show graph'):                                
+                draw_graph_by_fold(evaluation_result_df, st.session_state['selected_algorithm_list'], st.session_state['selected_metric_list'], st.session_state['selected_users_list'], increment_yaxis)
+                # Filtering the dataframe (with means) by the algorithms and metrics selected by the user:                                
+                df = evaluation_result_df.loc[evaluation_result_df['Algorithm'].isin(st.session_state['selected_algorithm_list']), ['User', 'Fold', 'Algorithm']+st.session_state['selected_metric_list']]
+                with st.expander(label='Data to plot in the graphic'):
+                    st.dataframe(df)
+
+def draw_graph_by_mean(df, algorithms, metrics, selected_users, increment_yaxis):
+    """
+    Visualize a bar graphic with evaluation results considering different algorithms, metrics and users.
+    :param df: A dataframe with evaluation results.
+    :param algorithms: List of recommendation algorithms.
+    :param metrics: List of metrics.
+    :param selected_users: List of users.
+    """
+    fig = go.Figure()
+    for algorithm in algorithms:
+        filtered_df = df[df["Algorithm"] == algorithm]
+        for metric in metrics:
+            if "All users" in selected_users:
+                users = df["User"].unique()
+                user_label = "All users"
+                user_filtered_df = filtered_df[filtered_df["User"].isin(users)]
+                mean_value = user_filtered_df[metric].mean()
+                fig.add_trace(go.Bar(x=[f"{metric}"], y=[mean_value], name=f"{algorithm} - {user_label}", legendgroup=f"{algorithm} - {user_label}"))
+            else:
+                for user in selected_users:
+                    user_filtered_df = filtered_df[filtered_df["User"] == user]
+                    mean_value = user_filtered_df[metric].mean()
+                    fig.add_trace(go.Bar(x=[f"{metric}"], y=[mean_value], name=f"{algorithm} - User {user}", legendgroup=f"{algorithm} - User {user}"))
+    fig.update_layout(xaxis_title="Measures of performance", yaxis_title="Performance", legend=dict(title="Algorithms & Users"), barmode='group', yaxis_range=[0, df[metrics].max().max()+increment_yaxis])
+    st.plotly_chart(fig, use_container_width=True)
+
+def draw_graph_by_fold(df, algorithms, metrics, selected_users, increment_yaxis):
+    """
+    Visualize a line graphic with evaluation results considering different algorithms, metrics and users.
+    :param df: A dataframe with evaluation results.
+    :param algorithms: List of recommendation algorithms.
+    :param metrics: List of metrics.
+    :param selected_users: List of users.
+    """
+    filtered_df = df[df["Algorithm"].isin(algorithms)]
+    fig = go.Figure()
+    for algorithm in algorithms:
+        for metric in metrics:
+            if "All users" in selected_users:
+                users = df["User"].unique()
+                algo_filtered_df = filtered_df[(filtered_df["Algorithm"] == algorithm) & (filtered_df["User"].isin(users))]
+                mean_values = []
+                for fold in algo_filtered_df["Fold"].unique():
+                    fold_filtered_df = algo_filtered_df[algo_filtered_df["Fold"] == fold]
+                    mean_value = fold_filtered_df[metric].mean()
+                    mean_values.append(mean_value)
+                fig.add_trace(go.Scatter(x=algo_filtered_df["Fold"].unique(), y=mean_values, name=f"{algorithm} - {metric} - All users", mode="markers+lines"))
+            else:
+                for user in selected_users:
+                    algo_user_filtered_df = filtered_df[(filtered_df["Algorithm"] == algorithm) & (filtered_df["User"] == user)]
+                    fig.add_trace(go.Scatter(x=algo_user_filtered_df["Fold"], y=algo_user_filtered_df[metric], name=f"{algorithm} - {metric} - User {user}", mode="markers+lines"))
+    fig.update_layout(xaxis=dict(title="Fold", dtick=1, tickmode='linear'), yaxis_title="Performance", legend=dict(title="Measures of performance"), yaxis_range=[0, df[metrics].max().max()+increment_yaxis])
+    st.plotly_chart(fig, use_container_width=True)

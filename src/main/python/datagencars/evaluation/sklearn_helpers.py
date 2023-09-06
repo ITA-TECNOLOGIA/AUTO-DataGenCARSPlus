@@ -1,32 +1,24 @@
 import sys
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+from sklearn.cluster import DBSCAN, KMeans
+from sklearn.ensemble import (HistGradientBoostingClassifier,
+                              RandomForestClassifier)
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import (f1_score, make_scorer, mean_absolute_error,
+                             mean_squared_error, precision_score, recall_score,
+                             roc_auc_score)
+from sklearn.model_selection import (KFold, LeaveOneOut, RepeatedKFold,
+                                     ShuffleSplit, cross_validate,
+                                     train_test_split)
+from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.cluster import DBSCAN, KMeans
-from sklearn.metrics import (
-    make_scorer,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
-    mean_absolute_error,
-    mean_squared_error
-)
-from sklearn.model_selection import (
-    cross_validate,
-    ShuffleSplit,
-    KFold,
-    LeaveOneOut,
-    RepeatedKFold,
-    train_test_split,
-)
-from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.impute import SimpleImputer
+
 sys.path.append("src/main/python/streamlit")
-import config
+from streamlit_app import config
+
 
 def create_algorithm(algo_name, params=None):
     """
@@ -60,11 +52,9 @@ def create_split_strategy(strategy, strategy_params):
     :return: the strategy
     """
     if strategy == "ShuffleSplit":
-        return ShuffleSplit(n_splits=strategy_params['n_splits'],
-                             train_size=strategy_params['train_size'])
+        return ShuffleSplit(n_splits=strategy_params['n_splits'], train_size=strategy_params['train_size'])
     elif strategy == "KFold":
-        return KFold(n_splits=strategy_params['n_splits'],                    
-                     shuffle=strategy_params['shuffle'])
+        return KFold(n_splits=strategy_params['n_splits'], shuffle=strategy_params['shuffle'])
     elif strategy == "LeaveOneOut":
         return LeaveOneOut()
     else:

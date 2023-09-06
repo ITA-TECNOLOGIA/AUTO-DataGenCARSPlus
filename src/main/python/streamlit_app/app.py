@@ -1,7 +1,7 @@
 import config
-import pandas as pd
 import streamlit as st
-from streamlit_app.analysis_dataset.evaluation import st_evaluation
+from streamlit_app.analysis_dataset.evaluation import (st_evaluation_cars,
+                                                       st_evaluation_rs)
 from streamlit_app.analysis_dataset.visualization import st_visualization
 from streamlit_app.generate_synthetic_dataset import (wf_explicit_rating,
                                                       wf_implicit_rating)
@@ -196,12 +196,11 @@ elif general_option == 'Analysis a dataset':
         st_visualization.generate(with_context)
 
     # Evaluation:    
-    elif analysis_option == 'Evaluation':
-        st_evaluation.generate(with_context)
-
-#     if "lars" and "side_lars" in st.session_state:
-#         lars = st.session_state["lars"]
-#         side_lars = st.session_state["side_lars"]
-#         if lars and side_lars:
-#             behavior_df = util.load_one_file('behavior')
+    elif analysis_option == 'Evaluation':        
+        # CARS Evaluation:
+        if with_context:        
+            st_evaluation_cars.generate()
+        # Traditional RS Evaluation:
+        else:
+            st_evaluation_rs.generate()
   

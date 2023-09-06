@@ -1,5 +1,10 @@
 import streamlit as st
 
+#     if "lars" and "side_lars" in st.session_state:
+#         lars = st.session_state["lars"]
+#         side_lars = st.session_state["side_lars"]
+#         if lars and side_lars:
+#             behavior_df = util.load_one_file('behavior')
 
 def evaluate_postfiltering_paradigm(rating_df):
     """
