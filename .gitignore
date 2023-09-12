@@ -14,3 +14,4 @@ resources/dataset_ml_100k/*
 resources/dataset_ml_27m/*
 resources/data_schema_imascono/*
 cert/
+src/main/python/streamlit_app/workflow_graph/ReplicateDataset.png

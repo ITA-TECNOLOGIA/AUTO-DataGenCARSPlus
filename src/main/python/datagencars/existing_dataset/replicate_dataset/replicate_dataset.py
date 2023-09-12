@@ -1,10 +1,12 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+from datagencars import util
 from datagencars.existing_dataset.generate_rating import GenerateRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 
+
 class ReplicateDataset(GenerateRating):
-    '''
+    """
     Replicate an existing dataset.
 
     Input:
@@ -21,17 +23,18 @@ class ReplicateDataset(GenerateRating):
 
     Ouput:
         [R]  rating.csv <replicated>        
-    '''
+    """
 
     def __init__(self, rating_df, user_profile_df, item_df, context_df=None):
         super().__init__(rating_df, user_profile_df, item_df, context_df)
         # Determining statistics:
         self.rating_statistics = ExtractStatisticsRating(rating_df)
 
-    def replicate_dataset(self, percentage_rating_variation):
+    def replicate_dataset(self, percentage_rating_variation=25, k=10):
         """
         Replicates an original dataset.
         :param percentage_rating_variation: The percentage of rating variation.
+        :param k: The k ratings to take in the past.
         :return: A replicated dataset.
         """
         rating_df = None
@@ -39,9 +42,7 @@ class ReplicateDataset(GenerateRating):
             rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'context_id', 'rating'])
         else:
             rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'rating'])
-
-        # The k ratings to take in the past.
-        k = 10
+               
         # The minimum value rating.
         min_rating_value = self.access_rating.get_min_rating()
         # The maximum value rating.
@@ -100,13 +101,9 @@ class ReplicateDataset(GenerateRating):
             rating_df['item_id'] = item_id_list
             if self.rating_statistics.get_number_contexts() != 0:
                 rating_df['context_id'] = context_id_list
-            rating_df['rating'] = rating_list           
-        # Contexts:
-        if self.rating_statistics.get_number_contexts() != 0:
-            # Sorting and returning a rating_df by user_id and item_id.
-            rating_df = rating_df.sort_values(by=['user_id', 'item_id', 'context_id'], ascending=[True, True, True], na_position='first')
-        else:
-            rating_df = rating_df.sort_values(by=['user_id', 'item_id'], ascending=[True, True], na_position='first')
+            rating_df['rating'] = rating_list
+        # Sorting and returning a rating_df by user_id, item_id and/or context.
+        rating_df = util.sort_rating_df(rating_df)        
         # Reseting index.
         rating_df.reset_index(drop=True, inplace=True)
         return rating_df

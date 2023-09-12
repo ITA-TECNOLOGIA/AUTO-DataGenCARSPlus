@@ -1,7 +1,9 @@
 import ast
 import random
+
 import numpy as np
 import pandas as pd
+from datagencars import util
 from datagencars.existing_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
 from datagencars.synthetic_dataset.generator.access_schema.access_generation_config import AccessGenerationConfig
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
@@ -177,12 +179,8 @@ class GeneratorExplicitRatingFile:
             # Inserting row into dataframe:
             rating_df.loc[len(rating_df.index)] = row_rating_list            
 
-        # Contexts:
-        if with_context:
-            # Sorting and returning a rating_df by user_id and item_id.
-            rating_df = rating_df.sort_values(by=['user_id', 'item_id', 'context_id'], ascending=True, na_position='first')
-        else:
-            rating_df = rating_df.sort_values(by=['user_id', 'item_id'], ascending=True, na_position='first')
+        # Sorting and returning a rating_df by user_id, item_id and/or context.
+        rating_df = util.sort_rating_df(rating_df)      
         # Reseting index.
         rating_df.reset_index(drop=True, inplace=True)
         return rating_df
@@ -195,8 +193,8 @@ class GeneratorExplicitRatingFile:
         :param context_id: The context ID.
         :return: A rating value.
         '''       
-        # Getting the attribute name list and atribute value list of the user_profile_id.
-        atribute_name_list, atribute_value_list = self.access_user_profile.get_vector_from_user_profile(user_profile_id)        
+        # Getting the attribute name list and atribute value list of the user_profile_id.        
+        atribute_name_list, atribute_value_list = self.access_user_profile.get_vector_from_user_profile(user_profile_id)
 
         # Getting the current attribute value and its possible values.
         if context_id:

@@ -1,5 +1,6 @@
-from graphviz import Digraph
 import json
+
+from graphviz import Digraph
 
 
 class Workflow:
@@ -113,7 +114,7 @@ class Workflow:
                     legend.node('legend', legend_text)
 
                 # Save the graph as a PNG file
-                path = g.render(filename='src/main/python/streamlit_app/workflow/'+workflow['workflow_name'], format='png', cleanup=True)
+                path = g.render(filename='src/main/python/streamlit_app/workflow_graph/'+workflow['workflow_name'], format='png', cleanup=True)
                 return path        
         return 'Workflow not found'
 

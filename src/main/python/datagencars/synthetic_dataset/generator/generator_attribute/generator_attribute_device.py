@@ -1,7 +1,7 @@
 import random, ast
 from datagencars.synthetic_dataset.generator.generator_attribute.generator_attribute import GeneratorAttribute
 
-class GeneratorDevice(GeneratorAttribute):
+class GeneratorAttributeDevice(GeneratorAttribute):
     '''
     A generator of attribute values representing a device
     (browserName, browserVersion, deviceName, deviceType, deviceVendor, osName, osVersion) 
