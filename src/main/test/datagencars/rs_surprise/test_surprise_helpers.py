@@ -1,6 +1,7 @@
-import surprise
 import unittest
+
 import pandas as pd
+import surprise
 from datagencars.evaluation.rs_surprise import surprise_helpers
 
 """
@@ -9,6 +10,7 @@ Usage: python -m unittest src\main\test\datagencars\rs_surprise\test_surprise_he
 """
 
 class TestCreateAlgorithm(unittest.TestCase):
+
     def test_valid_algorithm_name(self):
         algo_name = "SVD"
         params = {"n_factors": 100, "n_epochs": 20, "lr_all": 0.005, "reg_all": 0.02}
@@ -23,6 +25,7 @@ class TestCreateAlgorithm(unittest.TestCase):
         self.assertEqual(str(context.exception), "Invalid algorithm name")
 
 class TestCreateSplitStrategy(unittest.TestCase):
+
     def test_create_split_strategy_kfold(self):
         strategy = "KFold"
         params = {"n_splits": 5, "shuffle": True}
@@ -41,6 +44,7 @@ class TestCreateSplitStrategy(unittest.TestCase):
         self.assertEqual(str(context.exception), 'Invalid split strategy')
 
 class TestConvertToSurpriseDataset(unittest.TestCase):
+    
     def test_convert_to_surprise_dataset(self):
         df = pd.DataFrame({
             "user_id": [1, 2, 3, 4, 5],

@@ -9,9 +9,9 @@ class TestIncreaseRating(unittest.TestCase):
 
     def setUp(self):
         # CARS:
-        dataset_cars_path = 'resources/existing_dataset/context/sts/'        
+        dataset_cars_path = 'resources/existing_dataset/context/preferencial_rating/sts/'        
         # rating_df:
-        rating_file_path = dataset_cars_path + 'ratings.csv'
+        rating_file_path = dataset_cars_path + 'rating.csv'
         self.rating_df = pd.read_csv(rating_file_path, encoding='utf-8', index_col=False, sep=';')
         # user_profile_df:
         user_profile_file_path = dataset_cars_path + 'user_profile.csv'
@@ -24,9 +24,9 @@ class TestIncreaseRating(unittest.TestCase):
         context_df = pd.read_csv(context_file_path, encoding='utf-8', index_col=False, sep=';')
 
         # RS:
-        dataset_rs_path = 'resources/existing_dataset/without_context/sts/'
+        dataset_rs_path = 'resources/existing_dataset/without_context/preferencial_rating/sts/'
         # rating_df:
-        rating_file_path = dataset_rs_path + 'ratings.csv'
+        rating_file_path = dataset_rs_path + 'rating.csv'
         self.rating_df_rs = pd.read_csv(rating_file_path, encoding='utf-8', index_col=False, sep=';')
         # user_profile_df (RS):
         user_profile_file_path = dataset_rs_path + 'user_profile.csv'

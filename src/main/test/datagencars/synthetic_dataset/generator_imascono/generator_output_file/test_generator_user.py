@@ -8,7 +8,7 @@ class TestGeneratorUser(unittest.TestCase):
 
     def setUp(self):        
         # generation_config.conf
-        generation_config_file_path = 'resources/data_schema_imascono/generation_config.conf'
+        generation_config_file_path = 'resources/generate_synthetic_dataset/rating_implicit/context/data_schema/imascono/generation_config.conf'        
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()
 

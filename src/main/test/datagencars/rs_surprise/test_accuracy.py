@@ -1,5 +1,6 @@
-import numpy as np
 import unittest
+
+import numpy as np
 from datagencars.evaluation.rs_surprise import accuracy
 
 """
@@ -8,6 +9,7 @@ Usage: python -m unittest src\main\test\rs_surprise\test_accuracy.py
 """
 
 class TestRMSE(unittest.TestCase):
+    
     def test_rmse_with_valid_input(self):
         predictions = [
             (1, 2, 3, 4, 5),
@@ -174,7 +176,9 @@ class TestF1Score(unittest.TestCase):
         self.assertAlmostEqual(f1, 0.75, delta=1e-7)
 
 import unittest
+
 import numpy as np
+
 
 class TestMAP(unittest.TestCase):
     def test_map_with_empty_predictions_list(self):

@@ -8,7 +8,7 @@ from datagencars.synthetic_dataset.generator.generator_attribute.generator_attri
 class TestGeneratorAttributeAddress(unittest.TestCase):
 
     def setUp(self):        
-        item_schema_file_path = 'resources/generate_synthetic_dataset/rating_explicit/context/restaurant/data_schema/item_schema.conf'
+        item_schema_file_path = 'resources/generate_synthetic_dataset/rating_explicit/context/data_schema/restaurant/item_schema.conf'
         with open(item_schema_file_path, 'r') as item_schema_file:
             item_schema = item_schema_file.read()            
         schema_access = AccessSchema(file_str=item_schema)

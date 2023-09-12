@@ -6,11 +6,10 @@ the mighty scikit learn.
 import time
 
 import numpy as np
-from joblib import delayed, Parallel
+from joblib import Parallel, delayed
+from surprise.model_selection.split import get_cv
 
 from . import accuracy
-
-from surprise.model_selection.split import get_cv
 
 
 def cross_validate(

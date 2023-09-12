@@ -11,7 +11,7 @@ class TestCastRating(unittest.TestCase):
     
     def setUp(self):
         # user.csv:
-        user_file_path = 'resources/existing_dataset/context/sts/rating_preferencial/user.csv'
+        user_file_path = 'resources/existing_dataset/context/preferencial_rating/sts/user.csv'
         user_df = pd.read_csv(user_file_path, encoding='utf-8', index_col=False, sep=';')
                
         # Dataset converting data generator:        

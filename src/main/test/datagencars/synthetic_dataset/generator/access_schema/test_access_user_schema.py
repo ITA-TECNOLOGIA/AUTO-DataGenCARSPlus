@@ -7,7 +7,7 @@ from datagencars.synthetic_dataset.generator.access_schema.access_schema import 
 class TestAccessUserSchema(unittest.TestCase):
 
     def setUp(self):        
-        user_schema_file_path = 'resources/generate_synthetic_dataset/rating_explicit/context/restaurant/data_schema/user_schema.conf'
+        user_schema_file_path = 'resources/generate_synthetic_dataset/rating_explicit/context/data_schema/restaurant/user_schema.conf'
         with open(user_schema_file_path, 'r') as user_schema_file:
             user_schema = user_schema_file.read()            
         self.__access = AccessSchema(file_str=user_schema)
