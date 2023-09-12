@@ -8,17 +8,13 @@ from streamlit_app import config, help_information
 from streamlit_app.preprocess_dataset import wf_util
 
 
-def generate():
+def generate(rating_df):
     """
     Evaluating traditional Recommendation Systems.
     """
     st.header('Evaluation of traditional RS')
     output = st.empty() 
-    with console.st_log(output.code): 
-        # Loading rating file:
-        st.write('Upload the following file: ')
-        rating_df = wf_util.load_one_file(config.RATING_TYPE, wf_type='evaluation_rs_rating_df')        
-
+    with console.st_log(output.code):
         if not rating_df.empty:
             print('The rating file has been uploaded.') 
             if 'context_id' in rating_df.columns:

@@ -7,16 +7,12 @@ from streamlit_app.analysis_dataset.evaluation import (st_evaluation_cars_cm,
 from streamlit_app.preprocess_dataset import wf_util
 
 
-def generate():
+def generate(rating_df):
     """
     Evaluating Context-Aware Recommendation Systems.
     """
     output = st.empty() 
-    with console.st_log(output.code): 
-        # Loading rating file:
-        st.write('Upload the following file: ')
-        rating_df = wf_util.load_one_file(file_type=config.RATING_TYPE, wf_type='evaluation_cars_rating_df')
-        
+    with console.st_log(output.code):         
         if not rating_df.empty:
             print('The rating file has been uploaded.')   
             

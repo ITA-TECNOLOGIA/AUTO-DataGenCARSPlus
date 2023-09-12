@@ -171,7 +171,7 @@ def help_prefiltering_paradigm():
 
 def help_postfiltering_paradigm():
     with st.expander(label='Help information'):
-        st.markdown(""" In the post-filtering paradigm, the contextual information is considered only in the final step of the process. So, contextual information is initially ignored and the rat-ings are predicted using any conventional 2D recommendation system, taking all the potential items to recommend into account. Afterwards, the resulting set of recommendations is adjusted (contextualized) for each user by using contextual information. """)
+        st.markdown(""" In the post-filtering paradigm, the contextual information is considered only in the final step of the process. So, contextual information is initially ignored and the ratings are predicted using any conventional 2D recommendation system, taking all the potential items to recommend into account. Afterwards, the resulting set of recommendations is adjusted (contextualized) for each user by using contextual information. """)
         st.image(image=config.POSTFILTERING_IMAGE, use_column_width=True, output_format="auto")
 
 def help_rs_algoritms(recommender_name_list):

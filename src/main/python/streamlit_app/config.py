@@ -71,6 +71,7 @@ CM_IMAGE = 'resources/icons/cm_paradigm.png'
 PREFILTERING_IMAGE = 'resources/icons/pre_paradigm.png'
 # CARS --> Post-filtering:
 POSTFILTERING_IMAGE = 'resources/icons/post_paradigm.png'
+POSTFILTERING_TYPE_OPTIONS = ['LARS', 'SIDE-LARS']
 # Cross validation:
 CROSS_VALIDATION_STRATEGIES = ["KFold", "RepeatedKFold", "ShuffleSplit", "LeaveOneOut"] # , "PredefinedKFold", "train_test_split"
 # Metrics:

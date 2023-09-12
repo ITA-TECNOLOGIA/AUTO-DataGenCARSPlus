@@ -34,7 +34,7 @@ def evaluate_cm_paradigm(rating_df):
       
 def build_knowledge_base(rating_df):
     """
-    Builds the knowledge base to the classifier que será usado en el contextual modeling paradigm.
+    Builds the knowledge base to the classifier will be used in contextual modeling paradigm.
     :param rating_df: The rating dataframe.
     :return: A dataframe with the knowledge base.
     """    
@@ -59,7 +59,7 @@ def build_knowledge_base(rating_df):
             if not item_feature_df.empty:
                 knowledge_base_df = rating_df.merge(item_feature_df, on='item_id')
             if not context_feature_df.empty:
-                knowledge_base_df = rating_df.merge(context_feature_df, on='context_id')
+                knowledge_base_df = knowledge_base_df.merge(context_feature_df, on='context_id')
             knowledge_base_df.drop('context_id', axis=1, inplace=True)
             # Column name you want to move to the last position
             column_name_to_move = 'rating'

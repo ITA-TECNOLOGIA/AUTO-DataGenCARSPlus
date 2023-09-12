@@ -11,7 +11,7 @@ from streamlit_app.preprocess_dataset import (wf_cast_rating,
                                               wf_generate_user_profile,
                                               wf_recalculate_dataset,
                                               wf_replace_null_values,
-                                              wf_replicate_dataset)
+                                              wf_replicate_dataset, wf_util)
 
 # Setting the main page:
 st.set_page_config(page_title=config.APP_TITLE,
@@ -196,11 +196,15 @@ elif general_option == 'Analysis a dataset':
         st_visualization.generate(with_context)
 
     # Evaluation:    
-    elif analysis_option == 'Evaluation':        
+    elif analysis_option == 'Evaluation':
+        # Loading rating file:
+        st.write('Upload the following file: ')
+        rating_df = wf_util.load_one_file(config.RATING_TYPE, wf_type='evaluation_rating_df')        
+
         # CARS Evaluation:
         if with_context:        
-            st_evaluation_cars.generate()
+            st_evaluation_cars.generate(rating_df)
         # Traditional RS Evaluation:
         else:
-            st_evaluation_rs.generate()
+            st_evaluation_rs.generate(rating_df)
   

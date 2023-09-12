@@ -1,6 +1,7 @@
 import random
 
 import pandas as pd
+from datagencars import util
 from datagencars.existing_dataset.generate_rating import GenerateRating
 
 
@@ -50,7 +51,7 @@ class IncreaseRating(GenerateRating):
                 new_instance_df = pd.DataFrame([new_instance])                
                 # Adding new instance in the rating file:                
                 extended_rating_df = pd.concat([extended_rating_df, new_instance_df], ignore_index=True).copy()
-        return self.sort_rating_df(extended_rating_df)
+        return util.sort_rating_df(extended_rating_df)
 
     def extend_rating_random(self, number_rating, percentage_rating_variation=25, k=10):
         """
@@ -76,7 +77,7 @@ class IncreaseRating(GenerateRating):
             new_instance_df = pd.DataFrame([new_instance])
             # Adding new instance in the rating file:            
             extended_rating_df = pd.concat([extended_rating_df, new_instance_df], ignore_index=True).copy()
-        return self.sort_rating_df(extended_rating_df)
+        return util.sort_rating_df(extended_rating_df)
 
     def generate_new_instance(self, user_id, items_not_seen_list, percentage_rating_variation, k):
         """
@@ -125,17 +126,4 @@ class IncreaseRating(GenerateRating):
         if len(items_not_seen_list) == 0:
             items_not_seen_list = all_item_id_list
         return items_not_seen_list
-    
-    def sort_rating_df(self, rating_df):
-        """
-        Sort the rating dataframe by column.
-        :param rating_df: The rating dataframe.
-        :return: The sorted rating dataframe.
-        """
-        # Sorting and resetting index
-        sort_columns = ['user_id', 'item_id', 'rating']
-        if 'context_id' in rating_df.columns:
-            sort_columns.insert(2, 'context_id')
-        sorted_rating_df = rating_df.sort_values(by=sort_columns)
-        sorted_rating_df.reset_index(drop=True, inplace=True) 
-        return sorted_rating_df
+
