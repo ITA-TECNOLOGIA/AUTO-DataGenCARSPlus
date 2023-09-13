@@ -88,7 +88,7 @@ def load_one_file(file_type, wf_type):
                     elif "context" in col.lower() and "id" in col.lower():
                         column_names[i] = "context_id"
                 try:                    
-                    df = pd.read_csv(uploaded_file, sep=separator, names=column_names)                             
+                    df = pd.read_csv(uploaded_file, sep=separator, names=column_names, engine='python')                             
                     st.dataframe(df.head())
                 except Exception as e:
                     st.error(f"An error occurred while reading the {file_type} file: {str(e)}")

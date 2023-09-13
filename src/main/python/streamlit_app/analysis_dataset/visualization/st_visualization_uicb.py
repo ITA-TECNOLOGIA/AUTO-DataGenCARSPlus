@@ -62,10 +62,12 @@ def show_data_types(extract_statistics):
     """
     Shows attributes, data types and value ranges of the dataframe.
     :param extract_statistics: The object to extract general statistics.
+    :return: A dataframe with information related to attributes, data types and value ranges.
     """    
     st.header("Attributes, data types and value ranges")
-    table = extract_statistics.get_attributes_and_ranges()
-    st.table(pd.DataFrame(table, columns=["Attribute name", "Data type", "Value ranges"]))
+    data_type_df = extract_statistics.get_attributes_and_ranges()
+    st.table(pd.DataFrame(data_type_df, columns=["Attribute name", "Data type", "Value ranges"]))
+    return data_type_df
 
 def show_graphic_by_attribute(extract_statistics, attribute_list, file_type):
     """

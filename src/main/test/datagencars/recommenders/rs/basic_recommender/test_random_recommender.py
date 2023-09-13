@@ -26,7 +26,7 @@ class TestRandomRecommender(unittest.TestCase):
         # Split the data into a training set and a test set:
         self.trainset, self.testset = train_test_split(self.data, test_size=0.20, random_state=42)
         
-        # Create a NormalPredictor instance:
+        # Create a recommender instance:
         self.__rs = NormalPredictor()                       
     
     def tearDown(self):

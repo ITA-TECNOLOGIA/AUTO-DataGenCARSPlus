@@ -1,4 +1,3 @@
-
 import logging
 import unittest
 
@@ -8,14 +7,15 @@ from datagencars.evaluation.rs_surprise.accuracy import (f1_score, fcp, mae,
                                                          map, mse, ndcg,
                                                          precision, recall,
                                                          rmse)
-from surprise import NMF
+from surprise import CoClustering
 from surprise.model_selection import train_test_split
 
 
-class TestNMFRecommender(unittest.TestCase):    
+class TestCoClusteringRecommender(unittest.TestCase):    
     """
-    A collaborative filtering algorithm based on Non-negative Matrix Factorization.
-    This algorithm is very similar to SVD.
+    A collaborative filtering algorithm based on co-clustering.
+    This is a straightforward implementation of George:2005.
+    Basically, users and items are assigned some clusters C_u, C_i, and some co-clusters C_{ui}.
     """
 
     def setUp(self):
@@ -28,17 +28,16 @@ class TestNMFRecommender(unittest.TestCase):
         self.trainset, self.testset = train_test_split(self.data, test_size=0.20, random_state=42)
         
         # Parameters:
-        n_factors = 20
-        n_epochs = 20
-        lr_all = 0.007
-        reg_all = 0.02
+        n_cltr_u = 3
+        n_cltr_i = 3
+        n_epochs = 20        
         # Create a recommender instance:
-        self.__rs = NMF(n_factors=n_factors, n_epochs=n_epochs, lr_all=lr_all, reg_all=reg_all)
+        self.__rs = CoClustering(n_cltr_u=n_cltr_u, n_cltr_i=n_cltr_i, n_epochs=n_epochs)
     
     def tearDown(self):
         del self.__rs
     
-    def test_nmf_recommender_metrics(self):
+    def test_coclustering_recommender_metrics(self):
         # Train the model on the training set:
         self.__rs.fit(self.trainset)
         
@@ -77,7 +76,7 @@ class TestNMFRecommender(unittest.TestCase):
         self.assertGreaterEqual(recall_value, 0.0)
         self.assertGreaterEqual(f1_score_value, 0.0)
 
-    def test_nmf_recommender_cross_validation(self):
+    def test_coclustering_recommender_cross_validation(self):
         metric_result_map = evaluation.cross_validate(algo=self.__rs, data=self.data, measures=['RMSE', 'MAE'], cv=5, return_train_measures=True, verbose=True)
         for metric_name, metric_value_list in metric_result_map.items():
             logging.info(f'{metric_name}: {metric_value_list}')       
