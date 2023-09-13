@@ -3,7 +3,7 @@ import pandas as pd
 import unittest
 from unittest.mock import MagicMock
 from collections import defaultdict
-from datagencars.recommenders.recommender_sidelars import RecommenderSIDELARS
+from datagencars.recommenders.cars.lars.side_lars_recommender import RecommenderSIDELARS
 
 class TestRecommender(unittest.TestCase):
 

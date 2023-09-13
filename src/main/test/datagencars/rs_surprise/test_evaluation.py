@@ -10,6 +10,7 @@ Test cases for the evaluation module
 Usage: python -m unittest src\main\test\rs_surprise\test_evaluation.py
 """
 class TestCrossValidate(unittest.TestCase):
+    
     def test_cross_validate(self):
         results = evaluation.cross_validate(KNNBasic(), Dataset.load_builtin('ml-100k'), measures=['RMSE', 'MAE'], cv=5)
         results_array = np.array(results['fit_time'])

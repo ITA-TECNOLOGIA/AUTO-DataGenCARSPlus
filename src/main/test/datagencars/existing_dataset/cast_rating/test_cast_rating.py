@@ -10,22 +10,22 @@ class TestCastRating(unittest.TestCase):
     def setUp(self):
         # CARS:
         # Rating preferencial:
-        dataset_preferencial_cars_path = 'resources/existing_dataset/context/sts/rating_preferencial/'                
-        rating_preferencial_cars_file_path = dataset_preferencial_cars_path + 'ratings.csv'
+        dataset_preferencial_cars_path = 'resources/existing_dataset/context/preferencial_rating/sts/'                                         
+        rating_preferencial_cars_file_path = dataset_preferencial_cars_path + 'rating.csv'
         rating_df_preferencial_cars = pd.read_csv(rating_preferencial_cars_file_path, encoding='utf-8', index_col=False, sep=';')        
         # Rating binary:
-        dataset_binary_cars_path = 'resources/existing_dataset/context/sts/rating_binary/'                
-        rating_binary_cars_file_path = dataset_binary_cars_path + 'ratings.csv'        
+        dataset_binary_cars_path = 'resources/existing_dataset/context/binary_rating/sts/'
+        rating_binary_cars_file_path = dataset_binary_cars_path + 'rating.csv'        
         rating_df_binary_cars = pd.read_csv(rating_binary_cars_file_path, encoding='utf-8', index_col=False, sep=',')        
         
         # RS:
         # Rating preferencial:
-        dataset_preferencial_rs_path = 'resources/existing_dataset/without_context/sts/rating_preferencial/'        
-        rating_preferencial_rs_file_path = dataset_preferencial_rs_path + 'ratings.csv'
+        dataset_preferencial_rs_path = 'resources/existing_dataset/without_context/preferencial_rating/sts/'        
+        rating_preferencial_rs_file_path = dataset_preferencial_rs_path + 'rating.csv'
         rating_df_preferencial_rs = pd.read_csv(rating_preferencial_rs_file_path, encoding='utf-8', index_col=False, sep=';')
         # Rating binary:
-        dataset_binary_rs_path = 'resources/existing_dataset/without_context/sts/rating_binary/'                
-        rating_binary_rs_file_path = dataset_binary_rs_path + 'ratings.csv'
+        dataset_binary_rs_path = 'resources/existing_dataset/without_context/binary_rating/sts/'                
+        rating_binary_rs_file_path = dataset_binary_rs_path + 'rating.csv'
         rating_df_binary_rs = pd.read_csv(rating_binary_rs_file_path, encoding='utf-8', index_col=False, sep=',')
        
         # Dataset casting generator:        

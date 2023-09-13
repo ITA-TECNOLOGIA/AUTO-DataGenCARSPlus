@@ -7,12 +7,13 @@ from datagencars.synthetic_dataset.generator.generator_output_file.generator_con
 class TestGeneratorContext(unittest.TestCase):
 
     def setUp(self):        
+        schema_path = 'resources/generate_synthetic_dataset/rating_implicit/context/data_schema/imascono/'
         # context_schema.conf
-        context_schema_file_path = 'resources/data_schema_imascono/context_schema.conf'
+        context_schema_file_path = schema_path +'context_schema.conf'
         with open(context_schema_file_path, 'r') as context_schema_file:
             context_schema = context_schema_file.read()
         # generation_config.conf
-        generation_config_file_path = 'resources/data_schema_imascono/generation_config.conf'
+        generation_config_file_path = schema_path +'generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()
         # Context generator:        

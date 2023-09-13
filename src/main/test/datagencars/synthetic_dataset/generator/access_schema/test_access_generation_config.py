@@ -8,7 +8,7 @@ from datagencars.synthetic_dataset.generator.access_schema.access_generation_con
 class TestAccessGenerationConfig(unittest.TestCase):
 
     def setUp(self):        
-        generation_config_file_path = 'resources/data_schema/generation_config.conf'
+        generation_config_file_path = 'resources/generate_synthetic_dataset/rating_explicit/context/data_schema/restaurant/generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()            
         self.__access = AccessGenerationConfig(file_str=generation_config)
@@ -100,20 +100,20 @@ class TestAccessGenerationConfig(unittest.TestCase):
     def test_get_minimum_date_timestamp(self):
         '''
         [rating]
-        minimum_date_timestamp=1980-01-01
+        minimum_date_timestamp=1980
         '''
         minimum_date_timestamp = self.__access.get_minimum_date_timestamp()
         logging.info(f'minimum_date_timestamp: {minimum_date_timestamp}')                
-        self.assertEqual(minimum_date_timestamp, "1980-01-01")
+        self.assertEqual(minimum_date_timestamp, "1980")
 
     def test_get_maximum_date_timestamp(self):
         '''
         [rating]
-        maximum_date_timestamp=2022-01-01
+        maximum_date_timestamp=2022
         '''
         maximum_date_timestamp = self.__access.get_maximum_date_timestamp()
         logging.info(f'maximum_date_timestamp: {maximum_date_timestamp}')                
-        self.assertEqual(maximum_date_timestamp, "2022-01-01")
+        self.assertEqual(maximum_date_timestamp, "2022")
 
     def test_get_probability_percentage_profile_from_pos(self):
         '''

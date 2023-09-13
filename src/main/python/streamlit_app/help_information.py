@@ -177,28 +177,120 @@ def help_postfiltering_paradigm():
 def help_rs_algoritms(recommender_name_list):
     with st.expander(label='Help information'):                    
         for recommender_name in recommender_name_list:                        
-            if recommender_name == 'BaselineOnly':
-                st.markdown("""- ``` BaselineOnly ```: Algorithm predicting the baseline estimate for given user and item.""")
+            # Basic algorithms:
             if recommender_name == 'NormalPredictor':
                 st.markdown("""- ``` NormalPredictor ```: Algorithm predicting a random rating based on the distribution of the training set, which is assumed to be normal.""")
-            if recommender_name == 'KNNBasic':
-                st.markdown("""- ``` KNNBasic ```: A basic collaborative filtering algorithm derived from a basic nearest neighbors approach.""")
+            if recommender_name == 'BaselineOnly':
+                st.markdown("""
+                            - ``` BaselineOnly ```: Algorithm predicting the baseline estimate for given user and item.                
+                            Parameter settings: 
+                                > - ```method```: The method to use for baseline estimates. Options include 'als' (Alternating Least Squares) or 'sgd' (Stochastic Gradient Descent). The default is 'als'. 
+                                > - ```reg_i```: Regularization parameter for items. Controls the degree of regularization applied to item biases. Default is 10.
+                                > - ```reg_u```: Regularization parameter for users. Controls the degree of regularization applied to user biases. Default is 15.
+                                > - ```n_epochs```: The number of iterations for optimization algorithms (e.g., SGD). Default is 10.
+                                > - ```learning_rate```: Learning rate for optimization algorithms (SGD). Default is 0.005.
+                            """)           
+            # KNN-based CF algorithms:
+            if recommender_name == 'KNNBasic':                              
+                st.markdown("""
+                            - ``` KNNBasic ```: A basic collaborative filtering algorithm derived from a basic nearest neighbors approach.
+                            Parameter settings:
+                                > - ```k```: The number of neighbors to consider when making predictions. Typical value range: 1 to 100. The default is 40. 
+                                > - ```min_k```: The minimum number of neighbors required for a prediction to be computed. If there are fewer neighbors, the prediction may be set to a global mean. Typical value range: 1 to 10. Default is 1.
+                                > - ```name```: The similarity measure to use, e.g., 'cosine', 'pearson', 'msd' (mean squared difference), etc.
+                                > - ```user_based```: A boolean indicating whether to use user-based or item-based similarity.     
+                                > - ```min_support```: Minimum number of common items/users required to compute similarity.
+                            """)            
+            if recommender_name == 'KNNBaseline':                
+                st.markdown("""
+                            - ``` KNNBaseline ```: A basic collaborative filtering algorithm taking into account a baseline rating.
+                            Parameter settings:
+                                > - ```k```: The number of neighbors to consider when making predictions. Typical value range: 1 to 100. The default is 40. 
+                                > - ```min_k```: The minimum number of neighbors required for a prediction to be computed. If there are fewer neighbors, the prediction may be set to a global mean. Typical value range: 1 to 10. Default is 1.
+                                > - ```name```: The similarity measure to use, e.g., 'cosine', 'pearson', 'msd' (mean squared difference), etc.
+                                > - ```user_based```: A boolean indicating whether to use user-based or item-based similarity.                            
+                                > - ```method```: The method to use for baseline estimates. Options include 'als' (Alternating Least Squares) or 'sgd' (Stochastic Gradient Descent). The default is 'als'. 
+                                > - ```reg_i```: Regularization parameter for items. Controls the degree of regularization applied to item biases. Default is 10.
+                                > - ```reg_u```: Regularization parameter for users. Controls the degree of regularization applied to user biases. Default is 15.
+                                > - ```n_epochs```: The number of iterations for optimization algorithms (e.g., SGD). Default is 10.
+                                > - ```learning_rate```: Learning rate for optimization algorithms (SGD). Default is 0.005.
+                            """)                 
             if recommender_name == 'KNNWithMeans':
-                st.markdown("""- ``` KNNWithMeans ```: A basic collaborative filtering algorithm, taking into account the mean ratings of each user.""")
+                st.markdown("""
+                            - ``` KNNWithMeans ```: A basic collaborative filtering algorithm, taking into account the mean ratings of each user.
+                            Parameter settings:
+                                > - ```k```: The number of neighbors to consider when making predictions. Typical value range: 1 to 100. The default is 40. 
+                                > - ```min_k```: The minimum number of neighbors required for a prediction to be computed. If there are fewer neighbors, the prediction may be set to a global mean. Typical value range: 1 to 10. Default is 1.
+                                > - ```name```: The similarity measure to use, e.g., 'cosine', 'pearson', 'msd' (mean squared difference), etc.
+                                > - ```user_based```: A boolean indicating whether to use user-based or item-based similarity.     
+                                > - ```min_support```: Minimum number of common items/users required to compute similarity.
+                            """)
             if recommender_name == 'KNNWithZScore':
-                st.markdown("""- ``` KNNWithZScore ```: A basic collaborative filtering algorithm, taking into account the z-score normalization of each user.""")
-            if recommender_name == 'KNNBaseline':
-                st.markdown("""- ``` KNNBaseline ```: A basic collaborative filtering algorithm taking into account a baseline rating.""")
+                st.markdown("""
+                            - ``` KNNWithZScore ```: A basic collaborative filtering algorithm, taking into account the z-score normalization of each user.
+                            Parameter settings:
+                                > - ```k```: The number of neighbors to consider when making predictions. Typical value range: 1 to 100. The default is 40. 
+                                > - ```min_k```: The minimum number of neighbors required for a prediction to be computed. If there are fewer neighbors, the prediction may be set to a global mean. Typical value range: 1 to 10. Default is 1.
+                                > - ```name```: The similarity measure to use, e.g., 'cosine', 'pearson', 'msd' (mean squared difference), etc.
+                                > - ```user_based```: A boolean indicating whether to use user-based or item-based similarity.     
+                                > - ```min_support```: Minimum number of common items/users required to compute similarity.
+                            """)            
+            
+            # Matrix factorization-based CF algorithms:
             if recommender_name == 'SVD':
-                st.markdown("""- ``` SVD ```: The famous SVD algorithm, as popularized by Simon Funk during the Netflix Prize. When baselines are not used, this is equivalent to Probabilistic Matrix Factorization""")
+                st.markdown("""
+                            - ``` SVD ```: The famous SVD algorithm, as popularized by Simon Funk during the Netflix Prize. When baselines are not used, this is equivalent to Probabilistic Matrix Factorization.
+                            Parameter settings:
+                                > - ```n_factors```: Number of latent factors to use in the matrix factorization. Default is 20.
+                                > - ```n_epochs```: Number of epochs the algorithm should run during training. Each epoch involves one pass over the entire training dataset. Default is 20.
+                                > - ```lr_all```: The learning rate used for Stochastic Gradient Descent (SGD) optimization during training. It controls the step size in updating the model's parameters in each iteration. Default is 0.007.
+                                > - ```reg_all```: The regularization term applied to all parameters during training. It helps prevent overfitting by penalizing large parameter values. Default is 0.02.
+                                > - ```biased```: Whether to use baselines (or biases). Default is True.
+                                > - ```init_mean```: The mean of the normal distribution for factor vectors initialization. Default is 0.
+                                > - ```init_std_dev```: The standard deviation of the normal distribution for factor vectors initialization. Default is 0.1.
+                            """)
             if recommender_name == 'SVDpp':
-                st.markdown("""- ``` SVDpp ```: The SVD++ algorithm, an extension of SVD taking into account implicit ratings.""")
+                st.markdown("""
+                            - ``` SVDpp ```: The SVD++ algorithm, an extension of SVD taking into account implicit ratings.
+                            Parameter settings:
+                                > - ```n_factors```: Number of latent factors to use in the matrix factorization. Default is 20.
+                                > - ```n_epochs```: Number of epochs the algorithm should run during training. Each epoch involves one pass over the entire training dataset. Default is 20.
+                                > - ```lr_all```: The learning rate used for Stochastic Gradient Descent (SGD) optimization during training. It controls the step size in updating the model's parameters in each iteration. Default is 0.007.
+                                > - ```reg_all```: The regularization term applied to all parameters during training. It helps prevent overfitting by penalizing large parameter values. Default is 0.02.                                
+                                > - ```init_mean```: The mean of the normal distribution for factor vectors initialization. Default is 0.
+                                > - ```init_std_dev```: The standard deviation of the normal distribution for factor vectors initialization. Default is 0.1.
+                            """)
             if recommender_name == 'NMF':
-                st.markdown("""- ``` NMF ```:  A collaborative filtering algorithm based on Non-negative Matrix Factorization.""")
-            if recommender_name == 'SlopeOne':
-                st.markdown("""- ``` SlopeOne ```: A simple yet accurate collaborative filtering algorithm. This is a straightforward implementation of the SlopeOne algorithm [LM07]. [LM07] Daniel Lemire and Anna Maclachlan. [Slope one predictors for online rating-based collaborative filtering](https://arxiv.org/abs/cs/0702144). 2007.""")
+                st.markdown("""
+                            - ``` NMF ```:  A collaborative filtering algorithm based on Non-negative Matrix Factorization.
+                            Parameter settings:
+                                > - ```n_factors```: Number of latent factors to use in the matrix factorization. Default is 15.
+                                > - ```n_epochs```: Number of epochs of the SGD procedure. Default is 50.
+                                > - ```biased```: Whether to use baselines (or biases)". Default is False.
+                                > - ```reg_pu```: Regularization term for user factors. Default is 0.06.
+                                > - ```reg_qi```: Regularization term for item factors. Default is 0.06.
+                                > - ```reg_bu```: Regularization term for bu. Only relevant for biased version. Default is 0.02.
+                                > - ```reg_bi```: Regularization term for bi. Only relevant for biased version. Default is 0.02.
+                                > - ```lr_bu```: The learning rate for bu. Only relevant for biased version. Default is 0.005.
+                                > - ```lr_bi```: The learning rate for bi. Only relevant for biased version. Default is 0.005
+                                > - ```init_low```: Lower bound for random initialization of factors. Must be greater than 0 to ensure non-negative factors. Default is 0.
+                                > - ```init_high```: Higher bound for random initialization of factors. Default is 1.
+                            """)
+            
+            # Clustering-based CF algorithms:
             if recommender_name == 'CoClustering':
-                st.markdown("""- ``` CoClustering ```: A collaborative filtering algorithm based on co-clustering. This is a straightforward implementation of [GM05]. [GM05] Thomas George and Srujana Merugu. [A scalable collaborative filtering framework based on co-clustering](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.113.6458&rep=rep1&type=pdf). 2005.""")
+                st.markdown("""
+                            - ``` CoClustering ```: A collaborative filtering algorithm based on co-clustering. This is a straightforward implementation of [GM05]. [GM05] Thomas George and Srujana Merugu. [A scalable collaborative filtering framework based on co-clustering](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.113.6458&rep=rep1&type=pdf). 2005.
+                            Parameter settings:
+                                > - ```n_cltr_u```: Number of user clusters. Default is 3.
+                                > - ```n_cltr_i```: Number of item clusters. Default is 3.
+                                > - ```n_epochs```: Number of iteration of the optimization loop. Default is 20.
+                            """)
+            
+            if recommender_name == 'SlopeOne':
+                st.markdown("""
+                            - ``` SlopeOne ```: A simple yet accurate collaborative filtering algorithm. This is a straightforward implementation of the SlopeOne algorithm [LM07]. [LM07] Daniel Lemire and Anna Maclachlan. [Slope one predictors for online rating-based collaborative filtering](https://arxiv.org/abs/cs/0702144). 2007.
+                            """)
         st.markdown("""These algorithms are implemented in the [surprise](https://github.com/NicolasHug/Surprise) python library.""")                                             
 
 def help_classification_algoritms(classifier_name_list):

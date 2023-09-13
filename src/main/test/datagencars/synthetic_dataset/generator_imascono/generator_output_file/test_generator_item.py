@@ -7,12 +7,13 @@ from datagencars.synthetic_dataset.generator.generator_output_file.generator_ite
 class TestGeneratorItem(unittest.TestCase):
 
     def setUp(self):
+        schema_path = 'resources/generate_synthetic_dataset/rating_implicit/context/data_schema/imascono/'
         # item_schema.conf
-        item_schema_file_path = 'resources/data_schema_imascono/item_schema.conf'
+        item_schema_file_path = schema_path + 'item_schema.conf'
         with open(item_schema_file_path, 'r') as item_schema_file:
             item_schema = item_schema_file.read()        
         # generation_config.conf
-        generation_config_file_path = 'resources/data_schema_imascono/generation_config.conf'
+        generation_config_file_path = schema_path + 'generation_config.conf'
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()  
         # Item generator:
@@ -27,7 +28,7 @@ class TestGeneratorItem(unittest.TestCase):
         '''        
         item_file = self.__generator.generate_file(with_correlation=False)        
         logging.info(f'item_file: {item_file}')
-        item_file.to_csv('resources/data_schema_imascono/item.csv', index=False)
+        item_file.to_csv('resources/generate_synthetic_dataset/rating_implicit/context/data_schema/imascono/item.csv', index=False)
         self.assertEqual(item_file.shape[0], 25)
 
     

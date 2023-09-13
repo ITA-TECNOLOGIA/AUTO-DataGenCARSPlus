@@ -1,20 +1,8 @@
-from surprise import (
-    BaselineOnly,
-    CoClustering,
-    KNNBaseline,
-    KNNBasic,
-    KNNWithMeans,
-    KNNWithZScore,
-    NMF,
-    KNNWithZScore,
-    NormalPredictor,
-    SlopeOne,
-    SVD,
-    SVDpp,
-    model_selection as ms,
-    Reader,
-    Dataset
-)
+from surprise import (NMF, SVD, BaselineOnly, CoClustering, Dataset,
+                      KNNBaseline, KNNBasic, KNNWithMeans, KNNWithZScore,
+                      NormalPredictor, Reader, SlopeOne, SVDpp)
+from surprise import model_selection as ms
+
 
 def create_algorithm(algo_name, params=None):
     """
@@ -80,9 +68,7 @@ def convert_to_surprise_dataset(df):
     :param df: the dataframe to convert
     :return: the surprise dataset
     """
-    if "timestamp" in df.columns:
-        df = df.drop("timestamp", axis=1)
-    if "context_id" in df.columns:
-        df = df.drop("context_id", axis=1)
+    # A reader is still needed but only the rating_scale param is required.
     reader = Reader(rating_scale=(df["rating"].min(), df["rating"].max()))
-    return Dataset.load_from_df(df, reader)
+    # The columns must correspond to user id, item id and ratings (in that order).
+    return Dataset.load_from_df(df[["user_id", "item_id", "rating"]], reader)  

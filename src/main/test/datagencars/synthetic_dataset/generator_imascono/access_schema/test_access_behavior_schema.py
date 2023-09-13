@@ -8,7 +8,7 @@ from datagencars.synthetic_dataset.generator.generator_output_file.generator_fil
 class TestAccessBehaviorSchema(unittest.TestCase):
 
     def setUp(self):        
-        user_schema_file_path = 'resources/data_schema_imascono/behavior_schema.conf'
+        user_schema_file_path = 'resources/generate_synthetic_dataset/rating_implicit/context/data_schema/imascono/behavior_schema.conf'
         with open(user_schema_file_path, 'r') as user_schema_file:
             user_schema = user_schema_file.read()            
         self.__access = AccessSchema(file_str=user_schema)

@@ -7,7 +7,7 @@ from datagencars.synthetic_dataset.generator.generator_output_file.generator_con
 class TestGeneratorContext(unittest.TestCase):
 
     def setUp(self):        
-        data_schema_path = "resources/generate_synthetic_dataset/rating_explicit/context/restaurant/data_schema/"
+        data_schema_path = "resources/generate_synthetic_dataset/rating_explicit/context/data_schema/restaurant/"
         # context_schema.conf
         context_schema_file_path = data_schema_path + 'context_schema.conf'
         with open(context_schema_file_path, 'r') as context_schema_file:

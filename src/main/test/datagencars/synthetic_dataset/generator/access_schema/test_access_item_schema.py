@@ -8,7 +8,7 @@ from datagencars.synthetic_dataset.generator.access_schema.access_schema import 
 class TestAccessItemSchema(unittest.TestCase):
 
     def setUp(self):        
-        item_schema_file_path = 'resources/generate_synthetic_dataset/rating_explicit/context/restaurant/data_schema/item_schema.conf'
+        item_schema_file_path = 'resources/generate_synthetic_dataset/rating_explicit/context/data_schema/restaurant/item_schema.conf'
         with open(item_schema_file_path, 'r') as item_schema_file:
             item_schema = item_schema_file.read()            
         self.__access = AccessSchema(file_str=item_schema)
@@ -307,7 +307,7 @@ class TestAccessItemSchema(unittest.TestCase):
         '''
         important_profile = self.__access.get_important_profile_attribute_from_pos(position=15)
         logging.info(f'important_profile: {important_profile}')          
-        self.assertEqual(bool(important_profile), True)
+        self.assertEqual(bool(important_profile), False)
 
     def test_get_ranking_order_by_attribute_from_pos(self):
         '''
