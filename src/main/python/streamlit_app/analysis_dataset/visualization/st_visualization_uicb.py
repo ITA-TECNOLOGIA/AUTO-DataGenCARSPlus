@@ -20,26 +20,29 @@ def show_information(df, file_type):
     """
     if not df.empty:             
         # title:
-        st.header(file_type.title())        
-        # Show dataframe:            
-        st.dataframe(df)        
+        st.header(file_type.title())
+
+        # Show dataframe:
+        with st.expander(label=f'Show the {file_type}.csv file'):
+            st.dataframe(df)
         
         # Extracted statistics:
         extract_statistics = ExtractStatisticsUIC(df)
+        # Showing general statistics (user, item or context): 
+        # Getting the attribute list:
+        attribute_list = df.columns.tolist()
+        attribute_list.remove(f'{file_type}_id')      
+        if file_type in ['user', 'item', 'context']:
+            # Showing specific statistics related to user, item or context files:
+            show_attribute_statistics(df, file_type, attribute_list)
+            show_more_statistics_by_attribute(extract_statistics)            
         # Showing missing values:
         show_missing_values(extract_statistics)
         # Showing attributes, data types and value ranges:
-        show_data_types(extract_statistics)
-        # Getting the attribute list:
-        attribute_list = df.columns.tolist()
-        attribute_list.remove(f'{file_type}_id')
+        show_data_types(extract_statistics)       
         # Showing a frequency graphic by attribute:
-        show_graphic_by_attribute(extract_statistics, attribute_list, file_type)
-        
-        # Showing only for user, item or context files:
+        show_graphic_by_attribute(extract_statistics, attribute_list, file_type) 
         if file_type in ['user', 'item', 'context']:
-            # Showing specific statistics related to user, item or context files:
-            show_specific_statistics(extract_statistics, attribute_list, file_type)
             # Showing correlation between attributes:
             show_correlation_matrix(df, attribute_list, file_type)
 
@@ -95,7 +98,7 @@ def show_graphic_by_attribute(extract_statistics, attribute_list, file_type):
     else:
         st.warning(f"No columns (without {file_type}_id) to show.")
 
-def show_specific_statistics(extract_statistics, attribute_list, file_type):
+def show_attribute_statistics_calculated(extract_statistics, attribute_list, file_type):
     """
     Shows specific statistics related to user, item or context files.
     :param extract_statistics: The object to extract general statistics.
@@ -115,23 +118,44 @@ def show_specific_statistics(extract_statistics, attribute_list, file_type):
         extracted_statistics_df.insert(loc=0, column='possible values', value=label_column_list)                  
         if extracted_statistics_df.isnull().values.any():
             st.warning('If there are <NA> values, it is because these attributes have Nan or string values.')
-        st.dataframe(extracted_statistics_df)                    
-        # Showing more details:
-        with st.expander('More details'):
-            statistics = extract_statistics.statistics_by_attribute()                    
-            for stat in statistics:
-                st.subheader(stat[0])
-                st.write('Average: ', stat[1])
-                st.write('Standard deviation: ', stat[2])
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write('Frequencies:')
-                    st.dataframe(stat[3])
-                with col2:
-                    st.write('Percentages:')
-                    st.dataframe(stat[4])
+        st.dataframe(extracted_statistics_df)                            
     else:
         st.warning(f"No columns (without {file_type}_id) to show.")
+    return extracted_statistics_df
+
+def show_more_statistics_by_attribute(extract_statistics):
+    """
+    """
+    # Showing more details:
+    with st.expander('More details'):
+        statistics = extract_statistics.statistics_by_attribute()                    
+        for stat in statistics:
+            st.subheader(stat[0])
+            # st.write('Average: ', stat[1])
+            # st.write('Standard deviation: ', stat[2])
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write('Frequencies:')
+                st.dataframe(stat[3])
+            with col2:
+                st.write('Percentages:')
+                st.dataframe(stat[4])
+
+def show_attribute_statistics(df, file_type, attribute_list):
+    """
+    Show some rating statistics.    
+    :param df: The rating dataframe.
+    :param file_type: The type of file (user, item, context or behavior).
+    :return: A dataframe with user, item or context statistics.
+    """    
+    st.header("General statistics")
+    if len(attribute_list) > 0:
+        summary_df = df.describe()        
+        summary_df = summary_df.drop(columns=[f'{file_type}_id'])    
+        st.dataframe(summary_df) 
+    else:
+        st.warning(f"No columns (without {file_type}_id) to show.")
+    return summary_df
     
 def show_correlation_matrix(df, attribute_list, file_type):
     """

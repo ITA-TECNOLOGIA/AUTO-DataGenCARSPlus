@@ -1,12 +1,12 @@
 import os
 
 import altair as alt
-from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
+from matplotlib import pyplot as plt
 from streamlit_app import config
 from streamlit_app.preprocess_dataset import wf_util
 
@@ -19,39 +19,44 @@ def show_information(rating_df, with_context):
     """    
     if not rating_df.empty:
         # Title:    
-        st.header("Rating file")  
-        # Show rating dataframe:                
-        st.dataframe(rating_df)
+        st.header(config.RATING_TYPE.title())
+        
+        # Show dataframe:
+        with st.expander(label=f'Show the {config.RATING_TYPE}.csv file'):
+            st.dataframe(rating_df)
 
         # Extracted statistics:
         extract_statistics = ExtractStatisticsRating(rating_df=rating_df)
-        # Showing general statistics:
-        show_general_statistics(with_context, extract_statistics)
+        # Showing general statistics:        
+        show_general_statistics(with_context, extract_statistics)               
         # Showing attributes, data types and value ranges:
         show_data_types(extract_statistics)
         # Showing histogram of ratings:
         show_rating_histogram(rating_df)
+        # Showing the rating statistics:
+        show_rating_statistics(with_context, rating_df)
         # Showing number of items by user:
         show_items_by_user(rating_df)
         
         # Showing statistics per user:
-        st.header("Statistics per user")        
+        st.header("Statistics per user")
         user_id_list = list(rating_df['user_id'].unique())                    
         selected_user = st.selectbox(label="Select a user:", options=user_id_list, key="selected_user_id")           
         # Showing the evolution of a user's preferences or interests through time:
         show_user_preference_evolution(selected_user, rating_df)
         # Showing item statistics:
-        show_item_statistics(selected_user, extract_statistics)
+        show_item_statistics_from_user(selected_user, extract_statistics)
         # Showing context statistics:
-        show_context_statistics(with_context, selected_user, extract_statistics)
+        show_context_statistics_from_user(selected_user, extract_statistics, with_context)
         # Showing rating statistics:
-        show_rating_statistics(selected_user, extract_statistics)        
+        show_rating_statistics_from_user(selected_user, extract_statistics)        
     else:
         st.warning(f"The rating file ({config.RATING_TYPE}.csv) has not been uploaded.")
 
 def show_general_statistics(with_context, extract_statistics):
     """
     Shows general statistics.
+    :param with_context: True if the file to be generated will be contextual and False in the otherwise.
     :param extract_statistics: Instance of ExtractStatisticsRating class.
     :return: A dataframe with general statistics.
     """
@@ -92,6 +97,24 @@ def show_rating_histogram(rating_df):
     histogram_df = pd.DataFrame({'Type of ratings': np.arange(1, len(counts) + 1), 'Number of ratings': counts})
     chart = alt.Chart(histogram_df).mark_bar(color='#0099CC').encode(x=alt.X('Type of ratings:O', axis=alt.Axis(title='Type of ratings')), y=alt.Y('Number of ratings:Q', axis=alt.Axis(title='Number of ratings')), tooltip=['Type of ratings', 'Number of ratings']) # .properties(title={'text': 'Histogram of ratings', 'fontSize': 16,})
     st.altair_chart(chart, use_container_width=True)
+
+def show_rating_statistics(with_context, rating_df):
+    """
+    Show some rating statistics.
+    :param with_context: True if the file to be generated will be contextual and False in the otherwise.
+    :param rating_df: The rating dataframe.
+    :return: A dataframe with rating statistics.
+    """    
+    summary_df = rating_df.describe()    
+    if with_context:
+        summary_df = summary_df.drop(columns=['user_id', 'item_id', 'context_id'])
+    else:
+        summary_df = summary_df.drop(columns=['user_id', 'item_id'])
+    # Showing user_item_count_df:
+    rating_summary_df = summary_df.T
+    with st.expander(label='More details'):        
+        st.dataframe(rating_summary_df)        
+    return rating_summary_df
 
 def show_items_by_user(rating_df):
     """
@@ -169,7 +192,7 @@ def show_user_preference_evolution(user_id, rating_df):
             st.dataframe(user_data_df)
             wf_util.save_df(df_name='user_preference_evolution', df_value=user_data_df, extension='csv')            
 
-def show_item_statistics(user_id, extract_statistics):
+def show_item_statistics_from_user(user_id, extract_statistics):
     """
     Shows a dataframe with item statistics.
     :param user_id: The current user.
@@ -211,11 +234,13 @@ def show_item_statistics(user_id, extract_statistics):
     item_statistics_dict['not repeated items'] = [number_not_repeated_items]
     item_statistics_dict['percentage not repeated items'] = [percentage_not_repeated_items]
     item_statistics_dict['percentage repeated items'] = [percentage_repeated_items]
-    item_statistics_df = pd.DataFrame(item_statistics_dict)
+    item_statistics_df = pd.DataFrame(item_statistics_dict)        
+    # Set the index label for the first row:
+    item_statistics_df = item_statistics_df.rename(index={item_statistics_df.index[0]: 'item_id'})
     st.dataframe(item_statistics_df)
     return item_statistics_df
 
-def show_context_statistics(with_context, user_id, extract_statistics):
+def show_context_statistics_from_user(user_id, extract_statistics, with_context):
     """
     Shows a dataframe with context statistics.
     :param with_context: True if the file to be generated will be contextual and False in the otherwise.
@@ -262,9 +287,11 @@ def show_context_statistics(with_context, user_id, extract_statistics):
         context_statistics_dict['percentage not repeated contexts'] = [percentage_not_repeated_contexts]
         context_statistics_dict['percentage repeated contexts'] = [percentage_repeated_contexts]     
         context_statistics_df = pd.DataFrame(context_statistics_dict)
+        # Set the index label for the first row:
+        context_statistics_df = context_statistics_df.rename(index={context_statistics_df.index[0]: 'context_id'})
         st.dataframe(context_statistics_df)
 
-def show_rating_statistics(user_id, extract_statistics):
+def show_rating_statistics_from_user(user_id, extract_statistics):
     """
     Shows a dataframe with rating statistics.    
     :param user_id: The current user.
@@ -295,5 +322,7 @@ def show_rating_statistics(user_id, extract_statistics):
     rating_statistics_dict['variance'] = [variance_ratings]                  
     rating_statistics_dict['standard deviation'] = [sd_ratings]      
     rating_statistics_df = pd.DataFrame(rating_statistics_dict)
+    # Set the index label for the first row:
+    rating_statistics_df = rating_statistics_df.rename(index={rating_statistics_df.index[0]: 'rating'})
     st.dataframe(rating_statistics_df)
     return rating_statistics_df
