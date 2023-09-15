@@ -151,7 +151,8 @@ def show_user_preference_evolution(user_id, rating_df):
     :param user_id: The current user.
     :param rating_df: The rating dataframe.    
     """
-    if 'timestamp' in rating_df.columns:        
+    if 'timestamp' in rating_df.columns:  
+        st.markdown("*Evolution of user preferences*")
         # Filter data for the selected user:
         user_data_df = rating_df.loc[rating_df['user_id'] == user_id].copy()    
         # If the ratings are not integers:
