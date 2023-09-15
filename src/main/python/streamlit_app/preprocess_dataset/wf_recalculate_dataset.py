@@ -7,7 +7,7 @@ from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
 
-def generate(with_context, null_values_i, null_values_c):
+def generate(with_context, null_values_i, null_values_c=None):
     """
     Recalculate ratings from an dataset, considering other desired user profiles.            
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
