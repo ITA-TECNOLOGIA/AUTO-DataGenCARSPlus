@@ -1,3 +1,4 @@
+import datetime
 import altair as alt
 import numpy as np
 import pandas as pd
@@ -5,6 +6,7 @@ import streamlit as st
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from streamlit_app import config
 from streamlit_app.preprocess_dataset import wf_util
+import pyarrow as pa
 
 
 def show_information(rating_df, with_context):
@@ -100,11 +102,11 @@ def show_items_by_user(rating_df):
     user_item_count_df = rating_df.groupby('user_id')['item_id'].count().reset_index()    
     user_item_count_df.columns = ['User', 'Number of items']
     # Allow user to select sorting order
-    sort_order = st.selectbox(label="Select sort order", options=["Select option", "Ascending", "Descending"])
+    sort_order = st.selectbox(label="Sort", options=["none", "asc", "desc"])
     # Sort the DataFrame based on user choice
-    if sort_order == "Ascending":
+    if sort_order == "asc":
         user_item_count_df = user_item_count_df.sort_values(by='Number of items', ascending=True)
-    elif sort_order == "Descending":
+    elif sort_order == "desc":
         user_item_count_df = user_item_count_df.sort_values(by='Number of items', ascending=False)
     # Create a bar chart using Altair
     chart = alt.Chart(user_item_count_df).mark_bar().encode(x=alt.X('User:N', sort=None), y='Number of items:Q', tooltip=['User:N', 'Number of items:Q']).properties(width=600, height=400) # title=f'Histogram of the number of items rated by user', 
@@ -124,15 +126,29 @@ def show_user_preference_evolution(user_id, rating_df):
     """
     if 'timestamp' in rating_df.columns:        
         # Filter data for the selected user:
-        user_data = rating_df.loc[rating_df['user_id'] == user_id].copy()
-        # Convert 'timestamp' to datetime format:
-        user_data['timestamp'] = pd.to_datetime(user_data['timestamp'], unit='s')
+        user_data_df = rating_df.loc[rating_df['user_id'] == user_id].copy()        
+        # Check the data type of the timestamp column (timestamp or date values):
+        column_dtype = rating_df['timestamp'].dtype     
+        
+        # Check if timestamp column contains timestamp values:
+        if column_dtype == 'datetime64[ns]' or column_dtype == 'datetime64[ns, UTC]' or column_dtype == 'int64':            
+            # # Convert 'timestamp' to datetime format:
+            user_data_df['timestamp'] = pd.to_datetime(user_data_df['timestamp'], unit='s')
+            # # Format the datetime column as a date string
+            # user_data_df['timestamp'] = user_data_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
+            user_data_df['timestamp'] = user_data_df['timestamp'].dt.strftime('%Y-%m-%d')
         # Calculate average ratings through time for the selected user:
-        user_avg_rating = user_data.groupby('timestamp')['rating'].mean().reset_index()        
+        user_avg_rating_df = user_data_df.groupby('timestamp')['rating'].mean().reset_index()                 
         # Create an Altair chart:
-        chart = alt.Chart(user_avg_rating).mark_line().encode(x='timestamp:T', y='rating:Q', tooltip=['timestamp:T', 'rating:Q']).properties(title=f"User {user_id}: Evolution of user preferences in the time", width=800, height=400)
+        chart = alt.Chart(user_data_df).mark_line().encode(x='timestamp:T', y='rating:Q', tooltip=['timestamp:T', 'rating:Q']).properties(title=f"User {user_id}: Evolution of user preferences in the time", width=800, height=400)
         # Display the chart in Streamlit:
         st.altair_chart(chart, use_container_width=True)
+        # Showing user_data:
+        with st.expander(label='Show a table with the number of items by user'):
+            st.dataframe(user_data_df)
+            wf_util.save_df(df_name='user_preference_evolution', df_value=user_data_df, extension='csv')
+            st.dataframe(user_avg_rating_df)
+            wf_util.save_df(df_name='user_preference_evolution_avg', df_value=user_avg_rating_df, extension='csv')          
 
 def show_item_statistics(user_id, extract_statistics):
     """

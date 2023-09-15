@@ -108,7 +108,7 @@ def generate_synthtetic_dataset(with_context):
     with tab_user_profile:
         st.header('User profile')  
         # Uploading the file: "user_profile.csv"        
-        if st.checkbox(f'Upload the data {config.USER_PROFILE_IMAGE_TYPE} file', value=True, key=f'is_upload_{config.USER_PROFILE_IMAGE_SCHEMA_NAME}_file'):
+        if st.checkbox(f'Upload the data {config.USER_PROFILE_SCHEMA_NAME} file', value=True, key=f'is_upload_{config.USER_PROFILE_SCHEMA_NAME}_file'):
             user_profile = upload_user_profile_file()
         else:
             # Generating the schema file: "user_profile.csv"
@@ -141,8 +141,8 @@ def upload_user_profile_file():
     :return: A dataframe with the user profile content.
     """
     user_profile_df = pd.DataFrame()
-    with st.expander(label=f'Upload {config.USER_PROFILE_IMAGE_SCHEMA_NAME}.csv'):
-        if user_profile_file := st.file_uploader(label='Choose the file:', key=f'{config.USER_PROFILE_IMAGE_SCHEMA_NAME}_file'):
+    with st.expander(label=f'Upload {config.USER_PROFILE_SCHEMA_NAME}.csv'):
+        if user_profile_file := st.file_uploader(label='Choose the file:', key=f'{config.USER_PROFILE_SCHEMA_NAME}_file'):
             user_profile_value = user_profile_file.getvalue().decode("utf-8")
             user_profile_df = pd.read_csv(io.StringIO(user_profile_value))  
             st.dataframe(user_profile_df)
