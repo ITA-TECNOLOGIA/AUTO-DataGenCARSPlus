@@ -1,12 +1,14 @@
-import datetime
+import os
+
 import altair as alt
+from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import streamlit as st
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
 from streamlit_app import config
 from streamlit_app.preprocess_dataset import wf_util
-import pyarrow as pa
 
 
 def show_information(rating_df, with_context):
@@ -126,29 +128,46 @@ def show_user_preference_evolution(user_id, rating_df):
     """
     if 'timestamp' in rating_df.columns:        
         # Filter data for the selected user:
-        user_data_df = rating_df.loc[rating_df['user_id'] == user_id].copy()        
+        user_data_df = rating_df.loc[rating_df['user_id'] == user_id].copy()    
+        # If the ratings are not integers:
+        user_data_df['rating'] = user_data_df['rating'].round(0)
         # Check the data type of the timestamp column (timestamp or date values):
         column_dtype = rating_df['timestamp'].dtype     
         
         # Check if timestamp column contains timestamp values:
         if column_dtype == 'datetime64[ns]' or column_dtype == 'datetime64[ns, UTC]' or column_dtype == 'int64':            
-            # # Convert 'timestamp' to datetime format:
-            user_data_df['timestamp'] = pd.to_datetime(user_data_df['timestamp'], unit='s')
-            # # Format the datetime column as a date string
-            # user_data_df['timestamp'] = user_data_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
-            user_data_df['timestamp'] = user_data_df['timestamp'].dt.strftime('%Y-%m-%d')
-        # Calculate average ratings through time for the selected user:
-        user_avg_rating_df = user_data_df.groupby('timestamp')['rating'].mean().reset_index()                 
-        # Create an Altair chart:
-        chart = alt.Chart(user_data_df).mark_line().encode(x='timestamp:T', y='rating:Q', tooltip=['timestamp:T', 'rating:Q']).properties(title=f"User {user_id}: Evolution of user preferences in the time", width=800, height=400)
-        # Display the chart in Streamlit:
-        st.altair_chart(chart, use_container_width=True)
-        # Showing user_data:
-        with st.expander(label='Show a table with the number of items by user'):
+            # Convert 'timestamp' to datetime format:
+            user_data_df['timestamp'] = pd.to_datetime(user_data_df['timestamp'], unit='s')                    
+            user_data_df['timestamp'] = user_data_df['timestamp'].dt.date
+        else:            
+            # In this case, the column value are dates (not timestamps):
+            user_data_df['timestamp'] = pd.to_datetime(user_data_df['timestamp']).dt.date    
+        # Set the size of the Matplotlib figure (adjust width and height as needed)
+        plt.figure(figsize=(10, 8))
+        # Display user preference evolution image:
+        fig = sns.boxplot(data=user_data_df, x="timestamp", y="rating")        
+        # Set Y-axis ticks to display all unique rating values:
+        plt.yticks(user_data_df['rating'].unique(), fontsize=10)
+        # Set X-axis labels to display only the text of dates and rotate them vertically
+        date_labels = user_data_df['timestamp'].unique()        
+        # Rotate the labels vertically:
+        plt.xticks(range(len(date_labels)), date_labels, rotation=30, fontsize=10)        
+        # Save the figure to a temporary file
+        tmp_file = "temp_plot.png"
+        fig.figure.savefig(tmp_file)
+        # Display the saved image in Streamlit
+        st.image(tmp_file)
+        # Optionally, you can remove the temporary file after displaying it        
+        os.remove(tmp_file)        
+        # Showing df:
+        with st.expander(label='Show tables related to the evolution of user preferences'):
+            # Showing describe df:
+            describe_df = user_data_df.groupby('timestamp').rating.describe()
+            st.dataframe(describe_df)
+            wf_util.save_df(df_name='user_preference_evolution_describe', df_value=describe_df, extension='csv')    
+            # Showing user preference evolution df:
             st.dataframe(user_data_df)
-            wf_util.save_df(df_name='user_preference_evolution', df_value=user_data_df, extension='csv')
-            st.dataframe(user_avg_rating_df)
-            wf_util.save_df(df_name='user_preference_evolution_avg', df_value=user_avg_rating_df, extension='csv')          
+            wf_util.save_df(df_name='user_preference_evolution', df_value=user_data_df, extension='csv')            
 
 def show_item_statistics(user_id, extract_statistics):
     """
