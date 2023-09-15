@@ -106,10 +106,12 @@ def show_rating_statistics(with_context, rating_df):
     :return: A dataframe with rating statistics.
     """    
     summary_df = rating_df.describe()    
-    if with_context:
+    if with_context:        
         summary_df = summary_df.drop(columns=['user_id', 'item_id', 'context_id'])
-    else:
+    else:        
         summary_df = summary_df.drop(columns=['user_id', 'item_id'])
+    if 'timestamp' in summary_df.columns:
+        summary_df = summary_df.drop(columns=['timestamp'])
     # Showing user_item_count_df:
     rating_summary_df = summary_df.T
     with st.expander(label='More details'):        
