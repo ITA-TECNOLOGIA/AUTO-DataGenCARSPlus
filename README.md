@@ -74,17 +74,17 @@ AUTO-DataGenCARS for your research:
 
 ```
 @article{mc2017datagencars,
-          doi = {10.1016/j.pmcj.2016.09.020},             
-          year = {2017},
-          note = {Special Issue IEEE International Conference on Pervasive Computing and Communications (PerCom) 2016},
-          publisher = {Elsevier},
-          volume = {38},
-          number = {2},
-          pages = {516-541},
-          issn = {1574-1192},
-          author = {María del Carmen Rodríguez-Hernández and Sergio Ilarri and Ramón Hermoso and Raquel Trillo-Lado},
-          title = {DataGenCARS: A generator of synthetic data for the evaluation of context-aware recommendation systems},
-          journal = {Pervasive and Mobile Computing}
+         doi = {10.1016/j.pmcj.2016.09.020},             
+         year = {2017},
+         note = {Special Issue IEEE International Conference on Pervasive Computing and Communications (PerCom) 2016},
+         publisher = {Elsevier},
+         volume = {38},
+         number = {2},
+         pages = {516-541},
+         issn = {1574-1192},
+         author = {María del Carmen Rodríguez-Hernández and Sergio Ilarri and Ramón Hermoso and Raquel Trillo-Lado},
+         title = {DataGenCARS: A generator of synthetic data for the evaluation of context-aware recommendation systems},
+         journal = {Pervasive and Mobile Computing}
         }
 ```
 
