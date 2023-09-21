@@ -1,4 +1,4 @@
-![logo](./resources/icons/logo-datagencars.jpg)
+<div style="text-align:center"><img src="./resources/icons/logo-datagencars.jpg" /></div>
 
 ## Overview
 
@@ -82,10 +82,10 @@ AUTO-DataGenCARS for your research:
              number = {2},
              pages = {516-541},
              issn = {1574-1192},
-             author = {María {del Carmen Rodríguez-Hernández} and Sergio Ilarri and Ramón Hermoso and Raquel Trillo-Lado},
+             author = {María del Carmen Rodríguez-Hernández and Sergio Ilarri and Ramón Hermoso and Raquel Trillo-Lado},
              title = {DataGenCARS: A generator of synthetic data for the evaluation of context-aware recommendation systems},
              journal = {Pervasive and Mobile Computing}
-    }
+            }
 ```
 
 ## Contributors
