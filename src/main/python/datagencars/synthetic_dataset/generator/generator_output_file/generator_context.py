@@ -1,6 +1,7 @@
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
 
+import random
 
 class GeneratorContextFile(GeneratorFile):
     '''
@@ -40,3 +41,24 @@ class GeneratorContextFile(GeneratorFile):
         self.file_df.insert(loc=0, column='context_id', value=context_id_list)
         
         return self.file_df.copy()
+    
+    def generate_null_values(self, complete_context_file):
+        percentage_null = self.access_generation_config.get_number_context_null()
+        if percentage_null > 0:
+            number_context = self.access_generation_config.get_number_context()
+            number_attributes = self.schema_access.get_number_attributes() 
+            null_values = int((number_attributes * number_context * percentage_null) / 100)
+            print(complete_context_file)
+            # Generate random positions to be null
+            for i in range(1, null_values+1):
+                # Generate column to remove
+                random_column = random.randint(1, number_attributes)
+                # Generate row to remove
+                random_row = random.randint(0, number_context - 1)
+                #print('Removing item column {} and row {}'.format(random_column, random_row))
+                # Remove value
+                if complete_context_file.iloc[random_row, random_column] != None:
+                    complete_context_file.iloc[random_row, random_column] = None
+                    i = i + 1
+            #print(complete_user_file)
+        return complete_context_file.copy()

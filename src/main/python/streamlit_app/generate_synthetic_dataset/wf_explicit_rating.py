@@ -165,8 +165,18 @@ def get_generation_config_file(with_context):
                             'number_item=' + str(item_count) + '\n' +
                             'number_context=' + str(context_count) + '\n')
     else:            
-        dimension_value = ('number_user=' + str(user_count) + '\n' +
+        dimension_value += ('number_user=' + str(user_count) + '\n' +
                            'number_item=' + str(item_count) + '\n')
+    percentage_null_user = st.number_input(label='Percentage of null user values:', value=0)
+    percentage_null_item = st.number_input(label='Percentage of null item values:', value=0)
+    if with_context:
+        percentage_null_context = st.number_input(label='Percentage of null context values:', value=0)
+        dimension_value += ('percentage_user_null_value=' + str(percentage_null_user) + '\n' +
+                            'percentage_item_null_value=' + str(percentage_null_item) + '\n' +
+                            'percentage_context_null_value=' + str(percentage_null_context) + '\n')
+    else:
+        dimension_value += ('percentage_user_null_value=' + str(percentage_null_user) + '\n' +
+                           'percentage_item_null_value=' + str(percentage_null_item) + '\n')
     st.markdown("""---""")
     # [rating]
     st.write('Rating configuration')

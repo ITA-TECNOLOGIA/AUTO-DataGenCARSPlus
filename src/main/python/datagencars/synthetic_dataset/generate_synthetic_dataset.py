@@ -26,21 +26,24 @@ class GenerateSyntheticDataset(ABC):
             Generating file: user.csv
         """        
         user_file_generator = GeneratorUserFile(self.generation_config, user_schema)
-        return user_file_generator.generate_file()
+        complete_user_file = user_file_generator.generate_file()
+        return user_file_generator.generate_null_values(complete_user_file)
     
     def generate_item_file(self, item_schema, item_profile=None, with_correlation=False):
         """
             Generating file: item.csv
         """        
         item_file_generator = GeneratorItemFile(item_schema, self.generation_config, item_profile)
-        return item_file_generator.generate_file(with_correlation)        
+        complete_item_file = item_file_generator.generate_file(with_correlation)  
+        return item_file_generator.generate_null_values(complete_item_file)
 
     def generate_context_file(self, context_schema):
         """
             Generating file (for CARS): context.csv
         """        
         context_file_generator = GeneratorContextFile(context_schema, self.generation_config)
-        return context_file_generator.generate_file()
+        complete_context_file = context_file_generator.generate_file()
+        return context_file_generator.generate_null_values(complete_context_file)
     
     def generate_behavior_file(self, behavior_schema, item_df, item_schema):
         """

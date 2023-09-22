@@ -1,6 +1,8 @@
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
 
+import random
+
 
 class GeneratorItemFile(GeneratorFile):
     '''
@@ -74,3 +76,25 @@ class GeneratorItemFile(GeneratorFile):
             self.file_df['room_id'] = self.file_df['object_position'].apply(lambda x: x.pop(3))
 
         return self.file_df.copy()
+    
+    def generate_null_values(self, complete_item_file):
+        percentage_null = self.access_generation_config.get_number_item_null()
+        if percentage_null > 0:
+            number_item = self.access_generation_config.get_number_item()
+            number_attributes = self.schema_access.get_number_attributes()
+            null_values = int((number_attributes * number_item * percentage_null) / 100)
+            #print(complete_item_file)
+            # Generate random positions to be null
+            for i in range(1, null_values+1):
+                # Generate column to remove
+                random_column = random.randint(1, number_attributes)
+                # Generate row to remove
+                random_row = random.randint(0, number_item-1)
+                #print('Removing item column {} and row {}'.format(random_column, random_row))
+                # Remove value
+                if complete_item_file.iloc[random_row, random_column] != None:
+                    complete_item_file.iloc[random_row, random_column] = None
+                    i = i + 1
+            #print(complete_item_file)
+        return complete_item_file.copy()
+         

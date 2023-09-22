@@ -1,6 +1,7 @@
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
 
+import random
 
 class GeneratorUserFile(GeneratorFile):
     '''
@@ -33,3 +34,24 @@ class GeneratorUserFile(GeneratorFile):
         user_id_list = list(range(1, number_user+1))
         self.file_df.insert(loc=0, column='user_id', value=user_id_list)
         return self.file_df.copy()
+
+    def generate_null_values(self, complete_user_file):
+        percentage_null = self.access_generation_config.get_number_user_null()
+        if percentage_null > 0:
+            number_user = self.access_generation_config.get_number_user()
+            number_attributes = self.schema_access.get_number_attributes() - 1 #user_profile_id cannot be null
+            null_values = int((number_attributes * number_user * percentage_null) / 100)
+            # Generate random positions to be null
+            for i in range(1, null_values+1):
+                # Generate column to remove
+                random_column = random.randint(1, number_attributes)
+                # Generate row to remove
+                random_row = random.randint(0, number_user-1)
+                #print('Removing item column {} and row {}'.format(random_column, random_row))
+                # Remove value
+                if complete_user_file.iloc[random_row, random_column] != None:
+                    complete_user_file.iloc[random_row, random_column] = None
+                    i = i + 1
+            #print(complete_user_file)
+        return complete_user_file.copy()
+         
