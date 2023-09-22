@@ -45,9 +45,11 @@ def generate_item(with_context):
     output = st.empty()  
     with console.st_log(output.code):
         # Replacing NULL values in item.csv:
+        st.session_state.replace_item=False     
         replace_null_item = st.checkbox(f"Do you want to replace the null values in {config.ITEM_TYPE}.csv file?", value=False)
         new_item_df = pd.DataFrame()
-        if replace_null_item:            
+        if replace_null_item:   
+            st.session_state.replace_item=True         
             # Showing the WF image, by replacing null values in item.csv:
             workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(False)), ('NULLValuesI', str(True))])
             # Loading item.csv file:
@@ -79,8 +81,10 @@ def generate_context(with_context):
         # Showing progress messages in console:
         output = st.empty()  
         with console.st_log(output.code):
+            st.session_state.replace_context=False
             replace_null_context = st.checkbox(f"Do you want to replace the null values in {config.CONTEXT_TYPE}.csv file?", value=False)                    
-            if replace_null_context:                
+            if replace_null_context:  
+                st.session_state.replace_context=True              
                 # Showing the WF image, by replacing null values in context.csv:
                 workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(False))])            
                 # Loading context.csv file:        

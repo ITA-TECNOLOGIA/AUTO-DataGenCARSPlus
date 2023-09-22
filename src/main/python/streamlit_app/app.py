@@ -1,5 +1,5 @@
-#import sys 
-#sys.path.append("/data/bfranco/auto_datagencars/src/main/python")
+import sys 
+sys.path.append("/data/bfranco/auto_datagencars/src/main/python")
 import config
 import streamlit as st
 from streamlit_app.analysis_dataset.evaluation import (st_evaluation_cars,
@@ -86,7 +86,7 @@ elif general_option == 'Pre-process a dataset':
             # Setting tabs:
             tab_replace_null_values_item, tab_generate_user_profile = st.tabs(['Replace NULL values (item.csv)', 'Generate User Profile'])
             # Apply WF: "Replace NULL values":
-            new_item_df, __ = wf_replace_null_values.generate(with_context, tab_replace_null_values_item)   
+            new_item_df, _ = wf_replace_null_values.generate(with_context, tab_replace_null_values_item)   
             if new_item_df.empty:
                 null_values_i = False     
         # Apply WF: "Generate User Profile":        
