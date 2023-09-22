@@ -95,6 +95,7 @@ elif general_option == 'Pre-process a dataset':
 
     # WF --> Replicate dataset:    
     elif wf_option == 'Replicate dataset':
+        st.empty()
         null_values_i = True
         null_values_c = True
         if with_context:
@@ -120,7 +121,7 @@ elif general_option == 'Pre-process a dataset':
             if with_context:
                 wf_replicate_dataset.generate(with_context, null_values_i, null_values_c)
             else:
-                wf_replicate_dataset.generate(with_context, null_values_i)
+                wf_replicate_dataset.generate(with_context, null_values_i, 'False')
 
     # WF --> Extend dataset:
     elif wf_option == 'Extend dataset':

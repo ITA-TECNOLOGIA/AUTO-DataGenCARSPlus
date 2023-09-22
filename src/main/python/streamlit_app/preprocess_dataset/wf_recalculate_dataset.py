@@ -20,7 +20,7 @@ def generate(with_context, null_values_i, null_values_c=None):
     # Help information:
     help_information.help_recalculate_ratings_wf()
     # Showing the initial image of the WF:
-    workflow_image.show_wf(wf_name='RecalculateRatings', init_step='True', with_context=True, optional_value_list=[('NULLValues', str(True)), ('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
+    workflow_image.show_wf(wf_name='RecalculateRatings', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item))])
     st.markdown("""---""")
 
     # Loading dataset:
