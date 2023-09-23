@@ -95,6 +95,18 @@ class GeneratorExplicitRatingFile:
         min_rating_value = self.access_generation_config.get_minimum_value_rating()
         # The maximum value rating.
         max_rating_value = self.access_generation_config.get_maximum_value_rating()
+        # Even distribution.
+        even_distribution = self.access_generation_config.get_even_distribution()
+
+        if not even_distribution:
+            # Generate x-1 random numbers
+            ratings_by_user = [random.uniform(0, number_ratings) for _ in range(number_user - 1)]
+            # Calculate the x-th number to make the sum equal to target_sum
+            last_number = number_ratings - sum(ratings_by_user)
+            # Add the last number to the list
+            ratings_by_user.append(last_number)
+        else:
+            ratings_by_user = [number_rating_by_user] * number_user
 
         # Iterating by user:
         for user_index in range(1, number_user+1):
@@ -111,7 +123,8 @@ class GeneratorExplicitRatingFile:
                 initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]
             
             # Generating ratings for the current user:
-            user_rating_list = []           
+            user_rating_list = []          
+            number_rating_by_user = ratings_by_user[user_index-1]
             for _ in range(number_rating_by_user):
                 # Generating item_id:
                 item_id = random.choice(item_id_list)

@@ -120,6 +120,18 @@ class AccessGenerationConfig(AccessData):
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
         return maximum_value_rating
+    
+    def get_even_distribution(self):
+        '''
+        Gets the maximum value of the rating.
+        :return: The maximum value of the rating.
+        '''
+        even_distribution = None
+        try:
+            even_distribution = self.file_parser.getfloat(section='rating', option='even_distribution')
+        except (NoOptionError, NoSectionError) as e: 
+            logging.error(e)
+        return even_distribution
 
     def get_percentage_rating_variation(self):
         '''
