@@ -97,16 +97,19 @@ class GeneratorExplicitRatingFile:
         max_rating_value = self.access_generation_config.get_maximum_value_rating()
         # Even distribution.
         even_distribution = self.access_generation_config.get_even_distribution()
-
-        if not even_distribution:
+        
+        # even_distribution=True: generating a similar count of ratings by user.
+        if even_distribution:            
+            ratings_by_user = [number_rating_by_user] * number_user
+        else:
+            # even_distribution=False: generating a random count of ratings by user.
             # Generate x-1 random numbers
             ratings_by_user = [random.uniform(0, number_ratings) for _ in range(number_user - 1)]
             # Calculate the x-th number to make the sum equal to target_sum
             last_number = number_ratings - sum(ratings_by_user)
             # Add the last number to the list
             ratings_by_user.append(last_number)
-        else:
-            ratings_by_user = [number_rating_by_user] * number_user
+            
 
         # Iterating by user:
         for user_index in range(1, number_user+1):
@@ -124,7 +127,7 @@ class GeneratorExplicitRatingFile:
             
             # Generating ratings for the current user:
             user_rating_list = []          
-            number_rating_by_user = ratings_by_user[user_index-1]
+            number_rating_by_user = int(ratings_by_user[user_index-1])
             for _ in range(number_rating_by_user):
                 # Generating item_id:
                 item_id = random.choice(item_id_list)
@@ -252,12 +255,16 @@ class GeneratorExplicitRatingFile:
         for attribute_name in atribute_name_list:
             # Getting values from item.csv
             if attribute_name in list(self.item_df.columns.values):
-                attribute_value = self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]                
-                if ((isinstance(attribute_value, (np.bool_, np.int64, np.float64))) or ('[' not in attribute_value)):
-                    attribute_value_list.append(attribute_value)
-                else:
-                    # Ckeck if is a list as str "['a', 'b']"
-                    attribute_value_list.append(ast.literal_eval(attribute_value))
+                attribute_value = self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]                   
+                # Check if the attribute value is None:
+                if attribute_value is None:                    
+                    attribute_value_list.append(None)                
+                # Ckeck if is a list as str "['a', 'b']":
+                elif (isinstance(attribute_value, str)) and ('[' in attribute_value):                                    
+                    attribute_value_list.append(ast.literal_eval(attribute_value))                
+                # For the cases of: list, bool, int and float values:
+                else:                    
+                    attribute_value_list.append(attribute_value)                
                 # Getting possible values of the current attribute:         
                 possible_value_list.append(self.item_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
             elif context_id:
