@@ -123,12 +123,14 @@ class AccessGenerationConfig(AccessData):
     
     def get_even_distribution(self):
         '''
-        Gets the maximum value of the rating.
-        :return: The maximum value of the rating.
+        Gets if applying an even distribution. 
+        - even_distribution=True: generates a similar count of ratings by user.
+        - even_distribution=False: generates a random count of ratings by user.
+        :return: The boolean value.
         '''
         even_distribution = None
         try:
-            even_distribution = self.file_parser.getfloat(section='rating', option='even_distribution')
+            even_distribution = self.file_parser.getboolean(section='rating', option='even_distribution')
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
         return even_distribution

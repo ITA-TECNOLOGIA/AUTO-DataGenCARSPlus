@@ -79,6 +79,7 @@ class GeneratorExplicitRatingFile:
         # Getting the number of ratings:
         number_ratings = self.access_generation_config.get_number_rating()
         print(f'Total of ratings to generate: {number_ratings}')
+        print(f'Generating ratings by user.')
         # Determinig the number of rating by user:
         number_rating_by_user = int(number_ratings/number_user)
 
@@ -97,25 +98,28 @@ class GeneratorExplicitRatingFile:
         max_rating_value = self.access_generation_config.get_maximum_value_rating()
         # Even distribution.
         even_distribution = self.access_generation_config.get_even_distribution()
-
-        if not even_distribution:
-            # Generate x-1 random numbers
-            ratings_by_user = [random.uniform(0, number_ratings) for _ in range(number_user - 1)]
-            # Calculate the x-th number to make the sum equal to target_sum
-            last_number = number_ratings - sum(ratings_by_user)
-            # Add the last number to the list
-            ratings_by_user.append(last_number)
+        
+        # even_distribution=True: generating a similar count of ratings by user.
+        if even_distribution:            
+            ratings_by_user_list = [number_rating_by_user] * number_user
         else:
-            ratings_by_user = [number_rating_by_user] * number_user
+            # even_distribution=False: generating a random count of ratings by user.
+            # Generate a list of random proportions that sum up to 1:
+            random_proportions = [random.uniform(0, 1) for _ in range(number_user-1)]
+            total_proportion = sum(random_proportions)
+            # Scale the proportions to sum up to number_ratings:
+            ratings_by_user_list = [int(round(prop * number_ratings / total_proportion)) for prop in random_proportions]
+            # Calculate the x-th number to make the sum equal to target_sum
+            last_number = number_ratings - sum(ratings_by_user_list)
+            # Add the last number to the list
+            ratings_by_user_list.append(last_number)            
 
         # Iterating by user:
         for user_index in range(1, number_user+1):
             row_rating_list = []
-
             # Generating user_id:
             user_id = user_id_list[user_index-1]
-            row_rating_list.append(user_id)   
-         
+            row_rating_list.append(user_id)            
             # Determining the initial timestamp for the current user:
             initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]     
             # Check if the initial_timestamp is near to minimum year.
@@ -124,17 +128,15 @@ class GeneratorExplicitRatingFile:
             
             # Generating ratings for the current user:
             user_rating_list = []          
-            number_rating_by_user = ratings_by_user[user_index-1]
+            number_rating_by_user = int(ratings_by_user_list[user_index-1])
             for _ in range(number_rating_by_user):
                 # Generating item_id:
                 item_id = random.choice(item_id_list)
-                row_rating_list.append(item_id)    
-
+                row_rating_list.append(item_id)
                 # Generating context_id:
                 if with_context:
                     context_id = random.choice(context_id_list)
                     row_rating_list.append(context_id)
-
                 # Generating a rating for a specified user profile:                   
                 user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id, 'user_profile_id'].iloc[0]                
                 if with_context:
@@ -145,52 +147,47 @@ class GeneratorExplicitRatingFile:
                 modified_rating = self.modify_rating_by_user_expectations(rating, k, user_rating_list, min_rating_value, max_rating_value)
                 user_rating_list.append(rating)
                 row_rating_list.append(modified_rating)
-
                 # Generating timestamp:
                 timestamp = initial_timestamp+pd.Timedelta(days=random.randint(1, 30), minutes=random.randint(1, 1440))                
                 row_rating_list.append(timestamp)
-
                 # Inserting row into dataframe:                
                 rating_df.loc[len(rating_df.index)] = row_rating_list  
                 row_rating_list.clear()     
                 row_rating_list.append(user_id)                
 
-        # Inserting remaining items to randomly selected users:
-        number_remaining_rating = number_ratings - (number_rating_by_user*number_user)
-        for _ in range(number_remaining_rating):
-            row_rating_list.clear()
-
-            # Choosing user_id:
-            user_id = random.choice(user_id_list)
-            row_rating_list.append(user_id)            
-            # Generating item_id:
-            item_id = random.choice(item_id_list)
-            row_rating_list.append(item_id)
-            # Generating context_id:
-            if with_context:
-                context_id = random.choice(context_id_list)
-                row_rating_list.append(context_id)
-            # Generating a rating for a specified user profile:            
-            user_profile_id = self.user_df.loc[self.user_df['user_id'] == str(user_id), 'user_profile_id'].iloc[0]
-            if with_context:
-                rating = self.get_rating(user_profile_id, item_id, context_id)
-            else:
-                rating = self.get_rating(user_profile_id, item_id)
-
-            # Modifying the generated rating.
-            user_rating_list = rating_df.loc[rating_df['user_id'] == user_id]['rating'].tolist()
-            modified_rating = self.modify_rating_by_user_expectations(rating, k, user_rating_list, min_rating_value, max_rating_value)
-            row_rating_list.append(modified_rating)
-
-            # Generating timestamp:
-            timestamp_df = rating_df.loc[rating_df['user_id']==user_id, ['timestamp']]
-            timestamp_df.sort_values(by='timestamp', ascending=False, inplace=True)
-            initial_timestamp = timestamp_df['timestamp'].tolist()[0]
-            timestamp = initial_timestamp+pd.Timedelta(days=random.randint(1, 30), minutes=random.randint(1, 1440))            
-            row_rating_list.append(timestamp)
-
-            # Inserting row into dataframe:
-            rating_df.loc[len(rating_df.index)] = row_rating_list            
+        if even_distribution:
+            # Inserting remaining items to randomly selected users:
+            number_remaining_rating = number_ratings - (number_rating_by_user*number_user)
+            for _ in range(number_remaining_rating):
+                row_rating_list.clear()
+                # Choosing user_id:
+                user_id = random.choice(user_id_list)
+                row_rating_list.append(user_id)            
+                # Generating item_id:
+                item_id = random.choice(item_id_list)
+                row_rating_list.append(item_id)
+                # Generating context_id:
+                if with_context:
+                    context_id = random.choice(context_id_list)
+                    row_rating_list.append(context_id)
+                # Generating a rating for a specified user profile:            
+                user_profile_id = self.user_df.loc[self.user_df['user_id'] == str(user_id), 'user_profile_id'].iloc[0]
+                if with_context:
+                    rating = self.get_rating(user_profile_id, item_id, context_id)
+                else:
+                    rating = self.get_rating(user_profile_id, item_id)
+                # Modifying the generated rating.
+                user_rating_list = rating_df.loc[rating_df['user_id'] == user_id]['rating'].tolist()
+                modified_rating = self.modify_rating_by_user_expectations(rating, k, user_rating_list, min_rating_value, max_rating_value)
+                row_rating_list.append(modified_rating)
+                # Generating timestamp:
+                timestamp_df = rating_df.loc[rating_df['user_id']==user_id, ['timestamp']]
+                timestamp_df.sort_values(by='timestamp', ascending=False, inplace=True)
+                initial_timestamp = timestamp_df['timestamp'].tolist()[0]
+                timestamp = initial_timestamp+pd.Timedelta(days=random.randint(1, 30), minutes=random.randint(1, 1440))            
+                row_rating_list.append(timestamp)
+                # Inserting row into dataframe:
+                rating_df.loc[len(rating_df.index)] = row_rating_list            
 
         # Sorting and returning a rating_df by user_id, item_id and/or context.
         rating_df = util.sort_rating_df(rating_df)      
@@ -252,12 +249,16 @@ class GeneratorExplicitRatingFile:
         for attribute_name in atribute_name_list:
             # Getting values from item.csv
             if attribute_name in list(self.item_df.columns.values):
-                attribute_value = self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]                
-                if ((isinstance(attribute_value, (np.bool_, np.int64, np.float64))) or ('[' not in attribute_value)):
-                    attribute_value_list.append(attribute_value)
-                else:
-                    # Ckeck if is a list as str "['a', 'b']"
-                    attribute_value_list.append(ast.literal_eval(attribute_value))
+                attribute_value = self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]                   
+                # Check if the attribute value is None:
+                if attribute_value is None:                    
+                    attribute_value_list.append(None)                
+                # Ckeck if is a list as str "['a', 'b']":
+                elif (isinstance(attribute_value, str)) and ('[' in attribute_value):                                    
+                    attribute_value_list.append(ast.literal_eval(attribute_value))                
+                # For the cases of: list, bool, int and float values:
+                else:                    
+                    attribute_value_list.append(attribute_value)                
                 # Getting possible values of the current attribute:         
                 possible_value_list.append(self.item_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
             elif context_id:
@@ -308,4 +309,4 @@ class GeneratorExplicitRatingFile:
                 rating_modified = max(min_rating_value, rating_modified)
         else:
             rating_modified = rating
-        return round(rating_modified , 2)
+        return int(round(rating_modified))

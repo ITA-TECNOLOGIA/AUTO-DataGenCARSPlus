@@ -38,27 +38,28 @@ class GeneratorContextFile(GeneratorFile):
 
         # Adding context_id column:
         context_id_list = list(range(1, number_context+1))
-        self.file_df.insert(loc=0, column='context_id', value=context_id_list)
-        
+        self.file_df.insert(loc=0, column='context_id', value=context_id_list)        
         return self.file_df.copy()
     
     def generate_null_values(self, complete_context_file):
+        """
+        This method generates null values in a dataframe based on a specified percentage.        
+        :param complete_context_file: The input dataframe containing context data.
+        :return: A copy of the input dataframe with null values generated.
+        """
         percentage_null = self.access_generation_config.get_number_context_null()
         if percentage_null > 0:
             number_context = self.access_generation_config.get_number_context()
             number_attributes = self.schema_access.get_number_attributes() 
-            null_values = int((number_attributes * number_context * percentage_null) / 100)
-            print(complete_context_file)
-            # Generate random positions to be null
+            null_values = int((number_attributes * number_context * percentage_null) / 100)            
+            # Generate random positions to be null:
             for i in range(1, null_values+1):
-                # Generate column to remove
+                # Generate column to remove:
                 random_column = random.randint(1, number_attributes)
-                # Generate row to remove
-                random_row = random.randint(0, number_context - 1)
-                #print('Removing item column {} and row {}'.format(random_column, random_row))
-                # Remove value
+                # Generate row to remove:
+                random_row = random.randint(0, number_context - 1)                
+                # Remove value:
                 if complete_context_file.iloc[random_row, random_column] != None:
                     complete_context_file.iloc[random_row, random_column] = None
-                    i = i + 1
-            #print(complete_user_file)
+                    i = i + 1            
         return complete_context_file.copy()
