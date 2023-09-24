@@ -35,27 +35,27 @@ class TestGeneratorSyntheticDatasetCARS(unittest.TestCase):
     def tearDown(self):
         del self.__generator
     
-    # def test_generate_rating_file_cars_correlation(self):
-    #     '''
-    #     Generates the rating file.        
-    #     '''    
-    #     # item_schema.conf
-    #     item_schema_file_path = self.data_schema_cars_path + 'item_schema.conf'
-    #     with open(item_schema_file_path, 'r') as item_schema_file:
-    #         item_schema = item_schema_file.read()  
-    #     # item_profile.conf
-    #     item_profile_path = self.data_schema_cars_path + 'item_profile.conf'
-    #     with open(item_profile_path, 'r') as item_profile_file:            
-    #         item_profile = item_profile_file.read()
-    #     # Correlation:
-    #     with_correlation = True
-    #     item_file = self.__generator.generate_item_file(item_schema, item_profile, with_correlation)
+    def test_generate_rating_file_cars_correlation(self):
+        '''
+        Generates the rating file.        
+        '''    
+        # item_schema.conf
+        item_schema_file_path = self.data_schema_cars_path + 'item_schema.conf'
+        with open(item_schema_file_path, 'r') as item_schema_file:
+            item_schema = item_schema_file.read()  
+        # item_profile.conf
+        item_profile_path = self.data_schema_cars_path + 'item_profile.conf'
+        with open(item_profile_path, 'r') as item_profile_file:            
+            item_profile = item_profile_file.read()
+        # Correlation:
+        with_correlation = True
+        item_file = self.__generator.generate_item_file(item_schema, item_profile, with_correlation)
 
-    #     # Generating rating file:      
-    #     with_context = True        
-    #     rating_file = self.__generator.generate_rating_file(user_df=self.user_file, user_profile_df=self.user_profile_df, item_df=item_file, item_schema=item_schema, with_context=with_context, context_df=self.context_file, context_schema=self.context_schema)
-    #     logging.info(f'rating_file: {rating_file}')
-    #     self.assertEqual(rating_file.shape[0], 2000)
+        # Generating rating file:      
+        with_context = True        
+        rating_file = self.__generator.generate_rating_file(user_df=self.user_file, user_profile_df=self.user_profile_df, item_df=item_file, item_schema=item_schema, with_context=with_context, context_df=self.context_file, context_schema=self.context_schema)
+        logging.info(f'rating_file: {rating_file}')
+        self.assertEqual(rating_file.shape[0], 2000)
 
     def test_generate_rating_file_cars_without_correlation(self):
         '''
@@ -70,14 +70,10 @@ class TestGeneratorSyntheticDatasetCARS(unittest.TestCase):
         with open(item_profile_path, 'r') as item_profile_file:            
             item_profile = item_profile_file.read()    
         # Without correlation:        
-        item_file = self.__generator.generate_item_file(item_schema)
-
-        # user_profile_df:
-        user_profile_path = self.data_schema_cars_path + 'user_profile.csv'
-        user_profile_df = pd.read_csv(user_profile_path, encoding='utf-8', index_col=False)       
+        item_file = self.__generator.generate_item_file(item_schema) 
              
         with_context = True
-        rating_file = self.__generator.generate_rating_file(user_df=self.user_file, user_profile_df=self.user_profile_df, item_df=item_file, item_schema=item_schema, with_context=with_context, context_df=self.context_file, context_schema=self.context_schema)
+        rating_file = self.__generator.generate_rating_file(user_df=self.user_file, user_profile_df=self.user_profile_df, item_df=item_file, item_schema=item_schema, with_context=with_context, context_df=self.context_file, context_schema=self.context_schema)        
         logging.info(f'rating_file: {rating_file}')
         self.assertEqual(rating_file.shape[0], 2000)
 

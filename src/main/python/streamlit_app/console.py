@@ -16,7 +16,6 @@ def st_log(output_func):
         stdout.write = new_write
         yield
 
-
 # output = st.empty()
 # with st_log(output.code):
 #     print("Hello")

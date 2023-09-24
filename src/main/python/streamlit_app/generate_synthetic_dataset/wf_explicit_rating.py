@@ -1,4 +1,5 @@
 import io
+import time
 
 import config
 import console
@@ -118,8 +119,8 @@ def generate_synthtetic_dataset(with_context):
                 user_profile = get_user_profile_file(user_schema, item_schema)
     # TAB --> Run:
     with tab_run:        
-        if with_context:
-            run(generation_config_schema=generation_config_schema, user_schema=user_schema, user_profile=user_profile, item_schema=item_schema, item_profile=item_profile, with_context=with_context, context_schema=context_schema)
+        if with_context:            
+            run(generation_config_schema=generation_config_schema, user_schema=user_schema, user_profile=user_profile, item_schema=item_schema, item_profile=item_profile, with_context=with_context, context_schema=context_schema)            
         else:
             run(generation_config_schema=generation_config_schema, user_schema=user_schema, user_profile=user_profile, item_schema=item_schema, item_profile=item_profile)
         
@@ -609,6 +610,8 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
     """
     Runs the workflow related to generating a synthetic dataset with explicit ratings.
     """    
+    # Record the start time
+    start_time = time.time()
     with_correlation_checkbox = False
     inconsistent = False                
     col_run, col_stop = st.columns(2)
@@ -695,6 +698,10 @@ def run(generation_config_schema, user_schema, user_profile, item_schema, item_p
                             my_bar.progress(100, 'Synthetic data generation has finished.')    
         else:
             st.warning('Before generating data ensure all files are correctly generated.')
+        end_time = time.time()
+        # Calculate the elapsed time
+        elapsed_time = end_time - start_time            
+        print(f"Execution time: {round(elapsed_time, 2)} seconds")
    
 def edit_schema_file(schema_file_name, schema_value):
     """
