@@ -1,5 +1,5 @@
 import sys 
-sys.path.append("/data/bfranco/auto_datagencars/src/main/python")
+#sys.path.append("/data/bfranco/auto_datagencars/src/main/python")
 import config
 import streamlit as st
 from streamlit_app.analysis_dataset.evaluation import (st_evaluation_cars,
