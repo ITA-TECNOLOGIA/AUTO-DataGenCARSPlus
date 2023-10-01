@@ -50,7 +50,7 @@ def generate(with_context, null_values_i, null_values_c, only_automatic=False):
         # Help information:
         help_information.help_user_profile_automatic()
         # Showing the current image of the WF:
-        optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'True'), ('UPAutomatic', 'True')]
+        optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'False'), ('UPAutomatic', 'True')]
         workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=optional_value_list)
     
         # Generating user profiles:
@@ -70,7 +70,7 @@ def generate(with_context, null_values_i, null_values_c, only_automatic=False):
             # Help information:
             help_information.help_user_profile_manual()  
             # Showing the current image of the WF:
-            optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'True'), ('UPAutomatic', 'True')]
+            optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'True'), ('UPAutomatic', 'False')]
             workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=optional_value_list) 
 
             # Getting the number of user profiles to be generated:
@@ -201,7 +201,7 @@ def generate_user_profile_manual(number_user_profile, attribute_column_list, ite
     st.dataframe(export_df)
     # Downloading user_profile.csv:
     if not inconsistent:
-        wf_util.save_df(df_name=config.USER_PROFILE_IMAGE_SCHEMA_NAME, df_value=export_df, extension='csv')        
+        wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=export_df, extension='csv')        
     return export_df 
 
 def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, context_df=None, context_attribute_list=None):
@@ -226,7 +226,7 @@ def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, con
                         user_profile_df = generate_up_dataset.generate_user_profile(item_attribute_list, context_attribute_list)
                         with st.expander(label=f'Show the generated user profile file.'):
                             st.dataframe(user_profile_df)
-                            wf_util.save_df(df_name=config.USER_PROFILE_IMAGE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')                             
+                            wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')                             
                         print('The user profile has been generated.')                                                    
             else:
                 st.warning("The item, context and rating files have not been uploaded.")
@@ -239,7 +239,7 @@ def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, con
                     user_profile_df = generate_up_dataset.generate_user_profile(item_attribute_list)
                     with st.expander(label=f'Show the generated user profile file.'):
                         st.dataframe(user_profile_df)
-                        wf_util.save_df(df_name=config.USER_PROFILE_IMAGE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')  
+                        wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')  
                     print('The user profile has been generated.')
             else:
                 st.warning("The item and rating files have not been uploaded.")    
