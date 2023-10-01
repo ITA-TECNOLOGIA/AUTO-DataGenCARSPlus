@@ -50,7 +50,7 @@ def generate(with_context, null_values_i, null_values_c, only_automatic=False):
         # Help information:
         help_information.help_user_profile_automatic()
         # Showing the current image of the WF:
-        optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'False'), ('UPAutomatic', 'True')] # AKI
+        optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'False'), ('UPAutomatic', 'True')]
         workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=optional_value_list)
     
         # Generating user profiles:
@@ -70,7 +70,7 @@ def generate(with_context, null_values_i, null_values_c, only_automatic=False):
             # Help information:
             help_information.help_user_profile_manual()  
             # Showing the current image of the WF:
-            optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'True'), ('UPAutomatic', 'False')] # AKI
+            optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'True'), ('UPAutomatic', 'False')]
             workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=optional_value_list) 
 
             # Getting the number of user profiles to be generated:
