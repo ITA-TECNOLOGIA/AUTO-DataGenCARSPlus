@@ -5,7 +5,7 @@ APP_LAYOUT = ['centered', 'centered', 'wide']
 APP_INITIAL_SIDEBAR_STATE = ['auto', 'expanded', 'auto', 'collapsed']
 APP_DESCRIPTION = 'It is a complete Python-based synthetic dataset generator for the evaluation of Context-Aware Recommendation Systems (CARS) to obtain the required datasets for any type of scenario desired.'
 #### User information register ####:
-USER_INFORMATION_LOG_PATH = './resources/user_information_log/user_information_log.csv'
+USER_INFORMATION_LOG_PATH = 'resources/user_information_log/user_information_log.csv'
 EMAIL_LABEL = 'E-mail'
 ORGANIZATION_LABEL = 'Organization'
 COUNTRY_LABEL = 'Country'
