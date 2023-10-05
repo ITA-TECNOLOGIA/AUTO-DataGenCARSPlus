@@ -70,6 +70,24 @@ class TestAccessGenerationConfig(unittest.TestCase):
         logging.info(f'maximum_value_rating: {maximum_value_rating}')                
         self.assertEqual(maximum_value_rating, 5)
 
+    def test_get_even_distribution(self):
+        '''
+        [rating]
+        even_distribution=False
+        '''
+        even_distribution = self.__access.get_even_distribution()
+        logging.info(f'even_distribution: {even_distribution}')                
+        self.assertEqual(even_distribution, False)
+    
+    def test_get_even_distribution_type(self):
+        '''
+        [rating]
+        even_distribution_type=gaussian
+        '''
+        even_distribution_type = self.__access.get_even_distribution_type()
+        logging.info(f'even_distribution: {even_distribution_type}')                
+        self.assertEqual(even_distribution_type, 'gaussian')
+
     def test_get_percentage_rating_variation(self):
         '''
         [rating]

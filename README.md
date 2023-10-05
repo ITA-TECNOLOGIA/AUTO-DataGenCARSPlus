@@ -64,9 +64,7 @@ For the latest version, you can also clone the repo and build the source:
 The libraries used in this project with its respective versions can be seen in `environment.yml`.
 
 ## License
-This project is licensed under the [BSD 3-Clause](https://opensource.org/licenses/BSD-3-Clause) license, so it can be used for pretty much everything, including commercial applications.
-
-Open source license: If you are creating an open source application under a license compatible with the GNU GPL license v3 you may use SAME under its terms and conditions.
+Open source license: If you are creating an open source application under a license compatible with the GNU GPL license v3 you may use AUTO-DataGenCARS under its terms and conditions.
 
 ## Reference
 Please make sure to cite the [paper](https://www.sciencedirect.com/science/article/pii/S157411921630270X) if you use

@@ -100,19 +100,29 @@ class GeneratorExplicitRatingFile:
         even_distribution = self.access_generation_config.get_even_distribution()
         
         # even_distribution=True: generating a similar count of ratings by user.
-        if even_distribution:            
+        if even_distribution:      
             ratings_by_user_list = [number_rating_by_user] * number_user
         else:
             # even_distribution=False: generating a random count of ratings by user.
-            # Generate a list of random proportions that sum up to 1:
-            random_proportions = [random.uniform(0, 1) for _ in range(number_user-1)]
-            total_proportion = sum(random_proportions)
-            # Scale the proportions to sum up to number_ratings:
-            ratings_by_user_list = [int(round(prop * number_ratings / total_proportion)) for prop in random_proportions]
-            # Calculate the x-th number to make the sum equal to target_sum
-            last_number = number_ratings - sum(ratings_by_user_list)
-            # Add the last number to the list
-            ratings_by_user_list.append(last_number)            
+            # Get the distribution type:
+            distribution_type = self.access_generation_config.get_even_distribution_type()
+            mu = 100  # Average
+            sigma = 20  # Standard deviation                        
+            if distribution_type == 'uniform':
+                random_proportions = np.random.uniform(mu, sigma, number_user)                
+            elif distribution_type == 'gaussian':
+                random_proportions = np.random.normal(mu, sigma, number_user)
+            # Make sure the values are non-negative:
+            values_no_negativos = np.maximum(0, random_proportions)            
+            # Resize the values so that they add up to number_ratings
+            current_sum = np.sum(values_no_negativos)
+            resized_values = (values_no_negativos / current_sum) * number_ratings            
+            # Round values to get integers:
+            ratings_by_user_list = np.round(resized_values)            
+            # Make sure that the total sum is exactly number_ratings (there may be small differences due to rounding):
+            sum_total_real = np.sum(ratings_by_user_list)
+            difference = number_ratings - sum_total_real
+            ratings_by_user_list[-1] += difference                      
 
         # Iterating by user:
         for user_index in range(1, number_user+1):
