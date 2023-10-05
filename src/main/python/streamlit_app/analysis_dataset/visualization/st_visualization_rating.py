@@ -36,8 +36,9 @@ def show_information(rating_df, with_context):
         # Showing the rating statistics:
         show_rating_statistics(with_context, rating_df)
         # Showing number of items by user:
-        show_items_by_user(rating_df)
-        
+        show_items_by_user(rating_df)   
+        # Showing histogram of the number of ratings by user:
+        show_histogram_items_by_user(rating_df)
         # Showing statistics per user:
         st.header("Statistics per user")
         user_id_list = list(rating_df['user_id'].unique())                    
@@ -124,7 +125,7 @@ def show_items_by_user(rating_df):
     :param rating_df: The rating dataframe.
     :return: A dataframe with the information related to the number of items by user.
     """
-    st.header("Histogram of items by user")
+    st.header("Number of items by user")
     # Group data by user and count the number of items for each user
     user_item_count_df = rating_df.groupby('user_id')['item_id'].count().reset_index()    
     user_item_count_df.columns = ['User', 'Number of items']
@@ -144,6 +145,28 @@ def show_items_by_user(rating_df):
         st.dataframe(user_item_count_df)
         wf_util.save_df(df_name='number_items_by_user', df_value=user_item_count_df, extension='csv')
     return user_item_count_df
+
+def show_histogram_items_by_user(rating_df):
+    """
+    Display a histogram of the number of ratings by user.
+    :param rating_df: DataFrame containing user ratings data.
+    """
+    # Create a Streamlit app
+    st.header("Histogram of number of ratings by user")
+    # Sidebar for customizing the histogram    
+    num_bins = st.slider("Number of bins", min_value=1, max_value=50, value=6)        
+    # Calculate the count of values in the specified column
+    value_counts = rating_df['user_id'].value_counts().reset_index()
+    # Rename the columns for clarity
+    value_counts.columns = ['user_id', 'count']
+    #  Sort the DataFrame by the 'Count' column in descending order
+    sorted_value_counts = value_counts.sort_values(by='user_id', ascending=True)        
+    # Display the histogram    
+    fig, ax = plt.subplots()    
+    ax.hist(sorted_value_counts['count'].values, bins=num_bins, density=True, alpha=0.6)
+    plt.xlabel('Number items by user')
+    plt.ylabel('Frequency')      
+    st.pyplot(fig)
 
 def show_user_preference_evolution(user_id, rating_df):
     """

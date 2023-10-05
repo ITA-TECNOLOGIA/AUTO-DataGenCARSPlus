@@ -203,8 +203,11 @@ def get_generation_config_file(with_context):
         max_year_ts = st.number_input(label='Until:', value=2022, key='date_max_generation_config')
         rating_value += ('minimum_date_timestamp='+str(min_year_ts)+'\n' +
                          'maximum_date_timestamp='+str(max_year_ts)+'\n')        
-    even_distribution = st.checkbox(label='Users ratings should have a even distribution?', value=True, key='even_distribution')    
+    even_distribution = st.checkbox(label='Users ratings should have a even distribution?', value=False, key='even_distribution')    
     rating_value += ('even_distribution='+str(even_distribution)+'\n') 
+    if even_distribution == False:
+        event_distribution_type = st.selectbox(label='Distribution type', options=['uniform', 'gaussian'])
+    rating_value += ('even_distribution_type='+str(event_distribution_type)+'\n') 
     st.markdown("""---""")
     # [item profile]
     item_profile_value = ''            

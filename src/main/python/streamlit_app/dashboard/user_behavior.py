@@ -1,38 +1,34 @@
 import warnings
 
+import pandas as pd
 import streamlit as st
-from geopy.geocoders import Nominatim
 
 warnings.filterwarnings("ignore")
 st.set_option('deprecation.showPyplotGlobalUse', False)
 
 
-def show_user_map(df):    
-    # Inicializar el geocodificador de Nominatim
-    geolocator = Nominatim(user_agent="MyGeo")
-    
-    def geocode_country(country):
-        """
-        Función para geocodificar un país y obtener sus coordenadas
-        """
-        try:
-            location = geolocator.geocode(country)
-            if location:
-                return location.latitude, location.longitude
-            else:
-                return None, None
-        except Exception as e:
-            return None, None
-
-    # Aplicar la función para obtener las coordenadas de cada país en la columna "Country"
-    df['latitude'], df['longitude'] = zip(*df['Country'].apply(geocode_country))        
-    # Crear un mapa en Streamlit
-    st.header('Map of countries using AUTO-DataGenCARS')
-    data = df.loc[:, ['latitude', 'longitude']]        
-    st.map(data)  
-
-    with st.expander(label='Show details'):
-        # Calculate the frequency of values in the "country" column
-        country_frequency_df = df['Country'].value_counts().reset_index()
-        country_frequency_df.columns = ['Country', 'Frequency']
-        st.dataframe(country_frequency_df)
+def show_user_map(df):
+    """
+    Display a map of countries using user data with latitude and longitude coordinates.
+    :param df: A DataFrame containing user data, including 'loc' column with location coordinates in the format 'latitude, longitude'.       
+    """
+    # Split the 'loc' column into 'latitude' and 'longitude' columns
+    df[['latitude', 'longitude']] = df['loc'].str.split(',', expand=True)
+    # Convert 'latitude' and 'longitude' columns to numeric (handle non-numeric values)
+    df['latitude'] = pd.to_numeric(df['latitude'], errors='coerce')
+    df['longitude'] = pd.to_numeric(df['longitude'], errors='coerce')    
+    # Remove rows with NaN values in 'latitude' or 'longitude' columns
+    df = df.dropna(subset=['latitude', 'longitude'])
+    # Check if there are any rows left to plot
+    if df.empty:
+        st.warning("No valid data for plotting.")
+    else:
+        # Create a map in Streamlit
+        st.header('Map of countries using AUTO-DataGenCARS')
+        data = df.loc[:, ['latitude', 'longitude']]
+        st.map(data)
+        with st.expander(label='Show details'):
+            # Calculate the frequency of values in the "country" column
+            country_frequency_df = df['country'].value_counts().reset_index()
+            country_frequency_df.columns = ['country', 'frequency']
+            st.dataframe(country_frequency_df)

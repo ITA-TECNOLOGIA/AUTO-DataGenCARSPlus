@@ -134,6 +134,18 @@ class AccessGenerationConfig(AccessData):
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
         return even_distribution
+    
+    def get_even_distribution_type(self):
+        '''
+        Gets the distribution type when even_distribution=False.
+        :return: The distribution type.
+        '''
+        even_distribution_type = None
+        try:
+            even_distribution_type = self.file_parser.get(section='rating', option='even_distribution_type')
+        except (NoOptionError, NoSectionError) as e: 
+            logging.error(e)
+        return even_distribution_type
 
     def get_percentage_rating_variation(self):
         '''
