@@ -8,3 +8,6 @@ resources/existing_dataset/*
 resources/generate_synthetic_dataset/*
 src/main/python/streamlit_app/workflow_graph/*.png
 src/main/python/streamlit_app/workflow_graph/GenerateSyntheticDataset(Explicit_ratings)
+resources/data_percom_2024/experiment_1/ml-100k_original/*
+src/main/test/test_percom_2024_exp_1.py
+src/main/test/test_percom_2024_exp2.py

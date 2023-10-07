@@ -144,4 +144,4 @@ class GenerateRating(ABC):
                 rating_modified = max(min_rating_value, rating_modified)
         else:
             rating_modified = rating
-        return round(rating_modified , 2)
+        return int(round(rating_modified))

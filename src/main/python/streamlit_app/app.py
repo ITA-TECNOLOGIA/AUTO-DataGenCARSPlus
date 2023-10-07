@@ -62,7 +62,7 @@ elif general_option == 'Pre-process a dataset':
     wf_option = st.sidebar.radio(label='Select a workflow:', options=config.WF_OPTIONS)
     
     # WF --> Replace NULL values:
-    if wf_option == 'Replace NULL values':        
+    if wf_option == 'Replace NULL values':
         if with_context:
             # Setting tabs:
             tab_replace_null_values_item, tab_replace_null_values_context = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)'])            
@@ -75,116 +75,81 @@ elif general_option == 'Pre-process a dataset':
             wf_replace_null_values.generate(with_context, tab_replace_null_values_item)        
         
     # WF --> Generate User Profile:
-    elif wf_option == 'Generate user profile':
-        null_values_i = True
-        null_values_c = True
+    elif wf_option == 'Generate user profile':          
         if with_context:
             # Setting tabs:
             tab_replace_null_values_item, tab_replace_null_values_context, tab_generate_user_profile = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)', 'Generate User Profile'])            
             # Apply WF: "Replace NULL values":
-            new_item_df, new_context_df = wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)
-            if new_item_df.empty:
-                null_values_i = False
-            if new_context_df.empty:
-                null_values_c = False
+            wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)            
         else:
             # Setting tabs:
             tab_replace_null_values_item, tab_generate_user_profile = st.tabs(['Replace NULL values (item.csv)', 'Generate User Profile'])
             # Apply WF: "Replace NULL values":
-            new_item_df, _ = wf_replace_null_values.generate(with_context, tab_replace_null_values_item)   
-            if new_item_df.empty:
-                null_values_i = False     
+            wf_replace_null_values.generate(with_context, tab_replace_null_values_item)               
         # Apply WF: "Generate User Profile":        
         with tab_generate_user_profile:
-            wf_generate_user_profile.generate(with_context, null_values_i, null_values_c)
+            wf_generate_user_profile.generate(with_context)
 
     # WF --> Replicate dataset:    
-    elif wf_option == 'Replicate dataset':
-        st.empty()
-        null_values_i = True
-        null_values_c = True
+    elif wf_option == 'Replicate dataset':        
+        st.empty()        
         if with_context:
             # Setting tabs:
             tab_replace_null_values_item, tab_replace_null_values_context, tab_generate_user_profile, tab_replicate_dataset = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)', 'Generate user profile', 'Replicate dataset'])
             # Apply WF: "Replace NULL values":            
-            new_item_df, new_context_df = wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)
-            if new_item_df.empty:
-                null_values_i = False
-            if new_context_df.empty:
-                null_values_c = False
+            wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)            
         else:
             tab_replace_null_values_item, tab_generate_user_profile, tab_replicate_dataset = st.tabs(['Replace NULL values (item.csv)', 'Generate user profile', 'Replicate dataset'])
             # Apply WF: "Replace NULL values":
-            new_item_df, __ = wf_replace_null_values.generate(with_context, tab_replace_null_values_item)            
-            if new_item_df.empty:
-                null_values_i = False
+            wf_replace_null_values.generate(with_context, tab_replace_null_values_item)
         # Apply WF: "Generate User Profile":            
         with tab_generate_user_profile:
-            wf_generate_user_profile.generate(with_context, null_values_i, null_values_c, only_automatic=True)
+            wf_generate_user_profile.generate(with_context, only_automatic=True)
         # Apply WF: "Replicate Dataset":
         with tab_replicate_dataset:
-            if with_context:
-                wf_replicate_dataset.generate(with_context, null_values_i, null_values_c)
-            else:
-                wf_replicate_dataset.generate(with_context, null_values_i, 'False')
+            wf_replicate_dataset.generate(with_context) 
 
     # WF --> Extend dataset:
-    elif wf_option == 'Extend dataset':
-        null_values_i = True
-        null_values_c = True
+    elif wf_option == 'Extend dataset':        
         if with_context:
             # Setting tabs:
             tab_replace_null_values_item, tab_replace_null_values_context, tab_generate_user_profile, tab_extend_dataset = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)', 'Generate user profile', 'Extend dataset'])
             # Apply WF: "Replace NULL values":            
-            new_item_df, new_context_df = wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)
-            if new_item_df.empty:
-                null_values_i = False
-            if new_context_df.empty:
-                null_values_c = False
+            wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)            
         else:
             tab_replace_null_values_item, tab_generate_user_profile, tab_extend_dataset = st.tabs(['Replace NULL values (item.csv)', 'Generate user profile', 'Extend dataset'])
             # Apply WF: "Replace NULL values":
-            new_item_df, __ = wf_replace_null_values.generate(with_context, tab_replace_null_values_item)            
-            if new_item_df.empty:
-                null_values_i = False
+            wf_replace_null_values.generate(with_context, tab_replace_null_values_item)
         # Apply WF: "Generate User Profile":            
         with tab_generate_user_profile:
-            wf_generate_user_profile.generate(with_context, null_values_i, null_values_c, only_automatic=True)
+            wf_generate_user_profile.generate(with_context, only_automatic=True)
         # Apply WF: "Extend Dataset":
         with tab_extend_dataset:
             if with_context:
-                wf_extend_dataset.generate(with_context, null_values_i, null_values_c)
+                wf_extend_dataset.generate(with_context)
             else:
-                wf_extend_dataset.generate(with_context, null_values_i)       
+                wf_extend_dataset.generate(with_context)
 
     # WF --> Recalculate ratings:
-    elif wf_option == 'Recalculate ratings': 
-        null_values_i = True
-        null_values_c = True
+    elif wf_option == 'Recalculate ratings':         
         if with_context:
             # Setting tabs:
             tab_replace_null_values_item, tab_replace_null_values_context, tab_generate_user_profile, tab_extend_dataset = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)', 'Generate user profile', 'Recalculate dataset'])
             # Apply WF: "Replace NULL values":            
-            new_item_df, new_context_df = wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)
-            if new_item_df.empty:
-                null_values_i = False
-            if new_context_df.empty:
-                null_values_c = False
+            wf_replace_null_values.generate(with_context, tab_replace_null_values_item, tab_replace_null_values_context)          
         else:
             tab_replace_null_values_item, tab_generate_user_profile, tab_extend_dataset = st.tabs(['Replace NULL values (item.csv)', 'Generate user profile', 'Recalculate dataset'])
             # Apply WF: "Replace NULL values":
-            new_item_df, __ = wf_replace_null_values.generate(with_context, tab_replace_null_values_item)            
-            if new_item_df.empty:
-                null_values_i = False
+            wf_replace_null_values.generate(with_context, tab_replace_null_values_item)
         # Apply WF: "Generate User Profile":            
         with tab_generate_user_profile:
-            wf_generate_user_profile.generate(with_context, null_values_i, null_values_c, only_automatic=True)
+            wf_generate_user_profile.generate(with_context, only_automatic=True)
         # Apply WF: "Extend Dataset":
         with tab_extend_dataset:
             if with_context:
-                wf_recalculate_dataset.generate(with_context, null_values_i, null_values_c)
+                wf_recalculate_dataset.generate(with_context)
             else:
-                wf_recalculate_dataset.generate(with_context, null_values_i)      
+                wf_recalculate_dataset.generate(with_context)
 
     # WF --> Cast Rating (Binary to Preferencial / Preferencial to Binary):
     elif wf_option == 'Cast ratings':

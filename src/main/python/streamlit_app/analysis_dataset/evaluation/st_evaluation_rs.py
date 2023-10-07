@@ -44,31 +44,27 @@ def select_recommendation_algorithms():
     Selects a recommendation algorithm.
     """
     st.sidebar.markdown("""---""")
-    st.sidebar.markdown('**Recommendation Systems selection**')
-
     # Selecting recommendation systems to evaluate:
     recommender_name_list = []
-    # Basic Recommenders:
-    basic_recommender_name = st.sidebar.multiselect(label='Basic Recommenders:', options=config.BASIC_RS, default=config.BASIC_RS[0])
-    recommender_name_list.extend(basic_recommender_name)
-    # Collaborative Filtering Recommenders:
-    cf_recommender_name = st.sidebar.multiselect(label='Collaborative Filtering Recommenders:', options=config.CF_RS, default=config.CF_RS[0])
-    recommender_name_list.extend(cf_recommender_name)
-    # Content-Based Recommenders:
-    cb_recommender_type = st.sidebar.multiselect(label='Content-Based Recommenders:', options=config.CB_RS, default=config.CB_RS[0])
-    # recommender_name_list.extend(cb_recommender_type)
+    with st.sidebar.expander(label='**Recommender selection**'):      
+        # Basic Recommenders:
+        basic_recommender_name = st.multiselect(label='Basic Recommenders:', options=config.BASIC_RS, default=config.BASIC_RS[0])
+        recommender_name_list.extend(basic_recommender_name)
+        # Collaborative Filtering Recommenders:
+        cf_recommender_name = st.multiselect(label='Collaborative Filtering Recommenders:', options=config.CF_RS, default=config.CF_RS[0])
+        recommender_name_list.extend(cf_recommender_name)
+        # Content-Based Recommenders:
+        cb_recommender_type = st.multiselect(label='Content-Based Recommenders:', options=config.CB_RS, default=config.CB_RS[0])
+        # recommender_name_list.extend(cb_recommender_type)        
     # Help information:
-    help_information.help_rs_algoritms(recommender_name_list)  
-    # st.sidebar.markdown("""---""")  
-
+    help_information.help_rs_algoritms(recommender_name_list)       
     # Parameter settings:
     recommender_list = []
     for rs_algorithm in recommender_name_list:                                          
         rs_parameters_map = select_rs_parameters_map(rs_algorithm)                        
         recommender_instance = surprise_helpers.create_algorithm(rs_algorithm, rs_parameters_map)
         recommender_list.append(recommender_instance)
-    print(f'The recommendation algorithm {recommender_name_list} have been selected.')
-    st.sidebar.markdown("""---""")    
+    print(f'The recommendation algorithm {recommender_name_list} have been selected.')    
     return recommender_list
     
 def select_rs_parameters_map(recommendation_algorithm):
@@ -77,138 +73,120 @@ def select_rs_parameters_map(recommendation_algorithm):
     :param recommendation_algorithm: A recommendation algorithm.
     :return: A dictionary with parameter values.
     """
-    ## Basic algorithms:
-    # NormalPredictor: Algorithm predicting a random rating based on the distribution of the training set, which is assumed to be normal.
-    if recommendation_algorithm == "NormalPredictor":
-        return {}
-    # BaselineOnly: Algorithm predicting the baseline estimate for given user and item.    
-    if recommendation_algorithm == "BaselineOnly":
-        st.sidebar.markdown(""" -------""")
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')
-        return {"bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_baselineonly'),
-                                "reg_i": st.sidebar.number_input("Regularization parameter for items", min_value=1, max_value=100, value=10, key='reg_i_baselineonly'),
-                                "reg_u": st.sidebar.number_input("Regularization parameter for users", min_value=1, max_value=100, value=15, key='reg_u_baselineonly'),
-                                "n_epochs": st.sidebar.number_input("Number of epochs for optimization algorithms (ALS or SGD)", min_value=10, max_value=100, value=10, key='n_epochs_baselineonly'),
-                                "learning_rate": st.sidebar.number_input("Controls the step size during the SGD optimization process", min_value=0.0, max_value=0.1, value=0.005, step=0.01, key='learning_rate_baselineonly')}}
-    
-    ## KNN-based CF algorithms:
-    # KNNBasic: A basic collaborative filtering algorithm derived from a basic nearest neighbors approach.
-    if recommendation_algorithm == "KNNBasic":   
-        st.sidebar.markdown(""" -------""")     
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')
-        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbasic'),
-                "min_k": st.sidebar.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnbasic'),
-                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnbasic'),
-                                "user_based": st.sidebar.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnbasic'),
-                                "min_support": st.sidebar.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnbasic')}}
-    # KNNBaseline: A basic collaborative filtering algorithm taking into account a baseline rating.
-    if recommendation_algorithm == "KNNBaseline":  
-        st.sidebar.markdown(""" -------""")      
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')
-        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbaseline'),
-                "min_k": st.sidebar.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnbaseline'),
-                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnbaseline'),
-                                "user_based": st.sidebar.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnbaseline')},
-                "bsl_options": {"method": st.sidebar.selectbox("Baseline method", ["als", "sgd"], key='method_knnbaseline'),
-                                "reg_i": st.sidebar.number_input("Regularization parameter for items", min_value=1, max_value=100, value=10, key='reg_i_knnbaseline'),
-                                "reg_u": st.sidebar.number_input("Regularization parameter for users", min_value=1, max_value=100, value=15, key='reg_u_knnbaseline'),
-                                "n_epochs": st.sidebar.number_input("Number of epochs for optimization algorithms (ALS or SGD)", min_value=10, max_value=100, value=10, key='n_epochs_knnbaseline'),
-                                "learning_rate": st.sidebar.number_input("Controls the step size during the SGD optimization process", min_value=0.0, max_value=0.1, value=0.005, step=0.01, key='learning_rate_knnbaseline')}}
-    # KNNWithMeans: A basic collaborative filtering algorithm, taking into account the mean ratings of each user.
-    if recommendation_algorithm == "KNNWithMeans":    
-        st.sidebar.markdown(""" -------""")    
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')
-        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithmeans'),
-                "min_k": st.sidebar.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnwithmeans'),
-                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnwithmeans'),
-                                "user_based": st.sidebar.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnwithmeans'),
-                                "min_support": st.sidebar.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnwithmeans')}}
-    # KNNWithZScore: A basic collaborative filtering algorithm, taking into account the z-score normalization of each user.
-    if recommendation_algorithm == "KNNWithZScore":
-        st.sidebar.markdown(""" -------""")
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')
-        return {"k": st.sidebar.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithzscore'),
-                "min_k": st.sidebar.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnwithzscore'),
-                "sim_options": {"name": st.sidebar.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnwithzscore'),
-                                "user_based": st.sidebar.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnwithzscore'),
-                                "min_support": st.sidebar.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnwithzscore')}}
-    
-    # Matrix factorization-based CF algorithms:    
-    # SVD (Singular Value Decomposition): The famous SVD algorithm, as popularized by Simon Funk <https://sifter.org/~simon/journal/20061211.html>:
-    if recommendation_algorithm == "SVD":
-        st.sidebar.markdown(""" -------""")
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')          
-        return {"n_factors": st.sidebar.number_input("Number of latent factors to use in the matrix factorization", min_value=1, max_value=1000, value=20, key='n_factors_svd'),
-                "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svd'),
-                "lr_all": st.sidebar.number_input("Learning rate used for SGD optimization", min_value=0.0, max_value=0.1, value=0.007, step=0.01, key='lr_all_svd'),
-                "reg_all": st.sidebar.number_input("Regularization term for all parameters (it helps prevent overfitting by penalizing large parameter values)", min_value=0.0, max_value=0.1, value=0.02, step=0.01, key='reg_all_svd'),    
-                "biased": st.sidebar.checkbox("Whether to use baselines (or biases)", value=True, key='biased_svd'),    
-                "init_mean": st.sidebar.number_input("The mean of the normal distribution for factor vectors initialization", value=0, key='init_mean_svd'),
-                "init_std_dev": st.sidebar.number_input("The standard deviation of the normal distribution for factor vectors initialization", value=0.1, key='init_std_dev_svd')}
-    # SVDpp: The SVD++ algorithm, an extension of :class:SVD taking into account implicit ratings.
-    if recommendation_algorithm == "SVDpp":
-        st.sidebar.markdown(""" -------""")
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')          
-        return {"n_factors": st.sidebar.number_input("Number of latent factors to use in the matrix factorization", min_value=1, max_value=1000, value=20, key='n_factors_svdpp'),
-                "n_epochs": st.sidebar.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svdpp'),
-                "lr_all": st.sidebar.number_input("Learning rate used for SGD optimization", min_value=0.0, max_value=0.1, value=0.007, step=0.01, key='lr_all_svdpp'),
-                "reg_all": st.sidebar.number_input("Regularization term for all parameters (it helps prevent overfitting by penalizing large parameter values)", min_value=0.0, max_value=0.1, value=0.02, step=0.01, key='reg_all_svdpp'),
-                "init_mean": st.sidebar.number_input("The mean of the normal distribution for factor vectors initialization", value=0, key='init_mean_svdpp'),
-                "init_std_dev": st.sidebar.number_input("The standard deviation of the normal distribution for factor vectors initialization", value=0.1, key='init_std_dev_svdpp')}
-    # NMF (Non-Negative Matrix Factorization):     
-    if recommendation_algorithm == "NMF":
-        st.sidebar.markdown(""" -------""")     
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')          
-        return {"n_factors": st.sidebar.number_input("Number of latent factors to use in the matrix factorization", min_value=1, max_value=1000, value=15, key='n_factors_nmf'),
-                "n_epochs": st.sidebar.number_input("Number of epochs of the SGD procedure", min_value=20, max_value=100, value=50, key='n_epochs_nmf'),
-                "biased": st.sidebar.checkbox("Whether to use baselines (or biases)", value=False, key='biased_nmf'),
-                "reg_pu": st.sidebar.number_input("Regularization term for user factors", min_value=0.0, max_value=0.1, value=0.06, key='reg_pu_nmf'),
-                "reg_qi": st.sidebar.number_input("Regularization term for item factors", min_value=0.0, max_value=0.1, value=0.06, key='reg_qi_nmf'),
-                "reg_bu": st.sidebar.number_input("Regularization term for bu. Only relevant for biased version.", min_value=0.0, max_value=0.1, value=0.02, key='reg_bu_nmf'),
-                "reg_bi": st.sidebar.number_input("Regularization term for bi. Only relevant for biased version.", min_value=0.0, max_value=0.1, value=0.02, key='reg_bi_nmf'),
-                "lr_bu": st.sidebar.number_input("The learning rate for bu. Only relevant for biased version.", min_value=0.0, max_value=0.01, value=0.005, key='lr_bu_nmf'),
-                "lr_bi": st.sidebar.number_input("The learning rate for bi. Only relevant for biased version.", min_value=-0.0, max_value=0.01, value=0.005, key='lr_bi_nmf'),
-                "init_low": st.sidebar.number_input("Lower bound for random initialization of factors. Must be greater than 0 to ensure non-negative factors.", min_value=-0.1, max_value=0.0, value=0.0, key='init_low_nmf'),
-                "init_high": st.sidebar.number_input("Higher bound for random initialization of factors.", min_value=0.0, max_value=1.0, value=1.0, key='init_high_nmf')}
-    
-    # Clustering-based CF algorithms:  
-    # Co-clustering: A collaborative filtering algorithm based on co-clustering.
-    if recommendation_algorithm == "CoClustering":
-        st.sidebar.markdown(""" -------""")     
-        st.sidebar.markdown(f'**{recommendation_algorithm} parameter settings:**')          
-        return {"n_cltr_u": st.sidebar.number_input("Number of user clusters", min_value=1, max_value=1000, value=3, key='n_cltr_u_coclustering'),
-                "n_cltr_i": st.sidebar.number_input("Number of item clusters", min_value=1, max_value=1000, value=3, key='n_cltr_i_coclustering'),
-                "n_epochs": st.sidebar.number_input("Number of iteration of the optimization loop", min_value=1, max_value=1000, value=20, key='n_epochs_coclustering')}
-    # SlopeOne:    
-    if recommendation_algorithm == "SlopeOne":
-        return {}
+    with st.sidebar.expander(label=f'**{recommendation_algorithm} settings**'):      
+        ## Basic algorithms:
+        # NormalPredictor: Algorithm predicting a random rating based on the distribution of the training set, which is assumed to be normal.
+        if recommendation_algorithm == "NormalPredictor":
+            return {}
+        # BaselineOnly: Algorithm predicting the baseline estimate for given user and item.    
+        if recommendation_algorithm == "BaselineOnly":
+            return {"bsl_options": {"method": st.selectbox("Baseline method", ["als", "sgd"], key='method_baselineonly'),
+                                    "reg_i": st.number_input("Regularization parameter for items", min_value=1, max_value=100, value=10, key='reg_i_baselineonly'),
+                                    "reg_u": st.number_input("Regularization parameter for users", min_value=1, max_value=100, value=15, key='reg_u_baselineonly'),
+                                    "n_epochs": st.number_input("Number of epochs for optimization algorithms (ALS or SGD)", min_value=10, max_value=100, value=10, key='n_epochs_baselineonly'),
+                                    "learning_rate": st.number_input("Controls the step size during the SGD optimization process", min_value=0.0, max_value=0.1, value=0.005, step=0.01, key='learning_rate_baselineonly')}}
+        
+        ## KNN-based CF algorithms:
+        # KNNBasic: A basic collaborative filtering algorithm derived from a basic nearest neighbors approach.
+        if recommendation_algorithm == "KNNBasic":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbasic'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnbasic'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnbasic'),
+                                    "user_based": st.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnbasic'),
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnbasic')}}
+        # KNNBaseline: A basic collaborative filtering algorithm taking into account a baseline rating.
+        if recommendation_algorithm == "KNNBaseline":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbaseline'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnbaseline'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnbaseline'),
+                                    "user_based": st.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnbaseline')},
+                    "bsl_options": {"method": st.selectbox("Baseline method", ["als", "sgd"], key='method_knnbaseline'),
+                                    "reg_i": st.number_input("Regularization parameter for items", min_value=1, max_value=100, value=10, key='reg_i_knnbaseline'),
+                                    "reg_u": st.number_input("Regularization parameter for users", min_value=1, max_value=100, value=15, key='reg_u_knnbaseline'),
+                                    "n_epochs": st.number_input("Number of epochs for optimization algorithms (ALS or SGD)", min_value=10, max_value=100, value=10, key='n_epochs_knnbaseline'),
+                                    "learning_rate": st.number_input("Controls the step size during the SGD optimization process", min_value=0.0, max_value=0.1, value=0.005, step=0.01, key='learning_rate_knnbaseline')}}
+        # KNNWithMeans: A basic collaborative filtering algorithm, taking into account the mean ratings of each user.
+        if recommendation_algorithm == "KNNWithMeans":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithmeans'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnwithmeans'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnwithmeans'),
+                                    "user_based": st.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnwithmeans'),
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnwithmeans')}}
+        # KNNWithZScore: A basic collaborative filtering algorithm, taking into account the z-score normalization of each user.
+        if recommendation_algorithm == "KNNWithZScore":            
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithzscore'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnwithzscore'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnwithzscore'),
+                                    "user_based": st.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnwithzscore'),
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnwithzscore')}}
+        
+        # Matrix factorization-based CF algorithms:    
+        # SVD (Singular Value Decomposition): The famous SVD algorithm, as popularized by Simon Funk <https://sifter.org/~simon/journal/20061211.html>:
+        if recommendation_algorithm == "SVD":                    
+            return {"n_factors": st.number_input("Number of latent factors to use in the matrix factorization", min_value=1, max_value=1000, value=20, key='n_factors_svd'),
+                    "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svd'),
+                    "lr_all": st.number_input("Learning rate used for SGD optimization", min_value=0.0, max_value=0.1, value=0.007, step=0.01, key='lr_all_svd'),
+                    "reg_all": st.number_input("Regularization term for all parameters (it helps prevent overfitting by penalizing large parameter values)", min_value=0.0, max_value=0.1, value=0.02, step=0.01, key='reg_all_svd'),    
+                    "biased": st.checkbox("Whether to use baselines (or biases)", value=True, key='biased_svd'),    
+                    "init_mean": st.number_input("The mean of the normal distribution for factor vectors initialization", value=0, key='init_mean_svd'),
+                    "init_std_dev": st.number_input("The standard deviation of the normal distribution for factor vectors initialization", value=0.1, key='init_std_dev_svd')}
+        # SVDpp: The SVD++ algorithm, an extension of :class:SVD taking into account implicit ratings.
+        if recommendation_algorithm == "SVDpp":                   
+            return {"n_factors": st.number_input("Number of latent factors to use in the matrix factorization", min_value=1, max_value=1000, value=20, key='n_factors_svdpp'),
+                    "n_epochs": st.number_input("Number of epochs", min_value=1, max_value=1000, value=20, key='n_epochs_svdpp'),
+                    "lr_all": st.number_input("Learning rate used for SGD optimization", min_value=0.0, max_value=0.1, value=0.007, step=0.01, key='lr_all_svdpp'),
+                    "reg_all": st.number_input("Regularization term for all parameters (it helps prevent overfitting by penalizing large parameter values)", min_value=0.0, max_value=0.1, value=0.02, step=0.01, key='reg_all_svdpp'),
+                    "init_mean": st.number_input("The mean of the normal distribution for factor vectors initialization", value=0, key='init_mean_svdpp'),
+                    "init_std_dev": st.number_input("The standard deviation of the normal distribution for factor vectors initialization", value=0.1, key='init_std_dev_svdpp')}
+        # NMF (Non-Negative Matrix Factorization):     
+        if recommendation_algorithm == "NMF":                 
+            return {"n_factors": st.number_input("Number of latent factors to use in the matrix factorization", min_value=1, max_value=1000, value=15, key='n_factors_nmf'),
+                    "n_epochs": st.number_input("Number of epochs of the SGD procedure", min_value=20, max_value=100, value=50, key='n_epochs_nmf'),
+                    "biased": st.checkbox("Whether to use baselines (or biases)", value=False, key='biased_nmf'),
+                    "reg_pu": st.number_input("Regularization term for user factors", min_value=0.0, max_value=0.1, value=0.06, key='reg_pu_nmf'),
+                    "reg_qi": st.number_input("Regularization term for item factors", min_value=0.0, max_value=0.1, value=0.06, key='reg_qi_nmf'),
+                    "reg_bu": st.number_input("Regularization term for bu. Only relevant for biased version.", min_value=0.0, max_value=0.1, value=0.02, key='reg_bu_nmf'),
+                    "reg_bi": st.number_input("Regularization term for bi. Only relevant for biased version.", min_value=0.0, max_value=0.1, value=0.02, key='reg_bi_nmf'),
+                    "lr_bu": st.number_input("The learning rate for bu. Only relevant for biased version.", min_value=0.0, max_value=0.01, value=0.005, key='lr_bu_nmf'),
+                    "lr_bi": st.number_input("The learning rate for bi. Only relevant for biased version.", min_value=-0.0, max_value=0.01, value=0.005, key='lr_bi_nmf'),
+                    "init_low": st.number_input("Lower bound for random initialization of factors. Must be greater than 0 to ensure non-negative factors.", min_value=-0.1, max_value=0.0, value=0.0, key='init_low_nmf'),
+                    "init_high": st.number_input("Higher bound for random initialization of factors.", min_value=0.0, max_value=1.0, value=1.0, key='init_high_nmf')}
+        
+        # Clustering-based CF algorithms:  
+        # Co-clustering: A collaborative filtering algorithm based on co-clustering.
+        if recommendation_algorithm == "CoClustering":            
+            return {"n_cltr_u": st.number_input("Number of user clusters", min_value=1, max_value=1000, value=3, key='n_cltr_u_coclustering'),
+                    "n_cltr_i": st.number_input("Number of item clusters", min_value=1, max_value=1000, value=3, key='n_cltr_i_coclustering'),
+                    "n_epochs": st.number_input("Number of iteration of the optimization loop", min_value=1, max_value=1000, value=20, key='n_epochs_coclustering')}
+        # SlopeOne:    
+        if recommendation_algorithm == "SlopeOne":
+            return {}
 
 def select_split_strategy():
     """
     Selects split strategies (ShuffleSplit, KFold or LeaveOneOut) to evaluate recommendation algorithm.
     :return: A dictionary with parameter values.
     """    
-    st.sidebar.markdown('**Split strategy selection**')
-    split_strategy = st.sidebar.selectbox(label="Select a strategy", options=config.CROSS_VALIDATION_STRATEGIES) 
-    split_strategy_parameter_dict = {}
-    if split_strategy == "KFold":
-        st.sidebar.markdown("""A basic cross-validation iterator. Each fold is used once as a testset while the k - 1 remaining folds are used for training.""")
-        split_strategy_parameter_dict = {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
-                "shuffle": st.sidebar.checkbox("Shuffle?")}
-    elif split_strategy == "RepeatedKFold":
-        st.sidebar.markdown("""Repeats KFold n times with different randomization in each repetition.""")
-        split_strategy_parameter_dict = {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
-                                         "n_repeats": st.sidebar.number_input("Number of repeats", min_value=1, max_value=10, value=1)}
-    elif split_strategy == "ShuffleSplit":
-        st.sidebar.markdown("""A basic cross-validation iterator with random trainsets and testsets. Contrary to other cross-validation strategies, random splits do not guarantee that all folds will be different, although this is still very likely for sizeable datasets.""")
-        split_strategy_parameter_dict = {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
-                                         "test_size": st.sidebar.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
-                                         "shuffle": st.sidebar.checkbox("Shuffle?")}
-    elif split_strategy == "LeaveOneOut":
-        st.sidebar.markdown("""Cross-validation iterator where each user has exactly one rating in the testset. Contrary to other cross-validation strategies, LeaveOneOut does not guarantee that all folds will be different, although this is still very likely for sizeable datasets.""")
-        split_strategy_parameter_dict = {"n_splits": st.sidebar.number_input("Number of folds", min_value=2, max_value=10, value=5),
-                                         "min_n_ratings": st.sidebar.number_input("Minimum number of ratings for each user (trainset)", min_value=0, max_value=10000, value=0)}
-    st.sidebar.markdown("""---""")
+    with st.sidebar.expander(label=f'**Split strategy selection**'):          
+        split_strategy = st.selectbox(label="Select a strategy", options=config.CROSS_VALIDATION_STRATEGIES) 
+        split_strategy_parameter_dict = {}
+        if split_strategy == "KFold":
+            st.markdown("""A basic cross-validation iterator. Each fold is used once as a testset while the k - 1 remaining folds are used for training.""")
+            split_strategy_parameter_dict = {"n_splits": st.number_input("Number of folds", min_value=2, max_value=10, value=5),
+                    "shuffle": st.checkbox("Shuffle?")}
+        elif split_strategy == "RepeatedKFold":
+            st.markdown("""Repeats KFold n times with different randomization in each repetition.""")
+            split_strategy_parameter_dict = {"n_splits": st.number_input("Number of folds", min_value=2, max_value=10, value=5),
+                                            "n_repeats": st.number_input("Number of repeats", min_value=1, max_value=10, value=1)}
+        elif split_strategy == "ShuffleSplit":
+            st.markdown("""A basic cross-validation iterator with random trainsets and testsets. Contrary to other cross-validation strategies, random splits do not guarantee that all folds will be different, although this is still very likely for sizeable datasets.""")
+            split_strategy_parameter_dict = {"n_splits": st.number_input("Number of folds", min_value=2, max_value=10, value=5),
+                                            "test_size": st.number_input("Test size", min_value=0.1, max_value=0.9, step=0.1, value=0.2),
+                                            "shuffle": st.checkbox("Shuffle?")}
+        elif split_strategy == "LeaveOneOut":
+            st.markdown("""Cross-validation iterator where each user has exactly one rating in the testset. Contrary to other cross-validation strategies, LeaveOneOut does not guarantee that all folds will be different, although this is still very likely for sizeable datasets.""")
+            split_strategy_parameter_dict = {"n_splits": st.number_input("Number of folds", min_value=2, max_value=10, value=5),
+                                            "min_n_ratings": st.number_input("Minimum number of ratings for each user (trainset)", min_value=0, max_value=10000, value=0)}    
     return split_strategy, split_strategy_parameter_dict
 
 def select_evaluation_metric(rating_df):
@@ -216,12 +194,12 @@ def select_evaluation_metric(rating_df):
     Selects evaluation metrics.
     :return: A list with the evaluation metrics.
     """ 
-    st.sidebar.markdown('**Metrics selection**')
-    cast_rating = CastRating(rating_df)              
-    if cast_rating.is_binary_rating():
-        metric_list = st.sidebar.multiselect(label="Select one or more binary metrics", options=config.BINARY_RATING_METRICS, default=config.DEFAULT_BINARY_RATING_METRICS)
-    else:
-        metric_list = st.sidebar.multiselect(label="Select one or more non-binary metrics", options=config.PREFERENCIAL_RATING_METRICS, default=config.DEFAULT_PREFERENCIAL_RATING_METRICS)
+    with st.sidebar.expander(label=f'**Metrics selection**'):    
+        cast_rating = CastRating(rating_df)              
+        if cast_rating.is_binary_rating():
+            metric_list = st.multiselect(label="Select one or more binary metrics", options=config.BINARY_RATING_METRICS, default=config.DEFAULT_BINARY_RATING_METRICS)
+        else:
+            metric_list = st.multiselect(label="Select one or more non-binary metrics", options=config.PREFERENCIAL_RATING_METRICS, default=config.DEFAULT_PREFERENCIAL_RATING_METRICS)
     return metric_list
 
 def evaluate(surprise_data, recommender_list, split_strategy_instance, metric_list):

@@ -68,8 +68,7 @@ class IncreaseRating(GenerateRating):
         # Generating N ratings for the current user:
         for _ in range(number_rating):
             # Selecting a randomly user id:
-            user_id = random.choice(user_id_list)
-            print(f'User selected: {user_id}')
+            user_id = random.choice(user_id_list)            
             # Getting items not seen by user_id:          
             items_not_seen_list = self.get_items_not_seen_from_user(user_id)            
             new_instance = self.generate_new_instance(user_id, items_not_seen_list, percentage_rating_variation, k)

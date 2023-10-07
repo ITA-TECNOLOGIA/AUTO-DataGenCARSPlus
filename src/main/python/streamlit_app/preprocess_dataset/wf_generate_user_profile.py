@@ -10,7 +10,7 @@ from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
 
-def generate(with_context, null_values_i, null_values_c, only_automatic=False):
+def generate(with_context, only_automatic=False):
     """
     Generates the user profile.
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -19,7 +19,7 @@ def generate(with_context, null_values_i, null_values_c, only_automatic=False):
     st.header('Workflow: Generate user profile')
     # Help information:
     help_information.help_user_profile_wf()
-    # Worflow image:    
+    # Worflow image:
     optional_value_list = [('NULLValues', str(True)), ('NULLValuesC', str(True)), ('NULLValuesI', str(True)), ('UPManual', 'True'), ('UPAutomatic', 'True')]
     workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='True', with_context=True, optional_value_list=optional_value_list)
     st.markdown("""---""")
@@ -41,16 +41,20 @@ def generate(with_context, null_values_i, null_values_c, only_automatic=False):
     relevant_item_attribute_list = set_attribute_list(file_type=config.ITEM_TYPE, attribute_list=all_item_attribute_list)
     # Choosing user profile generation options (manual or automatic):
     if only_automatic:
-        up_options = st.selectbox(label='Choose an option to generate the user profile:', options=['automatic'])
+        up_options = st.selectbox(label='Choose an option to generate the user profile:', options=['Automatic'])
     else:
         up_options = st.selectbox(label='Choose an option to generate the user profile:', options=config.UP_OPTIONS)
     # Automatic generation of the user profile:
     user_profile_df = pd.DataFrame()
+    if 'replace_context' not in st.session_state:
+        st.session_state['replace_context'] = False
+    if 'replace_item' not in st.session_state:
+        st.session_state['replace_item'] = False
     if up_options == 'Automatic':
         # Help information:
         help_information.help_user_profile_automatic()
         # Showing the current image of the WF:
-        optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'False'), ('UPAutomatic', 'True')]
+        optional_value_list = [('NULLValues', str(st.session_state['replace_context'] or st.session_state['replace_item'])), ('NULLValuesC', str(st.session_state['replace_context'])), ('NULLValuesI', str(st.session_state['replace_item'])), ('UPManual', 'False'), ('UPAutomatic', 'True')]                
         workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=optional_value_list)
     
         # Generating user profiles:
@@ -70,7 +74,7 @@ def generate(with_context, null_values_i, null_values_c, only_automatic=False):
             # Help information:
             help_information.help_user_profile_manual()  
             # Showing the current image of the WF:
-            optional_value_list = [('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item)), ('UPManual', 'True'), ('UPAutomatic', 'False')]
+            optional_value_list = [('NULLValues', str(st.session_state['replace_context'] or st.session_state['replace_item'])), ('NULLValuesC', str(st.session_state['replace_context'])), ('NULLValuesI', str(st.session_state['replace_item'])), ('UPManual', 'True'), ('UPAutomatic', 'False')]            
             workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=optional_value_list) 
 
             # Getting the number of user profiles to be generated:
@@ -232,7 +236,7 @@ def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, con
                 st.warning("The item, context and rating files have not been uploaded.")
         else:
             # Without context:            
-            if (not item_df.empty) and (not rating_df.empty): 
+            if (not item_df.empty) and (not rating_df.empty):
                 if st.button(label='Generate', key='button_generate_up_rs'):
                     print('Automatically generating user profiles.')                    
                     generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df)

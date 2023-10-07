@@ -7,7 +7,7 @@ from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
 
-def generate(with_context, null_values_i, null_values_c=None):
+def generate(with_context):
     """
     Recalculate ratings from an dataset, considering other desired user profiles.            
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -33,7 +33,11 @@ def generate(with_context, null_values_i, null_values_c=None):
     # Showing the current image of the WF:
     st.markdown("""---""")
     st.write('Shows the applied workflow image:')
-    workflow_image.show_wf(wf_name='RecalculateRatings', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item))])
+    if 'replace_context' not in st.session_state:
+        st.session_state['replace_context'] = False
+    if 'replace_item' not in st.session_state:
+        st.session_state['replace_item'] = False
+    workflow_image.show_wf(wf_name='RecalculateRatings', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(st.session_state['replace_context'] or st.session_state['replace_item'])), ('NULLValuesC', str(st.session_state['replace_context'])), ('NULLValuesI', str(st.session_state['replace_item']))])
 
     # Recalculating dataset:
     output = st.empty()

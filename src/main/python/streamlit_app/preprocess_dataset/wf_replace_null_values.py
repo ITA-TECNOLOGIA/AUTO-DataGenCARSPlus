@@ -22,6 +22,7 @@ def generate(with_context, tab_replace_null_values_item, tab_replace_null_values
     """
     new_item_df = pd.DataFrame()
     new_context_df = pd.DataFrame()
+    null_values_i = null_values_c = False
     if with_context:
         # Replacing NULL values in context.csv:
         with tab_replace_null_values_context:
@@ -41,18 +42,21 @@ def generate_item(with_context):
     # Help information:
     help_information.help_replace_nulls_wf()
     # Showing the initial image of the WF:
-    workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="True", with_context="True", optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
+    if with_context:
+        workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="True", with_context="True", optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
+    else:
+        workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context="False", optional_value_list=[('NULLValuesI', str(True))])
     st.markdown("""---""")
     
     # Showing progress messages in console:
     output = st.empty()  
     with console.st_log(output.code):
         # Replacing NULL values in item.csv:
-        st.session_state.replace_item=False     
+        st.session_state['replace_item']=False
         replace_null_item = st.checkbox(f"Do you want to replace the null values in {config.ITEM_TYPE}.csv file?", value=False)
         new_item_df = pd.DataFrame()
         if replace_null_item:   
-            st.session_state.replace_item=True         
+            st.session_state['replace_item']=True
             # Showing the WF image, by replacing null values in item.csv:
             workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(False)), ('NULLValuesI', str(True))])
             # Loading item.csv file:
@@ -86,10 +90,10 @@ def generate_context(with_context):
         # Showing progress messages in console:
         output = st.empty()  
         with console.st_log(output.code):
-            st.session_state.replace_context=False
+            st.session_state['replace_context']=False            
             replace_null_context = st.checkbox(f"Do you want to replace the null values in {config.CONTEXT_TYPE}.csv file?", value=False)                    
             if replace_null_context:  
-                st.session_state.replace_context=True              
+                st.session_state['replace_context']=True                              
                 # Showing the WF image, by replacing null values in context.csv:
                 workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(False))])            
                 # Loading context.csv file:        
@@ -102,7 +106,7 @@ def generate_context(with_context):
                 wf_util.save_file(file_name=config.CONTEXT_SCHEMA_NAME, file_value=context_schema, extension='conf')
                 # Replacing null values:
                 new_context_df = button_replace_null_values(schema_type=config.CONTEXT_TYPE, df=context_df, schema=context_schema)                   
-    return new_context_df  
+    return new_context_df
 
 def infer_data_type(attribute_value_list):
     """

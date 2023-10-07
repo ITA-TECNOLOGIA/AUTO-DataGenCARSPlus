@@ -7,7 +7,7 @@ from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
 
-def generate(with_context, null_values_i, null_values_c=None):
+def generate(with_context):
     """
     Extends an existing rating file.
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -33,14 +33,18 @@ def generate(with_context, null_values_i, null_values_c=None):
     # Showing the current image of the WF:
     st.markdown("""---""")
     st.write('Shows the applied workflow image:')
-    workflow_image.show_wf(wf_name='ExtendDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item))])
+    if 'replace_context' not in st.session_state:
+        st.session_state['replace_context'] = False
+    if 'replace_item' not in st.session_state:
+        st.session_state['replace_item'] = False
+    workflow_image.show_wf(wf_name='ExtendDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(st.session_state['replace_context'] or st.session_state['replace_item'])), ('NULLValuesC', str(st.session_state['replace_context'])), ('NULLValuesI', str(st.session_state['replace_item']))])
 
     # Extending dataset:
     output = st.empty()    
     number_rating = st.number_input(label='Enter the number of ratings to extend in the rating file:', min_value=1, step=1, value=1)
     percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
-    k = st.number_input(label='Enter the k ratings to take in the past:', min_value=1, step=1, value=10)    
-    option = st.selectbox(label='How would you like to extend the dataset?', options=['Select one option', 'N ratings for randomly selected users', 'N ratings by user'])
+    k = st.number_input(label='Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
+    option = st.selectbox(label='How would you like to extend the dataset?', options=['Select one option', 'N ratings randomly (some users)', 'N ratings for each user'])
     new_rating_df = pd.DataFrame()
     if with_context:
         new_rating_df = button_extend_dataset(with_context, rating_df, user_profile_df, item_df, number_rating, percentage_rating_variation, k, option, output, context_df)
@@ -58,7 +62,7 @@ def button_extend_dataset(with_context, rating_df, user_profile_df, item_df, num
     :param number_rating: The number of ratings to generate for each user.
     :param percentage_rating_variation: The percentage of rating variation.
     :param k: The k ratings to take in the past.
-    :param option: The option selected by user ('N ratings for randomly selected users' or 'N ratings by user').
+    :param option: The option selected by user ('N ratings randomly (some users)' or 'N ratings for each user').
     :param output: The console output.
     :param context_df: The context dataframe (it can be with or without NULL values).
     :return: The extended rating dataframe.
@@ -94,14 +98,14 @@ def extend_dataset(increase_constructor, number_rating, percentage_rating_variat
     :param increase_constructor: The object to extend the dataset.
     :param percentage_rating_variation: The percentage of rating variation.
     :param k: The k ratings to take in the past.
-    The option selected by user ('N ratings for randomly selected users' or 'N ratings by user').
+    The option selected by user ('N ratings randomly (some users)' or 'N ratings for each user').
     :return: The extended rating dataframe.
     """
     # Extending dataset:
     new_rating_df = pd.DataFrame()    
     extend_button = st.button(label='Extend', key='extend_dataset_random')
     # Increasing N ratings randomly:    
-    if option == 'N ratings for randomly selected users':
+    if option == 'N ratings randomly (some users)':
         if extend_button:       
             print('Extending the rating.csv file.')
             new_rating_df = increase_constructor.extend_rating_random(number_rating, percentage_rating_variation, k)
@@ -111,7 +115,7 @@ def extend_dataset(increase_constructor, number_rating, percentage_rating_variat
                 st.dataframe(new_rating_df)    
                 # Saving the replicated rating file:
                 wf_util.save_df(df_name='rating', df_value=new_rating_df, extension='csv')
-    elif option == 'N ratings by user':      
+    elif option == 'N ratings for each user':      
         if extend_button:  
             print('Extending the rating.csv file.')
             new_rating_df = increase_constructor.extend_rating_by_user(number_rating, percentage_rating_variation, k)            
