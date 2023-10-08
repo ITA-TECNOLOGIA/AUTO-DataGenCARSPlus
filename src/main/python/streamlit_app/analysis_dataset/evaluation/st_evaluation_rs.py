@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.graph_objs as go
 import streamlit as st
 from datagencars.evaluation.rs_surprise import evaluation, surprise_helpers
-from datagencars.existing_dataset.cast_rating.cast_rating import CastRating
+from datagencars.existing_dataset.transform_attributes.transform_rating import TransformRating
 from streamlit_app import config, help_information
 from streamlit_app.preprocess_dataset import wf_util
 
@@ -195,7 +195,7 @@ def select_evaluation_metric(rating_df):
     :return: A list with the evaluation metrics.
     """ 
     with st.sidebar.expander(label=f'**Metrics selection**'):    
-        cast_rating = CastRating(rating_df)              
+        cast_rating = TransformRating(rating_df)              
         if cast_rating.is_binary_rating():
             metric_list = st.multiselect(label="Select one or more binary metrics", options=config.BINARY_RATING_METRICS, default=config.DEFAULT_BINARY_RATING_METRICS)
         else:

@@ -8,13 +8,14 @@ from streamlit_app.analysis_dataset.visualization import st_visualization
 from streamlit_app.dashboard import user_behavior, user_register
 from streamlit_app.generate_synthetic_dataset import (wf_explicit_rating,
                                                       wf_implicit_rating)
-from streamlit_app.preprocess_dataset import (wf_cast_rating,
-                                              wf_data_converter,
+from streamlit_app.preprocess_dataset import (wf_transform_attributes,
                                               wf_extend_dataset,
                                               wf_generate_user_profile,
-                                              wf_recalculate_dataset,
+                                              wf_recalculate_ratings,
                                               wf_replace_null_values,
+                                              wf_generate_null_values,
                                               wf_replicate_dataset, wf_util)
+
 
 # Setting the main page:
 st.set_page_config(page_title=config.APP_TITLE,
@@ -61,8 +62,12 @@ elif general_option == 'Pre-process a dataset':
     # Selecting a workflow option:
     wf_option = st.sidebar.radio(label='Select a workflow:', options=config.WF_OPTIONS)
     
+    # WF --> Generate NULL values:
+    if wf_option == 'Generate NULL values':
+        wf_generate_null_values.generate(with_context)
+
     # WF --> Replace NULL values:
-    if wf_option == 'Replace NULL values':
+    elif wf_option == 'Replace NULL values':
         if with_context:
             # Setting tabs:
             tab_replace_null_values_item, tab_replace_null_values_context = st.tabs(['Replace NULL values (item.csv)', 'Replace NULL values (context.csv)'])            
@@ -147,18 +152,14 @@ elif general_option == 'Pre-process a dataset':
         # Apply WF: "Extend Dataset":
         with tab_extend_dataset:
             if with_context:
-                wf_recalculate_dataset.generate(with_context)
+                wf_recalculate_ratings.generate(with_context)
             else:
-                wf_recalculate_dataset.generate(with_context)
+                wf_recalculate_ratings.generate(with_context)
 
-    # WF --> Cast Rating (Binary to Preferencial / Preferencial to Binary):
-    elif wf_option == 'Cast ratings':
-        wf_cast_rating.generate()
-
-    # WF --> Data converter:
-    elif wf_option == 'Data converter':
-        wf_data_converter.generate(with_context)
-
+    # WF --> Transform attributes:
+    elif wf_option == 'Transform attributes':
+        wf_transform_attributes.generate(with_context)
+    
 ####### Analysis a dataset #######
 elif general_option == 'Analysis a dataset':    
     # Selecting a analysis option:

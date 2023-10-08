@@ -112,8 +112,7 @@ class GeneratorExplicitRatingFile:
         for user_index in range(1, number_user+1):            
             row_rating_list = []
             # Generating user_id:
-            user_id = user_id_list[user_index-1]
-            print('user_id: ', user_id)
+            user_id = user_id_list[user_index-1]            
             row_rating_list.append(user_id)            
             # Determining the initial timestamp for the current user:
             initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]     
@@ -331,8 +330,7 @@ class GeneratorExplicitRatingFile:
                 # Getting possible values of the current attribute:         
                 possible_value_list.append(self.item_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
             elif context_id:
-                # Getting values from context.csv
-                print(list(self.context_df.columns.values))
+                # Getting values from context.csv                
                 if attribute_name in list(self.context_df.columns.values):
                     attribute_value_list.append(self.context_df.loc[self.context_df['context_id'] == context_id, attribute_name].iloc[0])
                     # Getting possible values of the current attribute:
