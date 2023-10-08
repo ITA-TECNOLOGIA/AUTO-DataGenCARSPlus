@@ -35,10 +35,10 @@ def show_information(rating_df, with_context):
         show_rating_histogram(rating_df)
         # Showing the rating statistics:
         show_rating_statistics(with_context, rating_df)
-        # Showing number of items by user:
-        show_items_by_user(rating_df)   
+        # Showing number of ratings by user:
+        show_ratings_by_user(rating_df)   
         # Showing histogram of the number of ratings by user:
-        show_histogram_items_by_user(rating_df)
+        show_histogram_ratings_by_user(rating_df)
         # Showing statistics per user:
         st.header("Statistics per user")
         user_id_list = list(rating_df['user_id'].unique())                    
@@ -46,11 +46,11 @@ def show_information(rating_df, with_context):
         # Showing the evolution of a user's preferences or interests through time:
         show_user_preference_evolution(selected_user, rating_df)
         # Showing item statistics:
-        show_item_statistics_from_user(selected_user, extract_statistics)
+        # show_item_statistics_from_user(selected_user, extract_statistics)
         # Showing context statistics:
-        show_context_statistics_from_user(selected_user, extract_statistics, with_context)
+        # show_context_statistics_from_user(selected_user, extract_statistics, with_context)
         # Showing rating statistics:
-        show_rating_statistics_from_user(selected_user, extract_statistics)        
+        # show_rating_statistics_from_user(selected_user, extract_statistics)        
     else:
         st.warning(f"The rating file ({config.RATING_TYPE}.csv) has not been uploaded.")
 
@@ -119,34 +119,34 @@ def show_rating_statistics(with_context, rating_df):
         st.dataframe(rating_summary_df)        
     return rating_summary_df
 
-def show_items_by_user(rating_df):
+def show_ratings_by_user(rating_df):
     """
-    Shows the number of items by user.
+    Shows the number of ratings by user.
     :param rating_df: The rating dataframe.
-    :return: A dataframe with the information related to the number of items by user.
+    :return: A dataframe with the information related to the number of ratings by user.
     """
-    st.header("Number of items by user")
-    # Group data by user and count the number of items for each user
+    st.header("Number of ratings by user")
+    # Group data by user and count the number of ratings for each user
     user_item_count_df = rating_df.groupby('user_id')['item_id'].count().reset_index()    
-    user_item_count_df.columns = ['User', 'Number of items']
+    user_item_count_df.columns = ['User', 'Number of ratings']
     # Allow user to select sorting order
     sort_order = st.selectbox(label="Sort", options=["none", "asc", "desc"])
     # Sort the DataFrame based on user choice
     if sort_order == "asc":
-        user_item_count_df = user_item_count_df.sort_values(by='Number of items', ascending=True)
+        user_item_count_df = user_item_count_df.sort_values(by='Number of ratings', ascending=True)
     elif sort_order == "desc":
-        user_item_count_df = user_item_count_df.sort_values(by='Number of items', ascending=False)
+        user_item_count_df = user_item_count_df.sort_values(by='Number of ratings', ascending=False)
     # Create a bar chart using Altair
-    chart = alt.Chart(user_item_count_df).mark_bar().encode(x=alt.X('User:N', sort=None), y='Number of items:Q', tooltip=['User:N', 'Number of items:Q']).properties(width=600, height=400) # title=f'Histogram of the number of items rated by user', 
+    chart = alt.Chart(user_item_count_df).mark_bar().encode(x=alt.X('User:N', sort=None), y='Number of ratings:Q', tooltip=['User:N', 'Number of ratings:Q']).properties(width=600, height=400) # title=f'Histogram of the number of items rated by user', 
     # Display the chart in Streamlit
     st.altair_chart(chart, use_container_width=True)
     # Showing user_item_count_df:
-    with st.expander(label='Show a table with the number of items by user'):
+    with st.expander(label='Show a table with the number of ratings by user'):
         st.dataframe(user_item_count_df)
-        wf_util.save_df(df_name='number_items_by_user', df_value=user_item_count_df, extension='csv')
+        wf_util.save_df(df_name='number_ratings_by_user', df_value=user_item_count_df, extension='csv')
     return user_item_count_df
 
-def show_histogram_items_by_user(rating_df):
+def show_histogram_ratings_by_user(rating_df):
     """
     Display a histogram of the number of ratings by user.
     :param rating_df: DataFrame containing user ratings data.
@@ -164,7 +164,7 @@ def show_histogram_items_by_user(rating_df):
     # Display the histogram    
     fig, ax = plt.subplots()    
     ax.hist(sorted_value_counts['count'].values, bins=num_bins, density=True, alpha=0.6)
-    plt.xlabel('Number items by user')
+    plt.xlabel('Number ratings by user')
     plt.ylabel('Frequency')      
     st.pyplot(fig)
 
