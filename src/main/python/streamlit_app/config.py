@@ -40,7 +40,7 @@ BEHAVIOR_TYPE = 'behavior'
 EXAMPLE_ROOM_LIST = [{'id': 1, 'x_min': -51.69645309448242, 'x_max': 17.033428192138672, 'y_min': -8.163072506091242e-15, 'y_max': 5.32511043548584, 'z_min': -36.15760040283203, 'z_max': 33.79861068725586}]
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### Pre-process a dataset ####:
-WF_OPTIONS = ['Replace NULL values', 'Generate user profile', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Cast ratings', 'Data converter']
+WF_OPTIONS = ['Generate NULL values', 'Replace NULL values', 'Generate user profile', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Transform attributes']
 # WF --> Replace NULL values:
 IC_WF_REPLACE_NULL_VALUES=['item', 'context']
 I_WF_REPLACE_NULL_VALUES=['item']

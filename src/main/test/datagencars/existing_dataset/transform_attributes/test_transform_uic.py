@@ -3,10 +3,10 @@ import unittest
 
 import numpy as np
 import pandas as pd
-from datagencars.existing_dataset.data_converter.data_converter import DataConverter
+from datagencars.existing_dataset.transform_attributes.transform_uic import TransformUIC
 
 
-class TestCastRating(unittest.TestCase):
+class TestTransformUIC(unittest.TestCase):
 
     
     def setUp(self):
@@ -15,7 +15,7 @@ class TestCastRating(unittest.TestCase):
         user_df = pd.read_csv(user_file_path, encoding='utf-8', index_col=False, sep=';')
                
         # Dataset converting data generator:        
-        self.__generator = DataConverter(df=user_df)       
+        self.__generator = TransformUIC(df=user_df)       
     
     def tearDown(self):
         del self.__generator

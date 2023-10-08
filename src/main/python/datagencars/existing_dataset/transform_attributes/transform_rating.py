@@ -1,9 +1,9 @@
 import random
 
 
-class CastRating:
+class TransformRating:
     """
-    Processes and converts different types of ratings (binary or preferencial) in a DataFrame.
+    Processes and transforms rating values (preferencial to binary / binary to preferencial) in a DataFrame.
     INPUT:
         [R] rating.csv
     OUTPUT:

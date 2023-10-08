@@ -2,9 +2,9 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 
 
-class DataConverter:
+class TransformUIC:
     """
-    Converts data between numerical and categorical representations.
+    Transforms user, item and contexts attributes (categorical to numerical / numerical to categorical).
     """
 
     def __init__(self, df):

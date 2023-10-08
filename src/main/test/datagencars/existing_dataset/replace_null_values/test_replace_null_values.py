@@ -6,7 +6,7 @@ from datagencars.existing_dataset.replace_null_values.replace_null_values import
 from streamlit_app.preprocess_dataset import wf_replace_null_values
 
 
-class TestGeneratorSyntheticDataset(unittest.TestCase):
+class TestReplaceNullValues(unittest.TestCase):
 
     def setUp(self):        
         # item_df:
@@ -166,7 +166,7 @@ class TestGeneratorSyntheticDataset(unittest.TestCase):
         '''        
         schema = wf_replace_null_values.infer_schema(df=self.context_df, file_type='context')
         new_df = self.__replace_nulls_context.regenerate_context_file(context_schema=schema)
-        logging.info(f'new_item: {new_df}')
+        logging.info(f'new_context: {new_df}')
         self.assertEqual(new_df.isnull().any().any(), False)
 
 

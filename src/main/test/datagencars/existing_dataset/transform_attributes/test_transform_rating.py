@@ -2,10 +2,10 @@ import logging
 import unittest
 
 import pandas as pd
-from datagencars.existing_dataset.cast_rating.cast_rating import CastRating
+from datagencars.existing_dataset.transform_attributes.transform_rating import TransformRating
 
 
-class TestCastRating(unittest.TestCase):
+class TestTransformRating(unittest.TestCase):
 
     def setUp(self):
         # CARS:
@@ -29,10 +29,10 @@ class TestCastRating(unittest.TestCase):
         rating_df_binary_rs = pd.read_csv(rating_binary_rs_file_path, encoding='utf-8', index_col=False, sep=',')
        
         # Dataset casting generator:        
-        self.__generator_preferencial_cars = CastRating(rating_df=rating_df_preferencial_cars)
-        self.__generator_binary_cars = CastRating(rating_df=rating_df_binary_cars)
-        self.__generator_preferencial_rs = CastRating(rating_df=rating_df_preferencial_rs)
-        self.__generator_binary_rs = CastRating(rating_df=rating_df_binary_rs)
+        self.__generator_preferencial_cars = TransformRating(rating_df=rating_df_preferencial_cars)
+        self.__generator_binary_cars = TransformRating(rating_df=rating_df_binary_cars)
+        self.__generator_preferencial_rs = TransformRating(rating_df=rating_df_preferencial_rs)
+        self.__generator_binary_rs = TransformRating(rating_df=rating_df_binary_rs)
     
     def tearDown(self):
         del self.__generator_preferencial_cars
@@ -44,14 +44,14 @@ class TestCastRating(unittest.TestCase):
         threshold = 3 
         new_rating_df = self.__generator_preferencial_cars.rating_preferencial_to_binary(threshold)            
         logging.info(f'rating_file: {new_rating_df}')
-        generator = CastRating(rating_df=new_rating_df)
+        generator = TransformRating(rating_df=new_rating_df)
         self.assertEqual(generator.is_binary_rating(), True)
 
     def test_rating_preferencial_to_binary_rs(self):
         threshold = 3 
         new_rating_df = self.__generator_preferencial_rs.rating_preferencial_to_binary(threshold)
         logging.info(f'rating_file: {new_rating_df}')
-        generator = CastRating(rating_df=new_rating_df)
+        generator = TransformRating(rating_df=new_rating_df)
         self.assertEqual(generator.is_binary_rating(), True)
 
     def test_rating_binary_to_preferencial_cars(self):
@@ -59,7 +59,7 @@ class TestCastRating(unittest.TestCase):
         threshold = 3
         new_rating_df = self.__generator_binary_cars.rating_binary_to_preferencial(scale, threshold)        
         logging.info(f'rating_file: {new_rating_df}')
-        generator = CastRating(rating_df=new_rating_df)
+        generator = TransformRating(rating_df=new_rating_df)
         self.assertEqual(generator.is_preferencial_rating(), True)    
 
     def test_rating_binary_to_preferencial_rs(self):
@@ -67,7 +67,7 @@ class TestCastRating(unittest.TestCase):
         threshold = 3
         new_rating_df = self.__generator_binary_rs.rating_binary_to_preferencial(scale, threshold)
         logging.info(f'rating_file: {new_rating_df}')
-        generator = CastRating(rating_df=new_rating_df)
+        generator = TransformRating(rating_df=new_rating_df)
         self.assertEqual(generator.is_preferencial_rating(), True)
 
     def test_set_binary_rating_label_cars(self):

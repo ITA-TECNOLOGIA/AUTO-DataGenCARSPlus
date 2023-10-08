@@ -7,12 +7,10 @@ from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
 
-def generate(with_context, null_values_i, null_values_c=None):
+def generate(with_context):
     """
     Replicates an existing rating file.
-    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
-    :param null_values_i: It is True if the NULL values are replaced in the item.csv file, and False otherwise.
-    :param null_values_c: It is True if the NULL values are replaced in the context.csv file, and False otherwise.
+    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.    
     :return: The replicated rating dataframe.
     """
     # WF --> Replicate dataset:
@@ -25,7 +23,7 @@ def generate(with_context, null_values_i, null_values_c=None):
 
     # Loading dataset:
     st.write('Upload the following files: ')
-    if with_context:
+    if with_context:        
         __, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_replicate_dataset')
     else:
         __, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_replicate_dataset')   
@@ -33,7 +31,11 @@ def generate(with_context, null_values_i, null_values_c=None):
     # Showing the current image of the WF:
     st.markdown("""---""")
     st.write('Shows the applied workflow image:')
-    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(st.session_state.replace_context or st.session_state.replace_item)), ('NULLValuesC', str(st.session_state.replace_context)), ('NULLValuesI', str(st.session_state.replace_item))])
+    if 'replace_context' not in st.session_state:
+        st.session_state['replace_context'] = False
+    if 'replace_item' not in st.session_state:
+        st.session_state['replace_item'] = False
+    workflow_image.show_wf(wf_name='ReplicateDataset', init_step='False', with_context=with_context, optional_value_list=[('NULLValues', str(st.session_state['replace_context'] or st.session_state['replace_item'])), ('NULLValuesC', str(st.session_state['replace_context'])), ('NULLValuesI', str(st.session_state['replace_item']))])    
     
     # Replicating dataset:
     output = st.empty()

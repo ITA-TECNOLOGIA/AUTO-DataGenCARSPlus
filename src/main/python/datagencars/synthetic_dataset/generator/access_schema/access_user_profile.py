@@ -124,15 +124,3 @@ class AccessUserProfile():
 	    :return: The values of y for a straight line that goes through (x0,y0) and (x1,y1).
         '''
         return y0 + ((y1 - y0) / (x1 - x0)) * (x - x0)
-    
-
-# # rating_df:
-# user_profile_path = 'resources/data_schema/user_profile.csv'
-# user_profile_df = pd.read_csv(user_profile_path, encoding='utf-8', index_col=False, sep=',')
-
-# access = AccessUserProfile(user_profile_df)
-# # attribute_name_list, attribute_value_list = access.get_vector_from_user_profile(user_profile_id=1)
-# # print(attribute_name_list)
-# # print(attribute_value_list)
-# print(access.get_atribute_name_list_other())
-# print(access.get_atribute_name_list())

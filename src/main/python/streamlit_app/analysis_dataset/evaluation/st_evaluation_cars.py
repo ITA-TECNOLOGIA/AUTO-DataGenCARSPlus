@@ -18,8 +18,8 @@ def generate(rating_df):
             
             # SELECTING PARADIGM TO EVALUATE:
             st.sidebar.markdown("""---""")
-            st.sidebar.markdown('**CARS paradigm selection**')
-            paradigm = st.sidebar.selectbox(label="Select one paradigm:", options=config.PARDIGM_OTPIONS)
+            with st.sidebar.expander(label='**CARS paradigm selection**'):
+                paradigm = st.selectbox(label="Select one paradigm:", options=config.PARDIGM_OTPIONS)
             print(f'The paradigm ({paradigm}) has been selected.')
             st.header(f'Evaluation of CARS: {paradigm}')                
 

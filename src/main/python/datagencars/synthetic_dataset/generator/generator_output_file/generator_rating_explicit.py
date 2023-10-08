@@ -79,9 +79,7 @@ class GeneratorExplicitRatingFile:
         # Getting the number of ratings:
         number_ratings = self.access_generation_config.get_number_rating()
         print(f'Total of ratings to generate: {number_ratings}')
-        print(f'Generating ratings by user.')
-        # Determinig the number of rating by user:
-        number_rating_by_user = int(number_ratings/number_user)
+        print(f'Generating ratings by user.')        
 
         # Generating a timestamp list by day and in a range of years:
         minimum_date_ts = self.access_generation_config.get_minimum_date_timestamp()
@@ -101,34 +99,20 @@ class GeneratorExplicitRatingFile:
         
         # even_distribution=True: generating a similar count of ratings by user.
         if even_distribution:      
+            # Determinig the number of rating by user:
+            number_rating_by_user = int(number_ratings/number_user)
             ratings_by_user_list = [number_rating_by_user] * number_user
         else:
             # even_distribution=False: generating a random count of ratings by user.
             # Get the distribution type:
             distribution_type = self.access_generation_config.get_even_distribution_type()
-            mu = 100  # Average
-            sigma = 20  # Standard deviation                        
-            if distribution_type == 'uniform':
-                random_proportions = np.random.uniform(mu, sigma, number_user)                
-            elif distribution_type == 'gaussian':
-                random_proportions = np.random.normal(mu, sigma, number_user)
-            # Make sure the values are non-negative:
-            values_no_negativos = np.maximum(0, random_proportions)            
-            # Resize the values so that they add up to number_ratings
-            current_sum = np.sum(values_no_negativos)
-            resized_values = (values_no_negativos / current_sum) * number_ratings            
-            # Round values to get integers:
-            ratings_by_user_list = np.round(resized_values)            
-            # Make sure that the total sum is exactly number_ratings (there may be small differences due to rounding):
-            sum_total_real = np.sum(ratings_by_user_list)
-            difference = number_ratings - sum_total_real
-            ratings_by_user_list[-1] += difference                      
+            ratings_by_user_list, __, __ = self.get_number_of_ratings_by_user(number_user, number_ratings, distribution_type)                 
 
         # Iterating by user:
-        for user_index in range(1, number_user+1):
+        for user_index in range(1, number_user+1):            
             row_rating_list = []
             # Generating user_id:
-            user_id = user_id_list[user_index-1]
+            user_id = user_id_list[user_index-1]            
             row_rating_list.append(user_id)            
             # Determining the initial timestamp for the current user:
             initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]     
@@ -137,8 +121,8 @@ class GeneratorExplicitRatingFile:
                 initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]
             
             # Generating ratings for the current user:
-            user_rating_list = []          
-            number_rating_by_user = int(ratings_by_user_list[user_index-1])
+            user_rating_list = []                   
+            number_rating_by_user = int(ratings_by_user_list[user_index-1])            
             for _ in range(number_rating_by_user):
                 # Generating item_id:
                 item_id = random.choice(item_id_list)
@@ -148,7 +132,7 @@ class GeneratorExplicitRatingFile:
                     context_id = random.choice(context_id_list)
                     row_rating_list.append(context_id)
                 # Generating a rating for a specified user profile:                   
-                user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id, 'user_profile_id'].iloc[0]                
+                user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id, 'user_profile_id'].iloc[0]
                 if with_context:
                     rating = self.get_rating(user_profile_id, item_id, context_id)
                 else:
@@ -159,7 +143,7 @@ class GeneratorExplicitRatingFile:
                 row_rating_list.append(modified_rating)
                 # Generating timestamp:
                 timestamp = initial_timestamp+pd.Timedelta(days=random.randint(1, 30), minutes=random.randint(1, 1440))                
-                row_rating_list.append(timestamp)
+                row_rating_list.append(timestamp)                
                 # Inserting row into dataframe:                
                 rating_df.loc[len(rating_df.index)] = row_rating_list  
                 row_rating_list.clear()     
@@ -204,6 +188,80 @@ class GeneratorExplicitRatingFile:
         # Reseting index.
         rating_df.reset_index(drop=True, inplace=True)
         return rating_df
+    
+    def decrement_number_ratings_uniform(self, mi_lista, cantidad_a_decrementar):
+        posiciones_no_cero = [i for i, valor in enumerate(mi_lista) if valor != 0]        
+        if cantidad_a_decrementar > len(posiciones_no_cero):
+            cantidad_a_decrementar = len(posiciones_no_cero)  
+        indices_seleccionados = random.sample(posiciones_no_cero, cantidad_a_decrementar)        
+        for indice in indices_seleccionados:  
+            mi_lista[indice] -= 1
+        return mi_lista
+
+    def decrement_number_ratings_gaussian(self, mi_lista, cantidad_a_decrementar):
+        posiciones_no_cero = [i for i, valor in enumerate(mi_lista) if valor != 0]          
+        if cantidad_a_decrementar > len(posiciones_no_cero):
+            cantidad_a_decrementar = len(posiciones_no_cero)
+        centro = len(posiciones_no_cero) // 2  # Calcula el índice central de la lista
+        inicio = max(0, centro - cantidad_a_decrementar // 2)  # Calcula el índice de inicio para seleccionar elementos
+        fin = min(len(posiciones_no_cero), inicio + cantidad_a_decrementar)  # Calcula el índice de fin para seleccionar elementos
+        indices_seleccionados = posiciones_no_cero[inicio:fin]  # Selecciona los elementos alrededor del centro          
+        for indice in indices_seleccionados:  
+            mi_lista[indice] -= 1  
+        return mi_lista
+
+    def increment_number_ratings_uniform(self, mi_lista, cantidad_a_incrementar):    
+        if cantidad_a_incrementar > len(mi_lista):
+            cantidad_a_incrementar = len(mi_lista)
+        indices_seleccionados = random.sample(mi_lista, cantidad_a_incrementar)
+        for indice in indices_seleccionados:  
+            mi_lista[indice] += 1
+        return mi_lista
+
+    def increment_number_ratings_gaussian(self, mi_lista, cantidad_a_incrementar):  
+        if cantidad_a_incrementar > len(mi_lista):
+            cantidad_a_incrementar = len(mi_lista)  
+        posiciones_lista = [i for i, __ in enumerate(mi_lista)]        
+        centro = len(posiciones_lista) // 2  # Calcula el índice central de la lista
+        inicio = max(0, centro - cantidad_a_incrementar // 2)  # Calcula el índice de inicio para seleccionar elementos
+        fin = min(len(posiciones_lista), inicio + cantidad_a_incrementar)  # Calcula el índice de fin para seleccionar elementos
+        indices_seleccionados = posiciones_lista[inicio:fin]  # Selecciona los elementos alrededor del centro        
+        for indice in indices_seleccionados:  
+            mi_lista[indice] += 1
+        return mi_lista
+
+    def get_number_of_ratings_by_user(self, number_user, number_ratings, distribution_type):
+        # Define la media y la desviación estándar de la distribución gaussiana
+        mu = 50 # media
+        sigma = 10 # desviacion_estandar
+
+        # Genera una lista de 90 números aleatorios que sigan una distribución gaussiana
+        if distribution_type == 'uniform':
+            random_proportions = np.random.uniform(mu, sigma, number_user)                
+        elif distribution_type == 'gaussian':
+            random_proportions = np.random.normal(mu, sigma, number_user)        
+
+        # Normaliza la lista para que la suma sea igual a number_ratings
+        suma_total = sum(random_proportions)
+        numeros_normalizados = [int(round((x / suma_total) * number_ratings)) for x in random_proportions]        
+
+        # Asegúrate de que la suma de los valores asignados sea igual a number_ratings
+        diferencia = number_ratings - sum(numeros_normalizados)        
+        if diferencia > 0:
+            # Si la suma es menor que number_ratings, agrega la diferencia a uno de los valores
+            if distribution_type == 'uniform':
+                number_of_ratings_by_user = self.increment_number_ratings_uniform(numeros_normalizados, diferencia)
+            elif distribution_type == 'gaussian':
+                number_of_ratings_by_user = self.increment_number_ratings_gaussian(numeros_normalizados, diferencia)
+        elif diferencia < 0:
+            # Si la suma es mayor que number_ratings, resta la diferencia de uno de los valores    
+            if distribution_type == 'uniform':
+                number_of_ratings_by_user = self.decrement_number_ratings_uniform(numeros_normalizados, abs(diferencia))
+            elif distribution_type == 'gaussian':
+                number_of_ratings_by_user = self.decrement_number_ratings_gaussian(numeros_normalizados, abs(diferencia))    
+        else:
+            number_of_ratings_by_user = numeros_normalizados
+        return number_of_ratings_by_user, numeros_normalizados, random_proportions
 
     def get_rating(self, user_profile_id, item_id, context_id=None):
         '''
@@ -272,7 +330,7 @@ class GeneratorExplicitRatingFile:
                 # Getting possible values of the current attribute:         
                 possible_value_list.append(self.item_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
             elif context_id:
-                # Getting values from context.csv
+                # Getting values from context.csv                
                 if attribute_name in list(self.context_df.columns.values):
                     attribute_value_list.append(self.context_df.loc[self.context_df['context_id'] == context_id, attribute_name].iloc[0])
                     # Getting possible values of the current attribute:
