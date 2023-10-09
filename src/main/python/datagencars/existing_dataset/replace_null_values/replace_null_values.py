@@ -1,5 +1,5 @@
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_context import GeneratorContextFile
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_item import GeneratorItemFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_context_file import GeneratorContextFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_item_file import GeneratorItemFile
 
 
 class ReplaceNullValues:

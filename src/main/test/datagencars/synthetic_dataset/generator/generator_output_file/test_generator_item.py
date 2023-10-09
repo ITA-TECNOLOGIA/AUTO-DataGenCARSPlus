@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_item import GeneratorItemFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_item_file import GeneratorItemFile
 
 
 class TestGeneratorItem(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestGeneratorItem(unittest.TestCase):
         with open(item_profile_path, 'r') as item_profile_file:            
             item_profile = item_profile_file.read()  
         # Item generator:
-        self.__generator = GeneratorItemFile(item_schema=item_schema, generation_config=generation_config, item_profile=item_profile)
+        self.__generator = GeneratorItemFile(generation_config=generation_config, item_schema=item_schema, item_profile=item_profile)
     
     def tearDown(self):
         del self.__generator

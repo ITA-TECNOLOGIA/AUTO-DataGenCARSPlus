@@ -2,7 +2,7 @@ import logging
 import unittest
 
 import pandas as pd
-from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
+from datagencars.synthetic_dataset.generate_synthetic_explicit_dataset import RatingExplicit
 
 
 class TestGeneratorSyntheticDatasetCARS(unittest.TestCase):

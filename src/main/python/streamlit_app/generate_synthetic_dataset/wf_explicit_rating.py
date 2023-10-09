@@ -1,23 +1,26 @@
 import io
-import time
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_explicit_rating_file import GeneratorExplicitRatingFile
 
-import config
+from streamlit_app import config
 import console
 import pandas as pd
 import requests
 import streamlit as st
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
-from datagencars.synthetic_dataset.rating_explicit import RatingExplicit
 from streamlit_app import help_information
 from streamlit_app.preprocess_dataset import wf_generate_user_profile
 from streamlit_app.preprocess_dataset.wf_util import save_df, save_file
 from streamlit_app.workflow_graph import workflow_image
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_user_file import GeneratorUserFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_item_file import GeneratorItemFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_context_file import GeneratorContextFile
+from streamlit_app.preprocess_dataset import wf_util
 
 
 def generate_synthtetic_dataset(with_context):
     """
     Generates a synthetic dataset with explicit ratings.
-    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.    
+    :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
     """ 
     # Help information:
     help_information.help_explicit_rating_wf()
@@ -27,104 +30,149 @@ def generate_synthtetic_dataset(with_context):
     
     # Loading available tabs:
     if with_context:        
-        tab_generation, tab_user, tab_item, tab_context, tab_user_profile, tab_run  = st.tabs(['Generation', 'Users', 'Items', 'Contexts', 'User profile', 'Run'])
+        tab_user, tab_item, tab_context, tab_rating  = st.tabs(config.CONTEXT_TAB_LIST)
     else:        
-        tab_generation, tab_user, tab_item, tab_user_profile, tab_run = st.tabs(['Generation', 'Users', 'Items', 'User profile', 'Run'])
-    
-    # Initializing global variables:
-    generation_config_schema = ''
-    user_schema = ''
-    item_schema = ''
-    item_profile = ''
-    context_schema = ''
-    user_profile = pd.DataFrame()    
-
-    # TAB --> Generation config:    
-    with tab_generation:
-        st.header('Generation')
-        # Uploading the file: "generation_config.conf"        
-        if st.checkbox('Upload the data generation configuration file', value=True, key=f'is_upload_{config.GENERATION_CONFIG_SCHEMA_NAME}_file'):
-            schema_value = upload_schema_file(schema_file_name=config.GENERATION_CONFIG_SCHEMA_NAME)
-        else:
-            # Generating the schema file: "generation_config.conf"
-            schema_value = get_generation_config_file(with_context)
-        # Editing schema:
-        generation_config_schema = edit_schema_file(schema_file_name=config.GENERATION_CONFIG_SCHEMA_NAME, schema_value=schema_value)
-        # Saving schema:
-        save_file(file_name=config.GENERATION_CONFIG_SCHEMA_NAME, file_value=generation_config_schema, extension='conf')
+        tab_user, tab_item, tab_rating = st.tabs(config.WITHOUT_CONTEXT_TAB_LIST)
+             
     # TAB --> User:
-    with tab_user:        
-        st.header('Users')
-        # Uploading the file: "user_schema.conf"        
+    with tab_user:
+        # Generating or uploading the configuration shema file (generation_config.conf):
+        generation_config_schema = get_general_settings(with_context, tab_type='tab_user')        
+        # Generating or uploading the user schema file (user_schema.conf):
+        st.header('Users')        
         if st.checkbox(f'Upload the data {config.USER_TYPE} schema file', value=True, key=f'is_upload_{config.USER_SCHEMA_NAME}_file'):
-            schema_value = upload_schema_file(schema_file_name=config.USER_SCHEMA_NAME)
+            # Uploading the file ("user_schema.conf"):
+            schema_value = upload_schema_file(schema_file_name=config.USER_SCHEMA_NAME, tab_type='tab_user')
         else:
-            # Generating the schema file: "user_schema.conf"
+            # Generating the schema file ("user_schema.conf"):
             schema_value = get_schema_file(schema_type=config.USER_TYPE)        
-
         # Editing schema:
-        user_schema = edit_schema_file(schema_file_name=config.USER_SCHEMA_NAME, schema_value=schema_value)
-        # Saving schema:
-        save_file(file_name=config.USER_SCHEMA_NAME, file_value=user_schema, extension='conf')
+        user_schema = edit_schema_file(schema_file_name=config.USER_SCHEMA_NAME, schema_value=schema_value, tab_type='tab_user')        
+        # Generating the user file (user.csv):
+        generate_user_file(generation_config=generation_config_schema, user_schema=user_schema)
     # TAB --> Item and Item Profile:
     with tab_item:
-        st.header('Items')
-        # Uploading the file: "item_schema.conf"
+        # Generating or uploading the configuration shema file (generation_config.conf):
+        generation_config_schema = get_general_settings(with_context, tab_type='tab_item')        
+        # Generating or uploading the item schema file (item_schema.conf):
+        st.header('Items')        
         if st.checkbox(f'Upload the data {config.ITEM_TYPE} schema file', value=True, key=f'is_upload_{config.ITEM_SCHEMA_NAME}_file'):
-            schema_value = upload_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME)
+            # Uploading the file ("item_schema.conf"):
+            schema_value = upload_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, tab_type='tab_item')
         else:
-            # Generating the schema file: "item_schema.conf"
+            # Generating the schema file ("item_schema.conf"):
             schema_value = get_schema_file(schema_type=config.ITEM_TYPE)
         # Editing schema:
-        item_schema = edit_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, schema_value=schema_value)
-        # Saving schema:
-        save_file(file_name=config.ITEM_SCHEMA_NAME, file_value=item_schema, extension='conf')
-        st.markdown("""---""")
-
-        # Uploading the file: "item_profile.conf"
-        if st.checkbox(f'Upload the data {config.ITEM_PROFILE_TYPE} schema file', value=True, key=f'is_upload_{config.ITEM_PROFILE_SCHEMA_NAME}_file'):
-            item_profile_value = upload_schema_file(schema_file_name=config.ITEM_PROFILE_SCHEMA_NAME)
+        item_schema = edit_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, schema_value=schema_value, tab_type='tab_item')
+        
+        # Generating the item file (item.csv):
+        with_correlation = st.checkbox(f'Apply correlation between item attributes?', value=False, key=f'is_with_correlation_{config.ITEM_PROFILE_SCHEMA_NAME}_file')
+        # Generating or uploading the item profile schema file (item_profile.conf):
+        if with_correlation:
+            # Uploading the file ("item_profile.conf"):
+            if st.checkbox(f'Upload the data {config.ITEM_PROFILE_TYPE} schema file', value=True, key=f'is_upload_{config.ITEM_PROFILE_SCHEMA_NAME}_file'):
+                item_profile_value = upload_schema_file(schema_file_name=config.ITEM_PROFILE_SCHEMA_NAME, tab_type='tab_item')
+            else:
+                # Generating the file ("item_profile.conf"):
+                item_profile_value = get_item_profile_file()
+            # Editing schema:
+            item_profile = edit_schema_file(schema_file_name=config.ITEM_PROFILE_SCHEMA_NAME, schema_value=item_profile_value, tab_type='tab_item')        
+            # Generating the item file (item.csv) with correlation:
+            generate_item_file(generation_config=generation_config_schema, item_schema=schema_value, item_profile=item_profile)
         else:
-            # Generating the schema file: "item_profile.conf"
-            item_profile_value = get_item_profile_file()
-        # Editing schema:
-        item_profile = edit_schema_file(schema_file_name=config.ITEM_PROFILE_SCHEMA_NAME, schema_value=item_profile_value)
-        # Saving schema:
-        save_file(file_name=config.ITEM_PROFILE_SCHEMA_NAME, file_value=item_profile, extension='conf')             
+            # Generating the item file (item.csv) without correlation:
+            generate_item_file(generation_config=generation_config_schema, item_schema=schema_value)
     # TAB --> Context:
     if with_context:
         with tab_context:
-            st.header('Contexts')
-            # Uploading the file: "context_schema.conf"        
+            # Generating or uploading the configuration shema file (generation_config.conf):
+            generation_config_schema = get_general_settings(with_context, tab_type='tab_context')        
+            # Generating or uploading the context schema file (context_schema.conf):
+            st.header('Contexts')                 
             if st.checkbox(f'Upload the data {config.CONTEXT_TYPE} schema file', value=True, key=f'is_upload_{config.CONTEXT_SCHEMA_NAME}_file'):
-                schema_value = upload_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME)
+                # Uploading the file ("context_schema.conf"):
+                schema_value = upload_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME, tab_type='tab_context')
             else:
-                # Generating the schema file: "context_schema.conf"
+                # Generating the schema file ("context_schema.conf"):
                 schema_value = get_schema_file(schema_type=config.CONTEXT_TYPE)
             # Editing schema:
-            context_schema = edit_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME, schema_value=schema_value)
-            # Saving schema:
-            save_file(file_name=config.CONTEXT_SCHEMA_NAME, file_value=context_schema, extension='conf')
-    # TAB --> User Profile:    
-    with tab_user_profile:
-        st.header('User profile')  
-        # Uploading the file: "user_profile.csv"        
-        if st.checkbox(f'Upload the data {config.USER_PROFILE_SCHEMA_NAME} file', value=True, key=f'is_upload_{config.USER_PROFILE_SCHEMA_NAME}_file'):
-            user_profile = upload_user_profile_file()
-        else:
-            # Generating the schema file: "user_profile.csv"
-            if with_context:
-                user_profile = get_user_profile_file(user_schema, item_schema, context_schema)
-            else:
-                user_profile = get_user_profile_file(user_schema, item_schema)
-    # TAB --> Run:
-    with tab_run:        
-        if with_context:            
-            run(generation_config_schema=generation_config_schema, user_schema=user_schema, user_profile=user_profile, item_schema=item_schema, item_profile=item_profile, with_context=with_context, context_schema=context_schema)            
-        else:
-            run(generation_config_schema=generation_config_schema, user_schema=user_schema, user_profile=user_profile, item_schema=item_schema, item_profile=item_profile)
+            context_schema = edit_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME, schema_value=schema_value, tab_type='tab_context')
+            # Generating the context file (context.csv):
+            generate_context_file(generation_config=generation_config_schema, context_schema=schema_value)
+    # TAB --> Rating:
+    with tab_rating:        
+        # Initializing files:
+        generation_config=item_schema=context_schema=''
+        user_df=user_profile_df=item_df=context_df= pd.DataFrame()
+
+        ###### Generation config #####: 
+        # Generating or uploading the configuration shema file (generation_config.conf):        
+        generation_config = get_general_settings(with_context, tab_type='tab_rating')        
         
-def upload_schema_file(schema_file_name):
+        ###### User, Item and Context #####:
+        if with_context:
+            st.header('User, Item and Context data')
+        else:
+            st.header('User and Item data')
+        # Uploading the user file (user.csv):        
+        user_df = wf_util.load_one_file(file_type='user', wf_type='wf_generate_explicit_rating')     
+        ###### Item #####:        
+        # Uploading the item file (user.csv):
+        item_df = wf_util.load_one_file(file_type='item', wf_type='wf_generate_explicit_rating')
+        ###### Context #####:        
+        if with_context:
+            # Uploading the context file (user.csv):
+            context_df = wf_util.load_one_file(file_type='context', wf_type='wf_generate_explicit_rating')
+        
+        ###### User profile #####:
+        st.header('User profile')
+        # Generating or uploading the user profile file (user_profile.csv):
+        if st.checkbox(f'Upload the data {config.USER_PROFILE_SCHEMA_NAME} file', value=True, key=f'is_upload_{config.USER_PROFILE_SCHEMA_NAME}_file'):
+            # Uploading the file ("user_profile.csv"):
+            user_profile_df = upload_user_profile_file(tab_type='tab_up')
+        else:
+            # Generating the file ("user_profile.csv"):
+            if with_context:
+                user_profile_df = get_user_profile_file(user_schema, item_schema, context_schema)
+            else:
+                user_profile_df = get_user_profile_file(user_schema, item_schema)        
+
+        ###### Item and Context schemas #####:                 
+        if with_context:
+            st.header('Item and Context schema files (optionals)')
+        else:
+            st.header('Item schema file (optional)')
+        # Uploading the item schema file (item_schema.conf): optional
+        item_schema_value = upload_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, tab_type='tab_rating')
+        # Editing schema:
+        item_schema = edit_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, schema_value=item_schema_value, tab_type='tab_rating')
+        if with_context:
+            # Uploading the context schema file (context_schema.conf): optional     
+            context_schema_value = upload_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME, tab_type='tab_rating')
+            # Editing schema:
+            context_schema = edit_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME, schema_value=context_schema_value, tab_type='tab_rating')
+        
+        # Generating the rating file (rating.csv):
+        generate_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema, context_df=context_df, context_schema=context_schema)
+        
+def get_general_settings(with_context, tab_type):
+    """
+    Display and manage general settings for data generation.
+    :param with_context: Boolean indicating whether to include context data.
+    :param tab_type: Type of tab or section in the GUI.
+    :return: The edited data generation configuration schema.
+    """
+    st.header('General settings')    
+    if st.checkbox('Upload the data generation configuration file', value=True, key=f'is_upload_{config.GENERATION_CONFIG_SCHEMA_NAME}_{tab_type}_file'):
+        # Uploading the file ("generation_config.conf"):
+        schema_value = upload_schema_file(schema_file_name=config.GENERATION_CONFIG_SCHEMA_NAME, tab_type=tab_type)
+    else:
+        # Generating the schema file ("generation_config.conf"):
+        schema_value = get_generation_config_file(with_context)
+    # Editing schema:
+    return edit_schema_file(schema_file_name=config.GENERATION_CONFIG_SCHEMA_NAME, schema_value=schema_value, tab_type=tab_type)   
+
+def upload_schema_file(schema_file_name, tab_type):
     """
     Upload schema from file.
     :param schema_file_name: The name of the schema file.
@@ -132,18 +180,18 @@ def upload_schema_file(schema_file_name):
     """
     schema_file_value = ''
     with st.expander(f"Upload {schema_file_name}.conf"):
-        if schema_file := st.file_uploader(label='Choose the file:', key=f"{schema_file_name}_file"):
+        if schema_file := st.file_uploader(label='Choose the file:', key=f"{schema_file_name}_file_{tab_type}"):
             schema_file_value = schema_file.getvalue().decode("utf-8")
     return schema_file_value
 
-def upload_user_profile_file():
+def upload_user_profile_file(tab_type):
     """
     Upload an existing user profile.
     :return: A dataframe with the user profile content.
     """
     user_profile_df = pd.DataFrame()
     with st.expander(label=f'Upload {config.USER_PROFILE_SCHEMA_NAME}.csv'):
-        if user_profile_file := st.file_uploader(label='Choose the file:', key=f'{config.USER_PROFILE_SCHEMA_NAME}_file'):
+        if user_profile_file := st.file_uploader(label='Choose the file:', key=f'{config.USER_PROFILE_SCHEMA_NAME}_file_{tab_type}'):
             user_profile_value = user_profile_file.getvalue().decode("utf-8")
             user_profile_df = pd.read_csv(io.StringIO(user_profile_value))  
             st.dataframe(user_profile_df)
@@ -608,105 +656,8 @@ def get_user_profile_file(user_schema, item_schema, context_schema=None):
     # Generate user profile manual:                
     user_profile_df = wf_generate_user_profile.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
     return user_profile_df
-
-def run(generation_config_schema, user_schema, user_profile, item_schema, item_profile, with_context=False, context_schema=None):
-    """
-    Runs the workflow related to generating a synthetic dataset with explicit ratings.
-    """    
-    # Record the start time
-    start_time = time.time()
-    with_correlation_checkbox = False
-    inconsistent = False                
-    col_run, col_stop = st.columns(2)
-    with col_run:
-        button_run = st.button(label='Run', key='button_run')
-    with col_stop:
-        button_stop = st.button(label='Stop', key='button_stop')
-    generator = RatingExplicit(generation_config=generation_config_schema)
-    output = st.empty()
-    with console.st_log(output.code):
-        if not inconsistent:
-            if button_run:
-                if with_context:
-                    steps = 4
-                else: 
-                    steps = 3
-                current_step = 0
-                print('Starting execution')
-                # Check if all the files required for the synthetic data generation exist:
-                # Checking the existence of the file: "user_schema.conf"  
-                progress_text = f'Generating data .....step {current_step + 1} from {steps}'
-                my_bar = st.progress(0, text=progress_text)                
-                if len(user_schema) != 0:
-                    st.write(f'{config.USER_TYPE}.csv')
-                    print('Generating user.csv')
-                    user_file_df = generator.generate_user_file(user_schema=user_schema)
-                    st.dataframe(user_file_df)
-                    save_df(df_name=config.USER_TYPE, df_value=user_file_df, extension='csv')
-                    st.markdown("""---""")
-                else:
-                    st.warning('The user schema file (user_schema.conf) is required.')
-                current_step = current_step + 1
-                if button_stop:
-                    st.experimental_rerun()
-                else:
-                    # Checking the existence of the file: "item_schema.conf"            
-                    my_bar.progress(int(100/steps)*current_step, f'Generating data Step {current_step + 1} from {steps}: ')
-                    if len(item_schema) != 0:
-                        st.write(f'{config.ITEM_TYPE}.csv')
-                        print('Generating item.csv')                    
-                        item_file_df = generator.generate_item_file(item_schema=item_schema, item_profile=item_profile, with_correlation=with_correlation_checkbox)
-                        st.dataframe(item_file_df)   
-                        save_df(df_name=config.ITEM_TYPE, df_value=item_file_df, extension='csv')
-                        st.markdown("""---""")
-                        current_step = current_step + 1
-                    else:
-                        st.warning('The item schema file (item_schema.conf) is required.')
-                    my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
-                    if button_stop:
-                        st.experimental_rerun()
-                    else:                        
-                        # Checking the existence of the file: "context_schema.conf"  
-                        if with_context:                           
-                            if context_schema:
-                                st.write(f'{config.CONTEXT_TYPE}.csv')
-                                print('Generating context.csv')                        
-                                context_file_df = generator.generate_context_file(context_schema=context_schema)
-                                st.dataframe(context_file_df)
-                                save_df(df_name=config.CONTEXT_TYPE, df_value=context_file_df, extension='csv')
-                                st.markdown("""---""")
-                                current_step = current_step + 1
-                            else:
-                                st.warning('The context schema file (context_schema.conf) is required.')               
-                        # Checking the existence of the file: "generation_config.conf" 
-                        my_bar.progress(int(100/steps*current_step), f'Generating data Step {current_step + 1} from {steps}: ')
-                        if button_stop:
-                            st.experimental_rerun()
-                        else:
-                            if len(generation_config_schema) != 0:
-                                st.write('rating.csv')
-                                if with_context:                                                  
-                                    if context_schema:
-                                        rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile, item_df=item_file_df, item_schema=item_schema, with_context=True, context_df=context_file_df, context_schema=context_schema)
-                                    else:
-                                        st.warning('The context schema file (context_schema.conf) is required.')
-                                else:
-                                    rating_file_df = generator.generate_rating_file(user_df=user_file_df, user_profile_df=user_profile, item_df=item_file_df, item_schema=item_schema)
-                                st.dataframe(rating_file_df)
-                                save_df(df_name='rating', df_value=rating_file_df, extension='csv')
-                                st.markdown("""---""")                                                                                                        
-                            else:
-                                st.warning('The configuration file (generation_config.conf) is required.')
-                            print('Synthetic data generation has finished.')   
-                            my_bar.progress(100, 'Synthetic data generation has finished.')    
-        else:
-            st.warning('Before generating data ensure all files are correctly generated.')
-        end_time = time.time()
-        # Calculate the elapsed time
-        elapsed_time = end_time - start_time            
-        print(f"Execution time: {round(elapsed_time, 2)} seconds")
    
-def edit_schema_file(schema_file_name, schema_value):
+def edit_schema_file(schema_file_name, schema_value, tab_type):
     """
     Edit the content of a schema file.
     :param schema_file_name: The name of the schema file.
@@ -715,10 +666,148 @@ def edit_schema_file(schema_file_name, schema_value):
     """
     schema_text_area = schema_value
     with st.expander(f"Show {schema_file_name}.conf"):
-        edit_checkbox = st.checkbox(label='Edit file?', value=False, key=f"false_initial_{schema_file_name}")
+        edit_checkbox = st.checkbox(label='Edit file?', value=False, key=f"false_initial_{schema_file_name}_{tab_type}")
         st.warning("If you edit the file and want to save the changes made, you must disable the 'Edit file?' checkbox again.")
         if edit_checkbox:
-            schema_text_area = st.text_area(label='Current file:', value=schema_text_area, height=500, disabled=False, key=f'true_edit_{schema_file_name}')
+            schema_text_area = st.text_area(label='Current file:', value=schema_text_area, height=500, disabled=False, key=f'true_edit_{schema_file_name}_{tab_type}')
         else:        
-            schema_text_area = st.text_area(label='Current file:', value=schema_text_area, height=500, disabled=True, key=f'true_edit_{schema_file_name}')            
-        return schema_text_area
+            schema_text_area = st.text_area(label='Current file:', value=schema_text_area, height=500, disabled=True, key=f'true_edit_{schema_file_name}_{tab_type}')            
+        # Saving schema:
+        save_file(file_name=schema_file_name, file_value=schema_text_area, extension='conf')
+    return schema_text_area
+    
+def generate_user_file(generation_config, user_schema):
+    """
+    Generates the user file from user_schema. 
+    :param generation_config: The configuration file.
+    :param user_schema: The user schema. It should contain information about users.    
+    :return: The user file generated from the user schema.
+    """    
+    user_file_df = pd.DataFrame()    
+    if st.button(label='Generate user file', key='button_tab_user'):            
+        if (len(user_schema) != 0) and (len(generation_config) != 0):
+            output = st.empty()
+            with console.st_log(output.code): 
+                print(f'Generating {config.USER_TYPE}.csv')   
+                generator = GeneratorUserFile(generation_config=generation_config, user_schema=user_schema)
+                user_file_df = generator.generate_file()
+                print('User file generation has finished.')   
+                with st.expander(label=f'Show the generated {config.USER_TYPE}.csv file:'):
+                    st.dataframe(user_file_df)
+                    save_df(df_name=config.USER_TYPE, df_value=user_file_df, extension='csv')
+        else:
+            st.warning(f'The user schema (user_schema.conf) and general setting (general_config.conf) files are required.')
+    return user_file_df
+
+def generate_item_file(generation_config, item_schema, item_profile=None):
+    """
+    Generates the item file from item_schema. 
+    :param generation_config: The configuration file.
+    :param item_schema: The item schema. It should contain information about items.
+    :param item_profile: The item profile.    
+    :return: The item file generated from the item schema.
+    """    
+    item_file_df = pd.DataFrame()   
+    if st.button(label='Generate item file', key='button_tab_item'): 
+        # Considering the correlation between attributes (item_profile.csv is required):
+        if (len(item_schema) != 0) and (item_profile) and (len(generation_config) != 0):                        
+            output = st.empty()
+            with console.st_log(output.code):
+                print(f'Generating {config.ITEM_TYPE}.csv')
+                generator = GeneratorItemFile(generation_config=generation_config, item_schema=item_schema, item_profile=item_profile)
+                item_file_df = generator.generate_file()
+                print('Item file generation has finished.')   
+                with st.expander(label=f'Show the generated {config.ITEM_TYPE}.csv file:'):
+                    st.dataframe(item_file_df)
+                    save_df(df_name=config.ITEM_TYPE, df_value=item_file_df, extension='csv')
+        # Without correlation between attributes (item_profile.csv is not required):
+        elif (len(item_schema) != 0) and (not item_profile) and (len(generation_config) != 0):                  
+            output = st.empty()
+            with console.st_log(output.code):
+                print(f'Generating {config.ITEM_TYPE}.csv')
+                generator = GeneratorItemFile(generation_config=generation_config, item_schema=item_schema)
+                item_file_df = generator.generate_file()
+                print('Item file generation has finished.')   
+                with st.expander(label=f'Show the generated {config.ITEM_TYPE}.csv file:'):
+                    st.dataframe(item_file_df)
+                    save_df(df_name=config.ITEM_TYPE, df_value=item_file_df, extension='csv')
+        else:            
+            st.warning(f'The item schema (item_schema.conf) and general setting (general_config.conf) files are required. The item profile schema (item_profile.conf) file should only be uploaded if you want to generate correlated item attributes ("check "with correlation" and upload the item profile").')
+    return item_file_df
+
+def generate_context_file(generation_config, context_schema):    
+    """
+    Generates the context file from context_schema. 
+    :param context_schema: The context schema. It should contain information about contexts.
+    :param generation_config: The configuration file.
+    :return: The context file generated from the context schema.
+    """           
+    context_file_df = pd.DataFrame()
+    if st.button(label='Generate context file', key='button_tab_context'):            
+        if (len(context_schema) != 0) and (len(generation_config) != 0):
+            output = st.empty()
+            with console.st_log(output.code): 
+                print(f'Generating {config.CONTEXT_TYPE}.csv')   
+                generator = GeneratorContextFile(generation_config=generation_config, context_schema=context_schema)            
+                context_file_df = generator.generate_file()
+                print('Context file generation has finished.')   
+                with st.expander(label=f'Show the generated {config.CONTEXT_TYPE}.csv file:'):
+                    st.dataframe(context_file_df)
+                    save_df(df_name=config.CONTEXT_TYPE, df_value=context_file_df, extension='csv')
+        else:
+            st.warning(f'The context schema (context_schema.conf) and general setting (general_config.conf) files are required.')
+    return context_file_df
+
+def generate_rating_file(with_context, generation_config, user_df, user_profile_df, item_df, item_schema=None, context_df=None, context_schema=None):
+    """
+    Generate a rating file based on the provided data and configuration.
+    :param generation_config: The configuration for rating file generation.
+    :param user_df: The dataFrame with user data.
+    :param user_profile: The dataFrame with user profiles.
+    :param item_df: The dataFrame with item data.
+    :param context_df: The dataFrame with context data (optional).
+    :param item_schema: The item schema (optional).
+    :param context_schema: The context schema (optional).
+    :return: A dataFrame containing the generated rating data.
+    """
+    generator = None    
+    rating_file_df = pd.DataFrame()
+    if st.button(label='Generate rating file', key='button_tab_rating'):
+        if with_context:  
+            # The mandatory files to be uploaded are checked (including contextual information):
+            if (len(generation_config) !=0) and (not user_df.empty) and (not user_profile_df.empty) and (not item_df.empty) and (not context_df.empty):
+                # All files are uploaded, including item and context schemas:  
+                if (len(item_schema) != 0) and (len(context_schema) != 0):
+                    generator = GeneratorExplicitRatingFile(generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema, context_df=context_df, context_schema=context_schema)
+                # All files are uploaded, except context schema:
+                elif (len(item_schema) != 0) and (len(context_schema) == 0):
+                    generator = GeneratorExplicitRatingFile(generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema, context_df=context_df)
+                # All files are uploaded, except item schema:
+                elif (len(item_schema) == 0) and (len(context_schema) != 0):
+                    generator = GeneratorExplicitRatingFile(generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, context_df=context_df, context_schema=context_schema)
+                # All files are uploaded, except item and context schemas:
+                else:                    
+                    generator = GeneratorExplicitRatingFile(generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, context_df=context_df)                        
+            else:
+                st.warning(f'At least the generation configuration (generation_config.conf), user (user.csv), user profile (user_profile.csv), item (item.csv) and context (context.csv) files must be uploaded. The item and context schema files (item_schema.conf and context_schema.conf) are optionals.')
+        else:
+            # The mandatory files to be uploaded are checked (without contextual information):
+            if (len(generation_config) !=0) and (not user_df.empty) and (not user_profile_df.empty) and (not item_df.empty):
+                # All files are uploaded, including the item schema:
+                if (len(item_schema) != 0):
+                    generator = GeneratorExplicitRatingFile(generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema)
+                # All files are uploaded, except item schema:
+                else:
+                    generator = GeneratorExplicitRatingFile(generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df)
+            else:
+                st.warning(f'At least the generation configuration (generation_config.conf), user (user.csv), user profile (user_profile.csv) and item (item.csv) files must be uploaded. The item schema file (item_schema.conf) is optional.')
+        # Generating rating file (rating.csv):        
+        if generator:
+            output = st.empty()
+            with console.st_log(output.code):              
+                rating_file_df = generator.generate_file()
+                print('Rating file generation has finished.')   
+                with st.expander(label=f'Show the generated {config.RATING_TYPE}.csv file:'):
+                    st.dataframe(rating_file_df)
+                    save_df(df_name=config.RATING_TYPE, df_value=rating_file_df, extension='csv')       
+    return rating_file_df
