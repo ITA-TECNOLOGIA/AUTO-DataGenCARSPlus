@@ -2,7 +2,7 @@ import logging
 import unittest
 
 import pandas as pd
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_rating_implicit import GeneratorImplicitRatingFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_implicit_rating_file import GeneratorImplicitRatingFile
 
 
 class TestGeneratorContext(unittest.TestCase):

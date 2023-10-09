@@ -1,7 +1,7 @@
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
+import streamlit as st
 
-import random
 
 class GeneratorContextFile(GeneratorFile):
     '''
@@ -10,7 +10,7 @@ class GeneratorContextFile(GeneratorFile):
     The following files are required: generation_config.conf and context_schema.conf.  
     '''
 
-    def __init__(self, context_schema, generation_config=None):
+    def __init__(self, generation_config, context_schema):
         super().__init__(generation_config, context_schema)
 
     def generate_file(self, input_csv=None):
@@ -27,7 +27,9 @@ class GeneratorContextFile(GeneratorFile):
         else:
             number_context = len(input_csv)
         print(f'Total of contexts to generate: {number_context}')
-        print('Generating instances by context.')  
+        print('Generating instances by context.') 
+        # Create a progress bar
+        progress_bar = st.progress(0.0) 
         for i in range(number_context):
             if not(input_csv is None):
                 instance = input_csv.iloc[i]
@@ -35,31 +37,10 @@ class GeneratorContextFile(GeneratorFile):
                 instance = None
             attribute_list = instance_generator.generate_instance(instance=instance)
             self.file_df.loc[len(self.file_df.index)] = attribute_list
+            # Update the progress bar with each iteration                            
+            progress_bar.progress(text=f'Generating context {i + 1} from {number_context}', value=(i + 1) / number_context) 
 
         # Adding context_id column:
         context_id_list = list(range(1, number_context+1))
         self.file_df.insert(loc=0, column='context_id', value=context_id_list)        
-        return self.file_df.copy()
-    
-    def generate_null_values(self, complete_context_file):
-        """
-        This method generates null values in a dataframe based on a specified percentage.        
-        :param complete_context_file: The input dataframe containing context data.
-        :return: A copy of the input dataframe with null values generated.
-        """
-        percentage_null = self.access_generation_config.get_number_context_null()
-        if percentage_null > 0:
-            number_context = self.access_generation_config.get_number_context()
-            number_attributes = self.schema_access.get_number_attributes() 
-            null_values = int((number_attributes * number_context * percentage_null) / 100)            
-            # Generate random positions to be null:
-            for i in range(1, null_values+1):
-                # Generate column to remove:
-                random_column = random.randint(1, number_attributes)
-                # Generate row to remove:
-                random_row = random.randint(0, number_context - 1)                
-                # Remove value:
-                if complete_context_file.iloc[random_row, random_column] != None:
-                    complete_context_file.iloc[random_row, random_column] = None
-                    i = i + 1            
-        return complete_context_file.copy()
+        return self.generate_null_values(self.file_df.copy())

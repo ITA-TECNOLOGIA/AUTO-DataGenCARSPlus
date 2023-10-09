@@ -19,8 +19,10 @@ class ExtractStatistics(ABC):
         df = self.df.copy()
         # Iterate through DataFrame columns and get value types
         for column_name, column in df.items():
+            print(column_name)
             attribute_value_list = column.dropna()
             value_type_list = list(set(attribute_value_list.apply(type)))                   
+            print(attribute_value_list[0])
             if len(value_type_list) == 1:  
                 value_type = value_type_list[0]               
                 # Type: int or float
@@ -75,5 +77,7 @@ class ExtractStatistics(ABC):
                 break
         # If no valid datetime object is obtained, raise a ValueError:
         if datetime_obj is None:
-            raise ValueError("Unsupported datetime format")
-        return datetime_obj.min().strftime('%Y-%m-%d'), datetime_obj.max().strftime('%Y-%m-%d')
+            # raise ValueError("Unsupported datetime format")
+            return None
+        else:
+            return datetime_obj.min().strftime('%Y-%m-%d'), datetime_obj.max().strftime('%Y-%m-%d')

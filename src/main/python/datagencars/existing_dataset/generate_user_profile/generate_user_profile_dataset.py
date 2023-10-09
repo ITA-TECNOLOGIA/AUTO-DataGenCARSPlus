@@ -9,6 +9,7 @@ from datagencars.existing_dataset.generate_user_profile.generate_user_profile im
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_rating import AccessRating
+import streamlit as st
 
 
 class GenerateUserProfileDataset(GenerateUserProfile):
@@ -58,6 +59,8 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         # Getting user ID list:
         user_id_list = self.access_rating.get_user_id_list()
         # Determining weigth vectors by user:
+        # Create a progress bar
+        progress_bar = st.progress(0.0) 
         for user_id in user_id_list:
             # Determining the x vector:
             a_matrix, rank_vector = self.get_a_matrix(user_id, item_attribute_list, context_attribute_list)
@@ -86,6 +89,8 @@ class GenerateUserProfileDataset(GenerateUserProfile):
                 else:
                     rank_weigth_list.append(str(x))         
             user_profile_df.loc[len(user_profile_df)] = [int(user_id)]+rank_weigth_list # +[sum(weight_vector)]
+            # Update the progress bar with each iteration                            
+            progress_bar.progress(text=f'Generating user profile {user_id} from {len(user_id_list)}', value=(user_id) / len(user_id_list))
         return user_profile_df
 
     def get_a_matrix(self, user_id, item_attribute_list, context_attribute_list):  # sourcery skip: extract-duplicate-method, extract-method, for-append-to-extend, inline-immediately-returned-variable, low-code-quality, merge-list-append, move-assign-in-block, use-dictionary-union

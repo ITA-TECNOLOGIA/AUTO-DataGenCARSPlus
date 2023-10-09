@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_context import GeneratorContextFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_context_file import GeneratorContextFile
 
 
 class TestGeneratorContext(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestGeneratorContext(unittest.TestCase):
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()      
         # Context generator:        
-        self.__generator = GeneratorContextFile(context_schema=context_schema, generation_config=generation_config)
+        self.__generator = GeneratorContextFile(generation_config=generation_config, context_schema=context_schema)
     
     def tearDown(self):
         del self.__generator

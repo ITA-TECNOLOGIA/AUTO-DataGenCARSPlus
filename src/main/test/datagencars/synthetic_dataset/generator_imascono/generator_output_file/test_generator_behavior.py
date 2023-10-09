@@ -2,7 +2,7 @@ import logging
 import unittest
 import pandas as pd
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_behavior import GeneratorBehaviorFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_behavior_file import GeneratorBehaviorFile
 
 
 class TestGeneratorBehavior(unittest.TestCase):

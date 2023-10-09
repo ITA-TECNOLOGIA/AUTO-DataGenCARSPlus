@@ -8,6 +8,9 @@ from datagencars.existing_dataset.generate_user_profile.calculate_attribute_rati
 from datagencars.synthetic_dataset.generator.access_schema.access_generation_config import AccessGenerationConfig
 from datagencars.synthetic_dataset.generator.access_schema.access_schema import AccessSchema
 from datagencars.synthetic_dataset.generator.access_schema.access_user_profile import AccessUserProfile
+from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
+from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
+import streamlit as st
 
 
 class GeneratorExplicitRatingFile:
@@ -32,7 +35,7 @@ class GeneratorExplicitRatingFile:
     @author Maria del Carmen Rodriguez-Hernandez 
     '''
 
-    def __init__(self, generation_config, user_df, user_profile_df, item_df, item_schema, context_df=None, context_schema=None):        
+    def __init__(self, generation_config, user_df, user_profile_df, item_df, item_schema=None, context_df=None, context_schema=None):
         # User profile access: user_profile.csv        
         self.access_user_profile = AccessUserProfile(user_profile_df)
         # Schema access: generation_config.conf
@@ -42,26 +45,32 @@ class GeneratorExplicitRatingFile:
         # Item file: item.csv
         self.item_df = item_df
         # Item schema: item_schema.conf
-        self.item_schema_access = AccessSchema(file_str=item_schema)
-        # Context:
+        if item_schema:            
+            self.item_schema_access = AccessSchema(file_str=item_schema)
+        else:
+            self.item_schema_access = None
+            self.access_item = AccessItem(item_df=item_df)            
+        # Context:        
         if context_df is None: 
             context_df = pd.DataFrame()
-        if not context_df.empty and context_schema:
+        if not context_df.empty:
             # Context file (optional): context.csv
             self.context_df = context_df
             # Context schema: context_schema.conf
-            self.context_schema_access = AccessSchema(file_str=context_schema)
+            if context_schema:
+                self.context_schema_access = AccessSchema(file_str=context_schema)
+            else:
+                self.context_schema_access = None
+                self.access_context = AccessContext(context_df=context_df)
         self.calculate_att_rating = CalculateAttributeRating()
 
-    def generate_file(self, with_context=False):
-        # sourcery skip: assign-if-exp, extract-duplicate-method, hoist-statement-from-loop, low-code-quality, merge-list-append, pandas-avoid-inplace
+    def generate_file(self):        
         '''
-        Generates the rating file.
-        :param with_context: True if the file to be generated will be contextual and False in the otherwise.
+        Generates the rating file.        
         :return: A dataframe with rating information (user_id, item_id, context_id <optional>, rating, timestamp). 
         '''     
         rating_df = None
-        if with_context:
+        if not self.context_df.empty:
             rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'context_id', 'rating', 'timestamp'])
         else:
             rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'rating', 'timestamp'])
@@ -73,7 +82,7 @@ class GeneratorExplicitRatingFile:
         # number_item = self.access_generation_config.get_number_item()
         item_id_list = self.item_df['item_id'].unique().tolist()
         # Getting the number of contexts.
-        if with_context:
+        if not self.context_df.empty:
             # number_context = self.access_generation_config.get_number_context()
             context_id_list = self.context_df['context_id'].unique().tolist()
         # Getting the number of ratings:
@@ -108,7 +117,9 @@ class GeneratorExplicitRatingFile:
             distribution_type = self.access_generation_config.get_even_distribution_type()
             ratings_by_user_list, __, __ = self.get_number_of_ratings_by_user(number_user, number_ratings, distribution_type)                 
 
-        # Iterating by user:
+        # Create a progress bar
+        progress_bar = st.progress(0.0)
+        # Iterating by user:        
         for user_index in range(1, number_user+1):            
             row_rating_list = []
             # Generating user_id:
@@ -128,12 +139,12 @@ class GeneratorExplicitRatingFile:
                 item_id = random.choice(item_id_list)
                 row_rating_list.append(item_id)
                 # Generating context_id:
-                if with_context:
+                if not self.context_df.empty:
                     context_id = random.choice(context_id_list)
                     row_rating_list.append(context_id)
                 # Generating a rating for a specified user profile:                   
                 user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id, 'user_profile_id'].iloc[0]
-                if with_context:
+                if not self.context_df.empty:
                     rating = self.get_rating(user_profile_id, item_id, context_id)
                 else:
                     rating = self.get_rating(user_profile_id, item_id)        
@@ -147,7 +158,9 @@ class GeneratorExplicitRatingFile:
                 # Inserting row into dataframe:                
                 rating_df.loc[len(rating_df.index)] = row_rating_list  
                 row_rating_list.clear()     
-                row_rating_list.append(user_id)                
+                row_rating_list.append(user_id)  
+            # Update the progress bar with each iteration                            
+            progress_bar.progress(text=f'Generating ratings for the user {user_index} from {number_user}', value=(user_index) / number_user)               
 
         if even_distribution:
             # Inserting remaining items to randomly selected users:
@@ -161,12 +174,12 @@ class GeneratorExplicitRatingFile:
                 item_id = random.choice(item_id_list)
                 row_rating_list.append(item_id)
                 # Generating context_id:
-                if with_context:
+                if not self.context_df.empty:
                     context_id = random.choice(context_id_list)
                     row_rating_list.append(context_id)
                 # Generating a rating for a specified user profile:            
                 user_profile_id = self.user_df.loc[self.user_df['user_id'] == str(user_id), 'user_profile_id'].iloc[0]
-                if with_context:
+                if not self.context_df.empty:
                     rating = self.get_rating(user_profile_id, item_id, context_id)
                 else:
                     rating = self.get_rating(user_profile_id, item_id)
@@ -327,14 +340,20 @@ class GeneratorExplicitRatingFile:
                 # For the cases of: list, bool, int and float values:
                 else:                    
                     attribute_value_list.append(attribute_value)                
-                # Getting possible values of the current attribute:         
-                possible_value_list.append(self.item_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
+                # Getting possible values of the current attribute: 
+                if self.item_schema_access:
+                    possible_value_list.append(self.item_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
+                else:
+                    possible_value_list.append(self.access_item.get_item_possible_value_list_from_attributte(attribute_name))
             elif context_id:
                 # Getting values from context.csv                
                 if attribute_name in list(self.context_df.columns.values):
                     attribute_value_list.append(self.context_df.loc[self.context_df['context_id'] == context_id, attribute_name].iloc[0])
                     # Getting possible values of the current attribute:
-                    possible_value_list.append(self.context_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
+                    if self.context_schema_access:
+                        possible_value_list.append(self.context_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
+                    else:
+                        possible_value_list.append(self.access_context.get_context_possible_value_list_from_attributte(attribute_name))
         return attribute_value_list, possible_value_list
     
     def modify_rating_by_user_expectations(self, rating, k, user_rating_list, min_rating_value, max_rating_value):

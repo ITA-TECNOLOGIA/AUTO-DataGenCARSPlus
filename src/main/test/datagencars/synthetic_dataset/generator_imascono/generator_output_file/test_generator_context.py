@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_context import GeneratorContextFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_context_file import GeneratorContextFile
 
 
 class TestGeneratorContext(unittest.TestCase):

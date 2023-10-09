@@ -3,6 +3,7 @@ import random
 import pandas as pd
 from datagencars import util
 from datagencars.existing_dataset.generate_rating import GenerateRating
+import streamlit as st
 
 
 class IncreaseRating(GenerateRating):
@@ -39,10 +40,12 @@ class IncreaseRating(GenerateRating):
         extended_rating_df = self.rating_df.copy()
         # Getting all user_id existing in the rating file:
         user_id_list = self.access_rating.get_user_id_list()
+        # Create a progress bar
+        progress_bar = st.progress(0.0) 
         # Extending dataset by user:
         for user_id in user_id_list:
             # Generating N ratings for the current user:
-            for _ in range(number_rating):
+            for i in range(number_rating):
                 # Getting items not seen by user_id:
                 items_not_seen_list = self.get_items_not_seen_from_user(user_id)
                 # Generating a new instance for the current user_id:
@@ -51,6 +54,8 @@ class IncreaseRating(GenerateRating):
                 new_instance_df = pd.DataFrame([new_instance])                
                 # Adding new instance in the rating file:                
                 extended_rating_df = pd.concat([extended_rating_df, new_instance_df], ignore_index=True).copy()
+            # Update the progress bar with each iteration                            
+            progress_bar.progress(text=f'Generating {i+1} ratings from {number_rating}', value=(i+1) / number_rating)
         return util.sort_rating_df(extended_rating_df)
 
     def extend_rating_random(self, number_rating, percentage_rating_variation=25, k=10):
@@ -64,9 +69,11 @@ class IncreaseRating(GenerateRating):
         # Initial DataFrame setup                     
         extended_rating_df = self.rating_df.copy()
         # Getting all user_id existing in the rating file:
-        user_id_list = self.access_rating.get_user_id_list()
+        user_id_list = self.access_rating.get_user_id_list()        
+        # Create a progress bar
+        progress_bar = st.progress(0.0) 
         # Generating N ratings for the current user:
-        for _ in range(number_rating):
+        for i in range(number_rating):
             # Selecting a randomly user id:
             user_id = random.choice(user_id_list)            
             # Getting items not seen by user_id:          
@@ -76,6 +83,8 @@ class IncreaseRating(GenerateRating):
             new_instance_df = pd.DataFrame([new_instance])
             # Adding new instance in the rating file:            
             extended_rating_df = pd.concat([extended_rating_df, new_instance_df], ignore_index=True).copy()
+            # Update the progress bar with each iteration                            
+            progress_bar.progress(text=f'Generating {i+1} ratings from {number_rating}', value=(i+1) / number_rating)
         return util.sort_rating_df(extended_rating_df)
 
     def generate_new_instance(self, user_id, items_not_seen_list, percentage_rating_variation, k):

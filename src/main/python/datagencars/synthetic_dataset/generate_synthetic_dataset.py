@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_behavior import GeneratorBehaviorFile
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_context import GeneratorContextFile
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_item import GeneratorItemFile
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_user import GeneratorUserFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_context_file import GeneratorContextFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_item_file import GeneratorItemFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_user_file import GeneratorUserFile
 
 
 class GenerateSyntheticDataset(ABC):
@@ -25,32 +24,25 @@ class GenerateSyntheticDataset(ABC):
         """
             Generating file: user.csv
         """        
-        user_file_generator = GeneratorUserFile(self.generation_config, user_schema)
+        user_file_generator = GeneratorUserFile(generation_config=self.generation_config, user_schema=user_schema)
         complete_user_file = user_file_generator.generate_file()
         return user_file_generator.generate_null_values(complete_user_file)
     
-    def generate_item_file(self, item_schema, item_profile=None, with_correlation=False):
+    def generate_item_file(self, item_schema, item_profile=None):
         """
             Generating file: item.csv
         """        
-        item_file_generator = GeneratorItemFile(item_schema, self.generation_config, item_profile)
-        complete_item_file = item_file_generator.generate_file(with_correlation)  
+        item_file_generator = GeneratorItemFile(generation_config=self.generation_config, item_schema=item_schema, item_profile=item_profile)
+        complete_item_file = item_file_generator.generate_file()  
         return item_file_generator.generate_null_values(complete_item_file)
 
     def generate_context_file(self, context_schema):
         """
             Generating file (for CARS): context.csv
         """        
-        context_file_generator = GeneratorContextFile(context_schema, self.generation_config)
+        context_file_generator = GeneratorContextFile(generation_config=self.generation_config, context_schema=context_schema)
         complete_context_file = context_file_generator.generate_file()
-        return context_file_generator.generate_null_values(complete_context_file)
-    
-    def generate_behavior_file(self, behavior_schema, item_df, item_schema):
-        """
-            Generating file (for CARS): behavior.csv
-        """        
-        behavior_file_generator = GeneratorBehaviorFile(self.generation_config, behavior_schema, item_df, item_schema)
-        return behavior_file_generator.generate_file()
+        return context_file_generator.generate_null_values(complete_context_file)        
     
     @abstractmethod
     def generate_rating_file(self, user_df, user_profile_df, item_df, item_schema, with_context=False, context_df=None, context_schema=None):

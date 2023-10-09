@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-from datagencars.synthetic_dataset.generator.generator_output_file.generator_user import GeneratorUserFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_user_file import GeneratorUserFile
 
 
 class TestGeneratorUser(unittest.TestCase):
