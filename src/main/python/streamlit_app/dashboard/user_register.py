@@ -1,10 +1,8 @@
 import os
-import socket
 
 import pandas as pd
 import requests
 from streamlit_app import config
-import streamlit as st
 from streamlit_javascript import st_javascript
 
 
