@@ -4,6 +4,8 @@ import socket
 import pandas as pd
 import requests
 from streamlit_app import config
+import streamlit as st
+from streamlit_javascript import st_javascript
 
 
 def generate_implicit():
@@ -24,15 +26,23 @@ def generate_implicit():
 
 def get_user_ip():
     """
-    Get the IP address of the current machine.
-    This function retrieves the IP address of the local machine by first obtaining the hostname 
-    and then resolving it to an IP address using the `socket` library. The resulting IP address
-    is returned as a string.
-    :return: The IP address of the local machine as a string.
+    Retrieve the user's IP address using an external API.
+    This function sends an HTTP request to 'https://api.ipify.org?format=json' to obtain the user's IP address.
+    The IP address is extracted from the API response and returned.
+    :return: The user's IP address if it is successfully obtained, or None if there's an error.
     """
-    hostname = socket.gethostname()    
-    ip_address = socket.gethostbyname(hostname)        
-    return ip_address
+    url = 'https://api.ipify.org?format=json'
+    script = (f'await fetch("{url}").then('
+                'function(response) {'
+                    'return response.json();'
+                '})')
+
+    try:
+        result = st_javascript(script)
+        if isinstance(result, dict) and 'ip' in result:
+            return result['ip']
+    except:
+        pass
 
 def get_country_from_ip(user_ip):
     """
