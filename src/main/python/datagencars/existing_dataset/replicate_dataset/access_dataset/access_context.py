@@ -37,5 +37,8 @@ class AccessContext:
         :return: A list of context possible values from a specific attribute.
         '''
         candidate_possible_value_list = self.context_df[attribute_name].unique().tolist()
-        context_possible_value_list = [x for x in candidate_possible_value_list if not math.isnan(x)]        
+        if self.context_df[attribute_name].isna().any():
+            context_possible_value_list = [x for x in candidate_possible_value_list if not math.isnan(x)]   
+        else:
+            context_possible_value_list = candidate_possible_value_list
         return sorted(context_possible_value_list)   

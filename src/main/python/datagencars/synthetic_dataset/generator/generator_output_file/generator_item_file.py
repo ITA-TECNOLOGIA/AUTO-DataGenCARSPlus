@@ -1,7 +1,9 @@
+import random
+
+import streamlit as st
+from datagencars.synthetic_dataset.generator.access_schema.access_item_profile import AccessItemProfile
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
-from datagencars.synthetic_dataset.generator.access_schema.access_item_profile import AccessItemProfile
-import streamlit as st
 
 
 class GeneratorItemFile(GeneratorFile):
@@ -39,22 +41,26 @@ class GeneratorItemFile(GeneratorFile):
             # Random with correlation:
             instance_generator = GeneratorInstance(generation_access=self.access_generation_config, schema_access=self.schema_access, item_profile_access=self.item_profile_access)
             number_profile = self.item_profile_access.get_number_profiles()
+            current_number_item_by_profile = 0
             for position_item_profile in range(1, number_profile+1):                
                 # Determining the number of instances to generate by item profile:
                 probability_percentage_profile = self.access_generation_config.get_probability_percentage_profile_from_pos(position=position_item_profile)
                 number_item_by_profile = (probability_percentage_profile*number_item)/100
                 # Determining the number of noise in the instances to generate by item profile:
                 noise_percentage_profile = self.access_generation_config.get_noise_percentage_profile_from_pos(position=position_item_profile)
-                number_noise_by_profile = int((noise_percentage_profile*number_item_by_profile)/100)
-                for _ in range(number_noise_by_profile):
+                number_noise_by_profile = int((noise_percentage_profile*number_item_by_profile)/100)                
+                for i in range(number_noise_by_profile):
                     attribute_list = instance_generator.generate_instance(position_item_profile=position_item_profile, with_noise=True)
                     self.file_df.loc[len(self.file_df.index)] = attribute_list                    
-                for _ in range(int(number_item_by_profile)-number_noise_by_profile):                                       
+                    # Update the progress bar with each iteration                    
+                    current_number_item_by_profile += 1
+                    progress_bar.progress(text=f'Generating {current_number_item_by_profile} items from {number_item}', value=(current_number_item_by_profile) / number_item)
+                for i in range(int(number_item_by_profile)-number_noise_by_profile):
                     attribute_list = instance_generator.generate_instance(position_item_profile=position_item_profile, with_noise=False)
                     self.file_df.loc[len(self.file_df.index)] = attribute_list
-                    # i = position_item_profile * number_item_by_profile
-                    # # Update the progress bar with each iteration
-                    # progress_bar.progress(text=f'Generating {i} items from {number_item}', value=(i) / number_item)
+                    # Update the progress bar with each iteration
+                    current_number_item_by_profile += 1
+                    progress_bar.progress(text=f'Generating {current_number_item_by_profile} items from {number_item}', value=(current_number_item_by_profile) / number_item)                    
         else:
             # Without correlation (Random or Gaussian distribution):
             instance_generator = GeneratorInstance(schema_access=self.schema_access)
@@ -79,8 +85,36 @@ class GeneratorItemFile(GeneratorFile):
         return self.generate_null_values(self.file_df.copy())
     
     def update_object_action(self, df):
+        """
+        Update the 'object_action_types' column in the dataframe based on the 'object_type' column.
+        :param df: The dataframe containing the data to be updated.
+        :return: The dataframe with the 'object_action_types' column updated.
+        """
         for index, row in df.iterrows():
             object_type = row['object_type']
             object_action = row['object_action_types']
             df.at[index, 'object_action_types'] = object_action[object_type]
         return df
+    
+    def generate_null_values(self, file_df):
+        """
+        Generate null values in the item dataframe based on the specified percentage.
+        :param file_df: A dataframe containing item data.
+        :return: A copy of the item dataframe with generated null values.
+        """
+        percentage_null = self.access_generation_config.get_number_item_null()
+        if percentage_null > 0:
+            number_item = self.access_generation_config.get_number_item()
+            number_attributes = self.schema_access.get_number_attributes()
+            null_values = int((number_attributes * number_item * percentage_null) / 100)
+            # Generate random positions to be null
+            for i in range(1, null_values+1):
+                # Generate column to remove
+                random_column = random.randint(1, number_attributes)
+                # Generate row to remove
+                random_row = random.randint(0, number_item-1)            
+                # Remove value
+                if file_df.iloc[random_row, random_column] != None:
+                    file_df.iloc[random_row, random_column] = None
+                    i = i + 1         
+        return file_df.copy()
