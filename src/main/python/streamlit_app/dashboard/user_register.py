@@ -14,7 +14,7 @@ def generate_implicit():
     """
     user_database_df = load_user_database()
     user_ip = get_user_ip()
-    if user_ip not in user_database_df[config.IP_LABEL].values:
+    if (user_ip) and (user_ip not in user_database_df[config.IP_LABEL].values):
         country, city, region, loc, timezone = get_country_from_ip(user_ip)        
         # Append the new instance to the DataFrame:
         selected_data_dict = {config.IP_LABEL: user_ip, config.COUNTRY_LABEL: country, config.CITY_LABEL: city, config.REGION_LABEL: region, config.LOC_LABEL: loc, config.TIMEZONE_LABEL: timezone}

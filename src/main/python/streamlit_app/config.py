@@ -35,6 +35,9 @@ ITEM_SCHEMA_NAME = 'item_schema'
 CONTEXT_TYPE = 'context'
 CONTEXT_SCHEMA_NAME = 'context_schema'
 # generation config:
+GENERATION_CONFIG_USER_SCHEMA_NAME = 'generation_config_user'
+GENERATION_CONFIG_ITEM_SCHEMA_NAME = 'generation_config_item'
+GENERATION_CONFIG_CONTEXT_SCHEMA_NAME = 'generation_config_context'
 GENERATION_CONFIG_SCHEMA_NAME = 'generation_config'
 # rating:
 RATING_TYPE = 'rating'
