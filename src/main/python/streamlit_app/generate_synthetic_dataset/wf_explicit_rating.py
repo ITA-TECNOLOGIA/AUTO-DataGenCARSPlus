@@ -85,7 +85,7 @@ def generate_synthtetic_dataset(with_context):
         user_profile_df = wf_rating.get_user_profile()
 
         ###### Rating file #####:
-        # Generating <rating.csv>: 
+        # Generating <rating.csv>:
         if with_context:
             wf_rating.generate_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema, context_df=context_df, context_schema=context_schema)
         else:
