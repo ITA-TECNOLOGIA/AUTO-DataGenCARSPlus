@@ -12,7 +12,7 @@ def get_generation_config_schema():
     Get the schema <generating_config_context.conf> for the generation of the context file.    
     :return: The edited content of the <generating_config_context.conf> schema.
     """
-    st.header('General settings')    
+    st.header('General Settings')    
     if st.checkbox('Upload the context data generation configuration file', value=True, key=f'is_upload_{config.GENERATION_CONFIG_CONTEXT_SCHEMA_NAME}'):
         # Uploading schema <"generating_config_context.conf">:
         schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.GENERATION_CONFIG_CONTEXT_SCHEMA_NAME, tab_type='tab_context')
@@ -41,7 +41,7 @@ def get_context_schema():
     Get the schema <context_schema.conf>.
     :return: The edited context schema content.
     """
-    st.header('Contexts')        
+    st.header('Context Schema')        
     if st.checkbox(f'Upload the data {config.CONTEXT_TYPE} schema file', value=True, key=f'is_upload_{config.CONTEXT_SCHEMA_NAME}_file'):
         # Uploading schema <context_schema.conf>:
         schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.CONTEXT_SCHEMA_NAME, tab_type='tab_context')

@@ -12,7 +12,7 @@ def get_generation_config_schema():
     Get the schema <generating_config_item.conf> for the generation of the item file.    
     :return: The edited content of the <generating_config_item.conf> schema.
     """
-    st.header('General settings')    
+    st.header('General Settings')
     if st.checkbox('Upload the user data generation configuration file', value=True, key=f'is_upload_{config.GENERATION_CONFIG_ITEM_SCHEMA_NAME}'):
         # Uploading the schema <"generation_config_item.conf">:
         schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.GENERATION_CONFIG_ITEM_SCHEMA_NAME, tab_type='tab_item')
@@ -41,7 +41,7 @@ def get_item_schema():
     Get the schema <item_schema.conf>.
     :return: The edited item schema content.
     """
-    st.header('Items')        
+    st.header('Item Schema')        
     if st.checkbox(f'Upload the data {config.ITEM_TYPE} schema file', value=True, key=f'is_upload_{config.ITEM_SCHEMA_NAME}_file'):
         # Uploading the schema <"item_schema.conf">:
         schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, tab_type='tab_item')

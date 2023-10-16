@@ -12,7 +12,7 @@ def get_generation_config_schema():
     Get the schema <generating_config_user.conf> for the generation of the user file.    
     :return: The edited content of the <generating_config_user.conf> schema.
     """
-    st.header('General settings')    
+    st.header('General Settings')    
     if st.checkbox('Upload the user data generation configuration file', value=True, key=f'is_upload_{config.GENERATION_CONFIG_USER_SCHEMA_NAME}'):
         # Uploading schema <"generation_config_user.conf">:
         schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.GENERATION_CONFIG_USER_SCHEMA_NAME, tab_type='tab_user')
@@ -41,7 +41,7 @@ def get_user_schema():
     Get the schema <user_schema.conf>.
     :return: The edited user schema content.
     """
-    st.header('Users')        
+    st.header('User Schema')        
     if st.checkbox(f'Upload the data {config.USER_TYPE} schema file', value=True, key=f'is_upload_{config.USER_SCHEMA_NAME}_file'):
         # Uploading schema <user_schema.conf>:
         schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.USER_SCHEMA_NAME, tab_type='tab_user')

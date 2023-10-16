@@ -36,7 +36,7 @@ class AccessItem:
         :return: A list of item possible values from an specific attribute.
         '''        
         candidate_possible_value_list = self.item_df[attribute_name].unique().tolist()
-        if self.context_df[attribute_name].isna().any():
+        if self.item_df[attribute_name].isna().any():
             item_possible_value_list = [x for x in candidate_possible_value_list if not math.isnan(x)]      
         else:
             item_possible_value_list = candidate_possible_value_list
