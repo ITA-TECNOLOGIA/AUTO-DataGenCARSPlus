@@ -19,8 +19,8 @@ GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-pro
 #### Generate a synthetic dataset ####:
 RATING_FEEDBACK_OPTIONS = ['Explicit ratings', 'Implicit ratings']
 # tabs:
-CONTEXT_TAB_LIST = ['User', 'Item', 'Context', 'Rating']
-WITHOUT_CONTEXT_TAB_LIST = ['User', 'Item', 'Rating']
+CONTEXT_TAB_LIST = ['User', 'Item', 'Context', 'User Profile', 'Rating']
+WITHOUT_CONTEXT_TAB_LIST = ['User', 'Item', 'User Profile', 'Rating']
 # user:
 USER_TYPE = 'user'
 USER_PROFILE_TYPE = 'user profile'
