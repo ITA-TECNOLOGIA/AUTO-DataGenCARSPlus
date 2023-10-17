@@ -49,6 +49,14 @@ class TestAccessUser(unittest.TestCase):
         logging.info(f'count_user_profile_id: {count_user_profile_id}')
         self.assertEqual(count_user_profile_id, 0)
 
+    def test_get_count_user_profile_id(self):
+        '''
+        Get the count of unique values in the 'user_profile_id' column of the 'user_df' dataframe.
+        '''
+        user_profile_id = self.__access.get_user_profile_id_from_user_id(user_id=4)        
+        logging.info(f'user_profile_id: {user_profile_id}')
+        self.assertEqual(user_profile_id, 0)        
+
 
 if __name__ == '__main__':
     unittest.main()

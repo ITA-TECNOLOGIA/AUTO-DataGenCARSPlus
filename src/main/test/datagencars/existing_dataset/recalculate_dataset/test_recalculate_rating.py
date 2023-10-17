@@ -16,6 +16,9 @@ class TestRecalculateRating(unittest.TestCase):
         # user_profile_df:
         user_profile_file_path = dataset_cars_path + 'user_profile.csv'
         user_profile_df = pd.read_csv(user_profile_file_path, encoding='utf-8', index_col=False, sep=',')
+        # user_df:
+        user_file_path = dataset_cars_path + 'user.csv'
+        user_df = pd.read_csv(user_file_path, encoding='utf-8', index_col=False, sep=';')   
         # item_df:
         item_file_path = dataset_cars_path + 'item.csv'
         item_df = pd.read_csv(item_file_path, encoding='utf-8', index_col=False, sep=';')
@@ -31,13 +34,16 @@ class TestRecalculateRating(unittest.TestCase):
         # user_profile_df (RS):
         user_profile_file_path = dataset_rs_path + 'user_profile.csv'
         user_profile_df_rs = pd.read_csv(user_profile_file_path, encoding='utf-8', index_col=False, sep=',')
+        # user_df:
+        user_file_path = dataset_rs_path + 'user.csv'
+        user_df_rs = pd.read_csv(user_file_path, encoding='utf-8', index_col=False, sep=';')     
         # item_df:
         item_file_path = dataset_rs_path + 'item.csv'
         item_df_rs = pd.read_csv(item_file_path, encoding='utf-8', index_col=False, sep=';')        
 
         # Dataset extension generator:        
-        self.__generator_cars = RecalculateRating(rating_df=self.rating_df, user_profile_df=user_profile_df, item_df=item_df, context_df=context_df)
-        self.__generator_rs = RecalculateRating(rating_df=self.rating_df_rs, user_profile_df=user_profile_df_rs, item_df=item_df_rs)
+        self.__generator_cars = RecalculateRating(rating_df=self.rating_df, user_profile_df=user_profile_df, user_df=user_df, item_df=item_df, context_df=context_df)
+        self.__generator_rs = RecalculateRating(rating_df=self.rating_df_rs, user_profile_df=user_profile_df_rs, user_df=user_df_rs, item_df=item_df_rs)
     
     def tearDown(self):
         del self.__generator_cars

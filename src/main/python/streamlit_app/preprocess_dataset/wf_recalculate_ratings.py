@@ -26,9 +26,9 @@ def generate(with_context):
     # Loading dataset:
     st.write('Upload the following files: ')
     if with_context:
-        __, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_extend_dataset')
+        user_df, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_extend_dataset')
     else:
-        __, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_extend_dataset')   
+        user_df, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_extend_dataset')   
 
     # Showing the current image of the WF:
     st.markdown("""---""")
@@ -45,12 +45,12 @@ def generate(with_context):
     k = st.number_input('Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
     new_rating_df = pd.DataFrame()
     if with_context:
-        new_rating_df = button_recalculate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output, context_df)
+        new_rating_df = button_recalculate_dataset(with_context, rating_df, user_profile_df, user_df, item_df, percentage_rating_variation, k, output, context_df)
     else:
-        new_rating_df = button_recalculate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output)
+        new_rating_df = button_recalculate_dataset(with_context, rating_df, user_profile_df, user_df, item_df, percentage_rating_variation, k, output)
     return new_rating_df
 
-def button_recalculate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output, context_df=None):
+def button_recalculate_dataset(with_context, rating_df, user_profile_df, user_df, item_df, percentage_rating_variation, k, output, context_df=None):
     """
     Executes a button to recalculate a dataset (rating file).
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -69,14 +69,14 @@ def button_recalculate_dataset(with_context, rating_df, user_profile_df, item_df
         # With context:
         if with_context:
             if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty) and (not user_profile_df.empty):                
-                recalculate_constructor = RecalculateRating(rating_df, user_profile_df, item_df, context_df)
+                recalculate_constructor = RecalculateRating(rating_df, user_profile_df, user_df, item_df, context_df)
                 new_rating_df = recalculate_ratings(recalculate_constructor, percentage_rating_variation, k)                
             else:
                 st.warning('The user, item, context, rating and user profile files must be uploaded.')
         else:
             # Without context:
             if (not item_df.empty) and (not rating_df.empty) and (not user_profile_df.empty):                
-                recalculate_constructor = RecalculateRating(rating_df, user_profile_df, item_df)
+                recalculate_constructor = RecalculateRating(rating_df, user_profile_df, user_df, item_df)
                 new_rating_df = recalculate_ratings(recalculate_constructor, percentage_rating_variation, k)                
             else:
                 st.warning('The user, item, rating and user profile files must be uploaded.')                    

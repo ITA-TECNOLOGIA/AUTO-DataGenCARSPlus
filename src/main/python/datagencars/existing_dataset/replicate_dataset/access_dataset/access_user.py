@@ -39,3 +39,13 @@ class AccessUser:
         if self.is_user_profile_id():
             count_user_profile_id = self.user_df['user_profile_id'].nunique()
         return count_user_profile_id
+    
+    def get_user_profile_id_from_user_id(self, user_id):
+        """
+        Get the 'user_profile_id' from 'user_id.
+        :return: The 'user_profile_id'.
+        """
+        user_profile_id = 0
+        if self.is_user_profile_id():
+            user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id]['user_profile_id'].values[0] 
+        return user_profile_id

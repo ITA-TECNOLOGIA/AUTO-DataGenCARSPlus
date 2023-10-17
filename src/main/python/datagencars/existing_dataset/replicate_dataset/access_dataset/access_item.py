@@ -10,7 +10,7 @@ class AccessItem:
         '''     
         Gets a list with unique values of item_id.
         :return: A list with unique values of item_id.
-        '''
+        '''        
         return sorted(self.item_df['item_id'].unique().tolist())
     
     def get_item_attribute_list(self):

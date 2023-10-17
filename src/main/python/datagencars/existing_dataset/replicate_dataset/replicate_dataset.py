@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import streamlit as st
 from datagencars import util
 from datagencars.existing_dataset.generate_rating import GenerateRating
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_rating import ExtractStatisticsRating
@@ -25,8 +26,8 @@ class ReplicateDataset(GenerateRating):
         [R]  rating.csv <replicated>        
     """
 
-    def __init__(self, rating_df, user_profile_df, item_df, context_df=None):
-        super().__init__(rating_df, user_profile_df, item_df, context_df)
+    def __init__(self, rating_df, user_profile_df, user_df, item_df, context_df=None):
+        super().__init__(rating_df, user_profile_df, user_df, item_df, context_df)
         # Determining statistics:
         self.rating_statistics = ExtractStatisticsRating(rating_df)
 
@@ -51,8 +52,13 @@ class ReplicateDataset(GenerateRating):
         item_id_list = []
         context_id_list = []
         rating_list = [] 
-        for user_id in range(1, self.rating_statistics.get_number_users()+1):
-            user_profile_id = user_id     
+        # Create a progress bar
+        progress_bar = st.progress(0.0) 
+        number_users = self.rating_statistics.get_number_users()
+        for user_id in range(1, number_users+1):            
+            user_profile_id = self.access_user.get_user_profile_id_from_user_id(user_id)
+            if user_profile_id == 0:
+                user_profile_id = user_id
             #print('user_id: ', user_id)
             # Items:            
             original_item_id_list = self.access_rating.get_item_id_list_from_user(user_id=user_id)
@@ -95,7 +101,9 @@ class ReplicateDataset(GenerateRating):
                 rating_list.append(modified_rating)
             # Users:
             k = len(original_item_id_list)
-            user_id_list.extend([int(user_id)] * k)                            
+            user_id_list.extend([int(user_id)] * k)
+            # Update the progress bar with each iteration   
+            progress_bar.progress(text=f'Replicating ratings of the user {user_id} from {number_users}', value=(user_id) / number_users)                           
         if rating_df.empty:
             rating_df['user_id'] = user_id_list
             rating_df['item_id'] = item_id_list

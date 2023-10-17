@@ -10,7 +10,7 @@ class TestExtractStatisticsRating(unittest.TestCase):
 
     def setUp(self):             
         # rating.csv
-        rating_file_path = 'resources/existing_dataset/context/sts/ratings.csv'
+        rating_file_path = 'resources/existing_dataset/context/preferencial_rating/sts/rating.csv'
         rating_df = pd.read_csv(rating_file_path, encoding='utf-8', index_col=False, sep=';')        
         # Extract Statistics of Ratings:
         self.__extract = ExtractStatisticsRating(rating_df)

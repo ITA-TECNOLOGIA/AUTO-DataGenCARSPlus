@@ -24,9 +24,9 @@ def generate(with_context):
     # Loading dataset:
     st.write('Upload the following files: ')
     if with_context:        
-        __, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_replicate_dataset')
+        user_df, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_replicate_dataset')
     else:
-        __, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_replicate_dataset')   
+        user_df, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_replicate_dataset')   
     
     # Showing the current image of the WF:
     st.markdown("""---""")
@@ -43,12 +43,12 @@ def generate(with_context):
     k = st.number_input('Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
     new_rating_df = pd.DataFrame()
     if with_context:
-        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output, context_df)
+        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, user_df, item_df, percentage_rating_variation, k, output, context_df)
     else:
-        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output)
+        new_rating_df = button_replicate_dataset(with_context, rating_df, user_profile_df, user_df, item_df, percentage_rating_variation, k, output)
     return new_rating_df
 
-def button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, percentage_rating_variation, k, output, context_df=None):
+def button_replicate_dataset(with_context, rating_df, user_profile_df, user_df, item_df, percentage_rating_variation, k, output, context_df=None):
     """
     Executes a button to replicate a dataset (rating file).
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -68,7 +68,7 @@ def button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, 
                 if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty) and (not user_profile_df.empty):     
                     print('Extracting statistics.')
                     print('Replicating the rating.csv file.')               
-                    replicate_constructor = ReplicateDataset(rating_df, user_profile_df, item_df, context_df)                                        
+                    replicate_constructor = ReplicateDataset(rating_df, user_profile_df, user_df, item_df, context_df)                                        
                     new_rating_df = replicate_constructor.replicate_dataset(percentage_rating_variation, k)
                     print('Replicated data generation has finished.')
                     with st.expander(label=f'Show the replicated file: {config.RATING_TYPE}.csv'):
@@ -83,7 +83,7 @@ def button_replicate_dataset(with_context, rating_df, user_profile_df, item_df, 
                 if (not item_df.empty) and (not rating_df.empty) and (not user_profile_df.empty):                   
                     print('Extracting statistics.')
                     print('Replicating the rating.csv file.')
-                    replicate_constructor = ReplicateDataset(rating_df, user_profile_df, item_df)                                            
+                    replicate_constructor = ReplicateDataset(rating_df, user_profile_df, user_df, item_df)                                            
                     new_rating_df = replicate_constructor.replicate_dataset(percentage_rating_variation, k)
                     print('Replicated data generation has finished.')
                     with st.expander(label=f'Show the replicated file: {config.RATING_TYPE}.csv'):
