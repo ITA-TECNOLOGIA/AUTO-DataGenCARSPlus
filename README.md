@@ -44,7 +44,7 @@ To use it the following credentials will be required.
 - **user**: `autodatagencars`
 - **password**: `Qxwsx3py`
 
-## Installation:
+<!-- ## Installation:
 With pip:
 ```python
     $ pip install numpy
@@ -58,7 +58,7 @@ With conda:
 For the latest version, you can also clone the repo and build the source:
 ```python     
     $ git clone https://git.itainnova.es/bigdata/misc/auto_datagencars.git  
-```
+``` -->
 
 ## Requirements
 The libraries used in this project with its respective versions can be seen in `environment.yml`.
