@@ -1,5 +1,7 @@
 import random
 
+import streamlit as st
+
 
 class GenerateNullValues:
 
@@ -13,6 +15,8 @@ class GenerateNullValues:
         :return: The item or context file with generated null values.  
         """
         if percentage_null > 0:
+            # Create a progress bar
+            progress_bar = st.progress(0.0)
             number_item = len(file_df)
             number_attributes = file_df.shape[1] - 1
 
@@ -29,9 +33,11 @@ class GenerateNullValues:
                 # Generate row to remove
                 random_row = random.randint(0, number_item-1)
                 #print('Removing item column {} and row {}'.format(random_column, random_row))
+                # Update the progress bar with each iteration                            
+                progress_bar.progress(text=f'Generating {i} null values from {null_values}', value=(i) / null_values)
                 # Remove value
                 if file_df.iloc[random_row, random_column] != None:
                     file_df.iloc[random_row, random_column] = None
-                    i = i + 1            
+                    i = i + 1                          
         return file_df.copy()    
   

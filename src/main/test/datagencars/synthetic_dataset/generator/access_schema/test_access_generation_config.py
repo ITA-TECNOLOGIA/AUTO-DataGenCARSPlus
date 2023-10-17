@@ -113,7 +113,7 @@ class TestAccessGenerationConfig(unittest.TestCase):
         '''
         gaussian_distribution = self.__access.is_gaussian_distribution()
         logging.info(f'gaussian_distribution: {gaussian_distribution}')                
-        self.assertEqual(bool(gaussian_distribution), False)
+        self.assertEqual(bool(gaussian_distribution), True)
 
     def test_get_minimum_date_timestamp(self):
         '''

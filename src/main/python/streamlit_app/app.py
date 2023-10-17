@@ -63,8 +63,17 @@ elif general_option == 'Pre-process a dataset':
     wf_option = st.sidebar.radio(label='Select a workflow:', options=config.WF_OPTIONS)
     
     # WF --> Generate NULL values:
-    if wf_option == 'Generate NULL values':
-        wf_generate_null_values.generate(with_context)
+    if wf_option == 'Generate NULL values':        
+        if with_context:
+            # Setting tabs:
+            tab_generate_null_values_item, tab_generate_null_values_context = st.tabs(['Generate NULL values (item.csv)', 'Generate NULL values (context.csv)'])            
+            # Apply WF: "Generate NULL values":
+            wf_generate_null_values.generate(with_context, tab_generate_null_values_item, tab_generate_null_values_context)
+        else:
+            # Setting tabs:
+            tab_generate_null_values_item, tab_empty = st.tabs(['Generate NULL values (item.csv)', '-'])
+            # Apply WF: "Generate NULL values":
+            wf_generate_null_values.generate(with_context, tab_generate_null_values_item)   
 
     # WF --> Replace NULL values:
     elif wf_option == 'Replace NULL values':

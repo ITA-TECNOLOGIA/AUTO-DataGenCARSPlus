@@ -51,9 +51,9 @@ class GeneratorExplicitRatingFile:
             self.item_schema_access = None
             self.access_item = AccessItem(item_df=item_df)            
         # Context:        
-        if context_df is None: 
-            context_df = pd.DataFrame()
-        if not context_df.empty:
+        if context_df is None:
+            self.context_df = pd.DataFrame()
+        else:
             # Context file (optional): context.csv
             self.context_df = context_df
             # Context schema: context_schema.conf
@@ -71,9 +71,9 @@ class GeneratorExplicitRatingFile:
         '''     
         rating_df = None
         if not self.context_df.empty:
-            rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'context_id', 'rating', 'timestamp'])
-        else:
-            rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'rating', 'timestamp'])
+           rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'context_id', 'rating', 'timestamp'])            
+        else:            
+           rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'rating', 'timestamp'])
 
         # Getting the number of users.
         number_user = self.access_generation_config.get_number_user()
