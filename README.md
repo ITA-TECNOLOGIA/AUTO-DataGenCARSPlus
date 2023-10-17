@@ -19,13 +19,13 @@ It was designed with the following purposes:
   - Explicit ratings
   - Implicit ratings
 * Pre-process a dataset:
+  - Generate NULL values
   - Replace NULL values
-  - Generate a user profile (manual and automatic)
+  - Generate user profile (manual and automatic)
   - Replicate dataset
   - Extend dataset
   - Recalculate ratings
-  - Cast rating
-  - Data converter
+  - Transform attributes
 * Analysis a dataset:
   - Visualization:
     - user
