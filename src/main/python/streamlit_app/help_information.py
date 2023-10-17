@@ -60,6 +60,16 @@ def help_user_profile_id():
 
 ####### Pre-process a dataset #######
 # WORKFLOWS:
+# WF --> Replace NULL values:
+def help_replace_nulls_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to complete unknown contextual information.""")
+
+# WF --> Generate NULL values:
+def help_generate_nulls_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a percentage with unknown contextual information.""")
+
 # WF --> Replicate dataset:
 def help_replicate_dataset_wf():
     with st.expander(label='Help information'):
@@ -74,11 +84,6 @@ def help_extend_dataset_wf():
 def help_recalculate_ratings_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to recalculate ratings in a dataset.""")
-
-# WF --> Replace NULL values:
-def help_replace_nulls_wf():
-    with st.expander(label='Help information'):
-        st.markdown("""Workflow to complete unknown contextual information.""")
 
 # WF --> Generate user profile:
 def help_user_profile_wf():

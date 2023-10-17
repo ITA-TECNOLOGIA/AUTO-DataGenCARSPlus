@@ -9,7 +9,7 @@ class TestExtractStatisticsItem(unittest.TestCase):
 
     def setUp(self):             
         # context.csv
-        context_file_path = 'resources/existing_dataset/context/sts/context.csv'
+        context_file_path = 'resources/existing_dataset/context/preferencial_rating/sts/context.csv'
         context_df = pd.read_csv(context_file_path, encoding='utf-8', index_col=False, sep=';')        
         # Extract Statistics of Context:
         self.__extract = ExtractStatisticsUIC(uic_df=context_df)

@@ -35,7 +35,7 @@ class TestGeneratorContext(unittest.TestCase):
             item_schema = item_schema_file.read()       
         # item_df:
         item_generator = GeneratorItemFile(generation_config=generation_config, item_schema=item_schema)
-        item_df = item_generator.generate_file(with_correlation=False)
+        item_df = item_generator.generate_file()
 
         # context_schema:
         context_schema_file_path = data_schema_path + 'context_schema.conf'
@@ -52,7 +52,7 @@ class TestGeneratorContext(unittest.TestCase):
         del self.__generator
     
     def test_generate_rating_file(self):     
-        rating_file = self.__generator.generate_file(with_context=True)         
+        rating_file = self.__generator.generate_file()         
         logging.info(f'rating_file: {rating_file}')        
         self.assertEqual(rating_file.shape[0], 2000)                
 

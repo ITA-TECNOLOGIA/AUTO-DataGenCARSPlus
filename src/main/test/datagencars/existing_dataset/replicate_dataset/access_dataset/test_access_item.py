@@ -9,7 +9,7 @@ class TestAccessItem(unittest.TestCase):
 
     def setUp(self):             
         # item.csv
-        item_file_path = 'resources/existing_dataset/context/sts/item.csv'
+        item_file_path = 'resources/existing_dataset/context/preferencial_rating/sts/item.csv'
         item_df = pd.read_csv(item_file_path, encoding='utf-8', index_col=False, sep=';')
         # Access item:
         self.__access = AccessItem(item_df)

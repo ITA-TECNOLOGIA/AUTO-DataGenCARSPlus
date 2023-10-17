@@ -2,7 +2,7 @@ import logging
 import unittest
 
 import pandas as pd
-from datagencars.synthetic_dataset.generate_synthetic_explicit_dataset import RatingExplicit
+from datagencars.synthetic_dataset.generate_synthetic_explicit_dataset import GenerateSyntheticExplicitDataset
 
 
 class TestGeneratorSyntheticDatasetCARS(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestGeneratorSyntheticDatasetCARS(unittest.TestCase):
         with open(generation_config_file_path, 'r') as generation_config_file:
             generation_config = generation_config_file.read()          
         # Rating generator:        
-        self.__generator = RatingExplicit(generation_config)
+        self.__generator = GenerateSyntheticExplicitDataset(generation_config)
 
         # user_schema.conf
         user_schema_file_path = self.data_schema_cars_path + 'user_schema.conf'
@@ -47,13 +47,11 @@ class TestGeneratorSyntheticDatasetCARS(unittest.TestCase):
         item_profile_path = self.data_schema_cars_path + 'item_profile.conf'
         with open(item_profile_path, 'r') as item_profile_file:            
             item_profile = item_profile_file.read()
-        # Correlation:
-        with_correlation = True
-        item_file = self.__generator.generate_item_file(item_schema, item_profile, with_correlation)
+        # Correlation:        
+        item_file = self.__generator.generate_item_file(item_schema, item_profile)
 
-        # Generating rating file:      
-        with_context = True        
-        rating_file = self.__generator.generate_rating_file(user_df=self.user_file, user_profile_df=self.user_profile_df, item_df=item_file, item_schema=item_schema, with_context=with_context, context_df=self.context_file, context_schema=self.context_schema)
+        # Generating rating file:                 
+        rating_file = self.__generator.generate_rating_file(user_df=self.user_file, user_profile_df=self.user_profile_df, item_df=item_file, item_schema=item_schema, context_df=self.context_file, context_schema=self.context_schema)
         logging.info(f'rating_file: {rating_file}')
         self.assertEqual(rating_file.shape[0], 2000)
 
@@ -71,9 +69,8 @@ class TestGeneratorSyntheticDatasetCARS(unittest.TestCase):
             item_profile = item_profile_file.read()    
         # Without correlation:        
         item_file = self.__generator.generate_item_file(item_schema) 
-             
-        with_context = True
-        rating_file = self.__generator.generate_rating_file(user_df=self.user_file, user_profile_df=self.user_profile_df, item_df=item_file, item_schema=item_schema, with_context=with_context, context_df=self.context_file, context_schema=self.context_schema)        
+
+        rating_file = self.__generator.generate_rating_file(user_df=self.user_file, user_profile_df=self.user_profile_df, item_df=item_file, item_schema=item_schema, context_df=self.context_file, context_schema=self.context_schema)        
         logging.info(f'rating_file: {rating_file}')
         self.assertEqual(rating_file.shape[0], 2000)
 

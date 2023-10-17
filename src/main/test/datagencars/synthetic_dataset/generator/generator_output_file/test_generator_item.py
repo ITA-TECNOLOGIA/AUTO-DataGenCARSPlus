@@ -21,16 +21,18 @@ class TestGeneratorItem(unittest.TestCase):
         with open(item_profile_path, 'r') as item_profile_file:            
             item_profile = item_profile_file.read()  
         # Item generator:
-        self.__generator = GeneratorItemFile(generation_config=generation_config, item_schema=item_schema, item_profile=item_profile)
+        self.__generator_with_correlation = GeneratorItemFile(generation_config=generation_config, item_schema=item_schema, item_profile=item_profile)
+        self.__generator_without_correlation = GeneratorItemFile(generation_config=generation_config, item_schema=item_schema)
     
     def tearDown(self):
-        del self.__generator
+        del self.__generator_with_correlation
+        del self.__generator_without_correlation
     
     def test_generate_item_file_correlation(self):
         '''        
         Generates the item file with correlation.        
         '''        
-        item_file = self.__generator.generate_file(with_correlation=True)        
+        item_file = self.__generator_with_correlation.generate_file()        
         logging.info(f'item_file: {item_file}')
         self.assertEqual(item_file.shape[0], 1000)
 
@@ -38,7 +40,7 @@ class TestGeneratorItem(unittest.TestCase):
         '''        
         Generates the item file without correlation.        
         '''        
-        item_file = self.__generator.generate_file(with_correlation=False)        
+        item_file = self.__generator_without_correlation.generate_file()        
         logging.info(f'item_file: {item_file}')
         self.assertEqual(item_file.shape[0], 1000)
 

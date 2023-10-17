@@ -4,6 +4,7 @@ import ast
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_rating import AccessRating
+from datagencars.existing_dataset.replicate_dataset.access_dataset.access_user import AccessUser
 from datagencars.synthetic_dataset.generator.access_schema.access_user_profile import AccessUserProfile
 
 class GenerateRating(ABC):
@@ -26,9 +27,11 @@ class GenerateRating(ABC):
         [R]  rating.csv <replicated>        
     '''
 
-    def __init__(self, rating_df, user_profile_df, item_df, context_df=None):
+    def __init__(self, rating_df, user_profile_df, user_df, item_df, context_df=None):
         # Access to the user profile:
         self.access_user_profile = AccessUserProfile(user_profile_df)
+        # Access to the user.csv.
+        self.access_user = AccessUser(user_df)
         # Access to the item.csv.
         self.access_item = AccessItem(item_df)
         # Access to the context.csv.

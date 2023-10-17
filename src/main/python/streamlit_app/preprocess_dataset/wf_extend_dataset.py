@@ -26,9 +26,9 @@ def generate(with_context):
     # Loading dataset:
     st.write('Upload the following files: ')
     if with_context:
-        __, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_extend_dataset')
+        user_df, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_extend_dataset')
     else:
-        __, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_extend_dataset')   
+        user_df, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_extend_dataset')   
 
     # Showing the current image of the WF:
     st.markdown("""---""")
@@ -47,12 +47,12 @@ def generate(with_context):
     option = st.selectbox(label='How would you like to extend the dataset?', options=['Select one option', 'N ratings randomly (some users)', 'N ratings for each user'])
     new_rating_df = pd.DataFrame()
     if with_context:
-        new_rating_df = button_extend_dataset(with_context, rating_df, user_profile_df, item_df, number_rating, percentage_rating_variation, k, option, output, context_df)
+        new_rating_df = button_extend_dataset(with_context, rating_df, user_profile_df, user_df, item_df, number_rating, percentage_rating_variation, k, option, output, context_df)
     else:
-        new_rating_df = button_extend_dataset(with_context, rating_df, user_profile_df, item_df, number_rating, percentage_rating_variation, k, option, output)
+        new_rating_df = button_extend_dataset(with_context, rating_df, user_profile_df, user_df, item_df, number_rating, percentage_rating_variation, k, option, output)
     return new_rating_df
 
-def button_extend_dataset(with_context, rating_df, user_profile_df, item_df, number_rating, percentage_rating_variation, k, option, output, context_df=None):
+def button_extend_dataset(with_context, rating_df, user_profile_df, user_df, item_df, number_rating, percentage_rating_variation, k, option, output, context_df=None):
     """
     Executes a button to replicate a dataset (rating file).
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -73,7 +73,7 @@ def button_extend_dataset(with_context, rating_df, user_profile_df, item_df, num
         # With context:
         if with_context:
             if (not item_df.empty) and (not context_df.empty) and (not rating_df.empty) and (not user_profile_df.empty):                
-                increase_constructor = IncreaseRating(rating_df, user_profile_df, item_df, context_df)
+                increase_constructor = IncreaseRating(rating_df, user_profile_df, user_df, item_df, context_df)
                 new_rating_df = extend_dataset(increase_constructor, number_rating, percentage_rating_variation, k, option)
                 if new_rating_df.shape[0] > 1:
                     total_extended_ratings = int(new_rating_df.shape[0]- rating_df.shape[0])
@@ -83,7 +83,7 @@ def button_extend_dataset(with_context, rating_df, user_profile_df, item_df, num
         else:
             # Without context:
             if (not item_df.empty) and (not rating_df.empty) and (not user_profile_df.empty):                
-                increase_constructor = IncreaseRating(rating_df, user_profile_df, item_df)
+                increase_constructor = IncreaseRating(rating_df, user_profile_df, user_df, item_df)
                 new_rating_df = extend_dataset(increase_constructor, number_rating, percentage_rating_variation, k, option)
                 if new_rating_df.shape[0] > 1:
                     total_extended_ratings = int(new_rating_df.shape[0]- rating_df.shape[0])

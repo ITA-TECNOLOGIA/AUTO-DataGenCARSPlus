@@ -15,7 +15,7 @@ class GeneratorItemFile(GeneratorFile):
 
     def __init__(self, generation_config, item_schema, item_profile=None):
         super().__init__(generation_config, item_schema)
-        # Acces item profile.        
+        # Acces item profile.
         if item_profile:
             self.item_profile_access = AccessItemProfile(file_str=item_profile)
         else:
@@ -64,7 +64,7 @@ class GeneratorItemFile(GeneratorFile):
         else:
             # Without correlation (Random or Gaussian distribution):
             instance_generator = GeneratorInstance(schema_access=self.schema_access)
-            for i in range(number_item):                 
+            for i in range(number_item):
                 if not(input_csv is None):
                     instance = input_csv.iloc[i]
                 else:

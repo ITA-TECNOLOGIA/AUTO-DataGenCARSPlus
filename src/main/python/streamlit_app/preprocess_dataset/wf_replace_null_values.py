@@ -1,13 +1,9 @@
-import base64
-import io
-
 import pandas as pd
-import requests
 import streamlit as st
 from datagencars.existing_dataset.replace_null_values.replace_null_values import ReplaceNullValues
 from dateutil.parser import parse
 from streamlit_app import config, console, help_information
-from streamlit_app.generate_synthetic_dataset import wf_explicit_rating
+from streamlit_app.generate_synthetic_dataset import wf_schema_util
 from streamlit_app.preprocess_dataset import wf_util
 from streamlit_app.workflow_graph import workflow_image
 
@@ -21,8 +17,7 @@ def generate(with_context, tab_replace_null_values_item, tab_replace_null_values
     :return: The item and context files with replaced NULL values.
     """
     new_item_df = pd.DataFrame()
-    new_context_df = pd.DataFrame()
-    null_values_i = null_values_c = False
+    new_context_df = pd.DataFrame()    
     if with_context:
         # Replacing NULL values in context.csv:
         with tab_replace_null_values_context:
@@ -64,9 +59,7 @@ def generate_item(with_context):
             # Infering context schema from item.csv:
             item_schema = infer_schema(df=item_df, file_type=config.ITEM_TYPE)
             # Showing and editing the inferred schema:
-            item_schema = wf_explicit_rating.edit_schema_file(schema_file_name=config.ITEM_TYPE, schema_value=item_schema)
-            # Saving schema:
-            wf_util.save_file(file_name=config.ITEM_SCHEMA_NAME, file_value=item_schema, extension='conf')
+            item_schema = wf_schema_util.edit_schema_file(schema_file_name=config.ITEM_TYPE, schema_value=item_schema, tab_type='null_values')           
             # Replacing null values:
             new_item_df = button_replace_null_values(schema_type=config.ITEM_TYPE, df=item_df, schema=item_schema)      
     return new_item_df
@@ -101,9 +94,7 @@ def generate_context(with_context):
                 # Infering context schema from context.csv:
                 context_schema = infer_schema(df=context_df, file_type=config.CONTEXT_TYPE)
                 # Showing and editing the inferred schema:
-                context_schema = wf_explicit_rating.edit_schema_file(schema_file_name=config.CONTEXT_TYPE, schema_value=context_schema)
-                # Saving schema:
-                wf_util.save_file(file_name=config.CONTEXT_SCHEMA_NAME, file_value=context_schema, extension='conf')
+                context_schema = wf_schema_util.edit_schema_file(schema_file_name=config.CONTEXT_TYPE, schema_value=context_schema, tab_type='null_values')                
                 # Replacing null values:
                 new_context_df = button_replace_null_values(schema_type=config.CONTEXT_TYPE, df=context_df, schema=context_schema)                   
     return new_context_df
@@ -311,7 +302,7 @@ def button_replace_null_values(schema_type, df, schema):
     """
     new_df = pd.DataFrame()    
     if not df.empty:
-        if st.button(label='Replace NULL Values', key=f'button_replace_nulls_{schema_type}'):
+        if st.button(label='Replace', key=f'button_replace_nulls_{schema_type}'):
             print('Replacing NULL Values')
             replace_null_values = ReplaceNullValues(file_df=df)         
             if schema_type == 'item':
@@ -319,7 +310,11 @@ def button_replace_null_values(schema_type, df, schema):
                 df_name = config.ITEM_TYPE
             elif schema_type == 'context':
                 new_df = replace_null_values.regenerate_context_file(context_schema=schema)
-                df_name = config.CONTEXT_TYPE            
+                df_name = config.CONTEXT_TYPE
+            if new_df.equals(df):
+                st.warning(f'There are no Nulls values in the {schema_type} file. Below is the original {schema_type} file (without being transformed).')
+            else:
+                st.success(f'In the {schema_type}, null values have been replaced successfully.')
             with st.expander(label=f'Show the replaced file: {schema_type}.csv'):
                 # Show the new item schema file with replaced null values:    
                 st.dataframe(new_df)

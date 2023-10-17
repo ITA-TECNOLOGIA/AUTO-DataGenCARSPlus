@@ -18,9 +18,9 @@ class IncreaseRating(GenerateRating):
     Ouput:
         [R]  rating.csv <extended>        
     """
-
-    def __init__(self, rating_df, user_profile_df, item_df, context_df=None):
-        super().__init__(rating_df, user_profile_df, item_df, context_df)        
+        
+    def __init__(self, rating_df, user_profile_df, user_df, item_df, context_df=None):
+        super().__init__(rating_df, user_profile_df, user_df, item_df, context_df)        
         self.with_context = False
         if 'context_id' in rating_df.columns:  
             # Identifying whether with_context:
@@ -42,6 +42,8 @@ class IncreaseRating(GenerateRating):
         user_id_list = self.access_rating.get_user_id_list()
         # Create a progress bar
         progress_bar = st.progress(0.0) 
+        count_user = 0
+        count_ratings = number_rating*len(user_id_list)
         # Extending dataset by user:
         for user_id in user_id_list:
             # Generating N ratings for the current user:
@@ -54,8 +56,9 @@ class IncreaseRating(GenerateRating):
                 new_instance_df = pd.DataFrame([new_instance])                
                 # Adding new instance in the rating file:                
                 extended_rating_df = pd.concat([extended_rating_df, new_instance_df], ignore_index=True).copy()
-            # Update the progress bar with each iteration                            
-            progress_bar.progress(text=f'Generating {i+1} ratings from {number_rating}', value=(i+1) / number_rating)
+            # Update the progress bar with each iteration   
+            count_user += number_rating
+            progress_bar.progress(text=f'Generating {count_user} ratings from {count_ratings}', value=(count_user) / count_ratings)
         return util.sort_rating_df(extended_rating_df)
 
     def extend_rating_random(self, number_rating, percentage_rating_variation=25, k=10):
@@ -96,13 +99,17 @@ class IncreaseRating(GenerateRating):
         :param k: The k ratings to take in the past.
         :return: The new instance for the rating file.
         """
-        item_id = random.choice(items_not_seen_list)                
+        item_id = random.choice(items_not_seen_list)    
+
+        user_profile_id = self.access_user.get_user_profile_id_from_user_id(user_id)
+        if user_profile_id == 0:
+            user_profile_id = user_id
         if self.with_context:                    
             context_id_list = self.access_context.get_context_id_list()
             context_id = random.choice(context_id_list)
-            rating = self.get_rating(user_id, item_id, context_id)
+            rating = self.get_rating(user_profile_id, item_id, context_id)
         else:
-            rating = self.get_rating(user_id, item_id)                
+            rating = self.get_rating(user_profile_id, item_id)                
         # The minimum value rating.
         min_rating_value = self.access_rating.get_min_rating()
         # The maximum value rating.
