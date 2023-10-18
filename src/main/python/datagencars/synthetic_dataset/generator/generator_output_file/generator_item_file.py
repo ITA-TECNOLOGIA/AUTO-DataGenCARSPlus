@@ -61,6 +61,15 @@ class GeneratorItemFile(GeneratorFile):
                     # Update the progress bar with each iteration
                     current_number_item_by_profile += 1
                     progress_bar.progress(text=f'Generating {current_number_item_by_profile} items from {number_item}', value=(current_number_item_by_profile) / number_item)                    
+            # Check if there are pending items to be added in self.file_df: without correlation
+            count_pending_items = number_item - len(self.file_df)
+            if count_pending_items > 0:     
+                instance_generator = GeneratorInstance(schema_access=self.schema_access)
+                for count_pend_item in range(1, count_pending_items+1):                    
+                    attribute_list = instance_generator.generate_instance()
+                    self.file_df.loc[len(self.file_df.index)] = attribute_list
+                    # Update the progress bar with each iteration
+                    progress_bar.progress(text=f'Generating {current_number_item_by_profile+count_pend_item} items from {number_item}', value=(current_number_item_by_profile+count_pend_item) / number_item)
         else:
             # Without correlation (Random or Gaussian distribution):
             instance_generator = GeneratorInstance(schema_access=self.schema_access)
