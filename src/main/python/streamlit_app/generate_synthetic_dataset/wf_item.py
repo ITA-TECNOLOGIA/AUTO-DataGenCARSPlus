@@ -19,6 +19,7 @@ def get_generation_config_schema():
     else:
         # Generating the schema <"generation_config_item.conf">:
         schema_value = generate_generation_config_schema()
+
     # Editing schema:
     return wf_schema_util.edit_schema_file(schema_file_name=config.GENERATION_CONFIG_ITEM_SCHEMA_NAME, schema_value=schema_value, tab_type='tab_item')
 
@@ -27,13 +28,36 @@ def generate_generation_config_schema():
     Generate the schema <generating_config_item.conf> for the generation of the item file.    
     :return: The content of the <generating_config_item.conf> schema.
     """    
-    with st.expander(f"Generate generating_config_item.conf"):
+    with st.expander(f"Generate generating_config_item.conf"):        
         # [dimension]        
-        generation_config_item_schema = '[dimension] \n'
+        dimension_value = '[dimension] \n'
         item_count = st.number_input(label='Number of items to generate:', value=0)      
-        generation_config_item_schema += 'number_item=' + str(item_count) + '\n'    
+        dimension_value += 'number_item=' + str(item_count) + '\n'    
         percentage_null_item = st.number_input(label='Percentage of null item values:', value=0)
-        generation_config_item_schema += 'percentage_item_null_value=' + str(percentage_null_item) + '\n'
+        dimension_value += 'percentage_item_null_value=' + str(percentage_null_item) + '\n'
+        
+        st.markdown("""---""")
+
+        # [item profile]
+        item_profile_value = ''            
+        with_correlation_checkbox = st.checkbox(label='Apply correlation in the generation of the item file?', value=False, key='with_correlation_checkbox')
+        if with_correlation_checkbox:
+            st.write('Item profile configuration')
+            item_profile_value = '[item profile] \n'
+            probability_percentage_profile_1 = st.number_input(label='Profile probability percentage 1:', value=10)
+            probability_percentage_profile_2 = st.number_input(label='Profile probability percentage 2:', value=30)
+            probability_percentage_profile_3 = st.number_input(label='Profile probability percentage 3:', value=60)
+            noise_percentage_profile_1 = st.number_input(label='Profile noise percentage 1:', value=20)
+            noise_percentage_profile_2 = st.number_input(label='Profile noise percentage 2:', value=20)
+            noise_percentage_profile_3 = st.number_input(label='Profile noise percentage 3:', value=20)            
+            item_profile_value += ('probability_percentage_profile_1=' + str(probability_percentage_profile_1) + '\n' +
+                                'probability_percentage_profile_2=' + str(probability_percentage_profile_2) + '\n' +
+                                'probability_percentage_profile_3=' + str(probability_percentage_profile_3) + '\n' +
+                                'noise_percentage_profile_1=' + str(noise_percentage_profile_1) + '\n' +
+                                'noise_percentage_profile_2=' + str(noise_percentage_profile_2) + '\n' +
+                                'noise_percentage_profile_3=' + str(noise_percentage_profile_3) + '\n')
+        # Generating the text of the file <generation_config.conf>:
+        generation_config_item_schema = dimension_value + '\n' + item_profile_value        
     return generation_config_item_schema
 
 def get_item_schema():
