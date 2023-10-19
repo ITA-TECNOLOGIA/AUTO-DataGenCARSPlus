@@ -93,13 +93,12 @@ def help_user_profile_wf():
 def help_user_profile_manual():
     with st.expander(label='Help information'):
         st.markdown("""Insert weight values in the user profile matrix, considering the following:""")            
-        st.markdown("""* First of all, you will have to specify the ```number of user profiles``` to be generated. """)
+        st.markdown("""* If the ```user_profile_id``` column is not present in the ```user.csv``` file, you will have to specify the ```number of user profiles``` to be generated. """)
         st.markdown("""* The user profile matrix consists of relevant attribute names related to the items and/or contexts. """)
         st.markdown("""* The values of the user profile matrix must have values between ```[0-1]```. Except column ```user_profile_id``` which must be an ```integer``` value and start at ```1```. """)
         st.markdown("""* Attributes that are not relevant for the user profile must have a ```weight=0```. """)
         st.markdown("""* Each row of the user profile matrix must sum to ```1```. """)
-        st.markdown("""* In the ```row``` and ```column``` input fields, you must indicate the row index and the column attribute name (respectively), where the user's relevance weight will be inserted through the ```weight``` field. """)            
-        st.markdown("""* In the ```weight``` input field, you must indicate the order and weight of importance of each attribute. For example:  ```(-)|0.1``` or ```(+)|0.1)```. """)                
+        st.markdown("""* In the cells of the dataframe, you must insert the ```weight``` value and the order of importance of each attribute. For example:  ```-0.1``` --> ```(-)|0.1``` or ```0.1``` --> ```(+)|0.1)```. """)
         st.markdown(
         """
         * Weights may be associated with symbols or labels ```(-)``` and ```(+)```, which indicate the order of preference of attribute values for that user profile. The ```(-)``` label must indicate that the order of preference of the attribute values is from left to right, while the ```(+)``` label indicates the reverse order of preference (from right to left). For example, for the attribute ```distance``` and possible values ```[near, fear]```: 

@@ -151,8 +151,13 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         rank_vector = []
         # Iterate over columns
         for attribute_name_column, value_series in df_attribute_value.items():            
-            attribute_value_list = value_series.tolist()
-            value_possible_list = [x for x in value_possible_dict[attribute_name_column] if not math.isnan(x)]  
+            attribute_value_list = value_series.tolist()            
+            value_possible_list = []
+            for x in value_possible_dict[attribute_name_column]:
+                if isinstance(x, (int, float)) and not math.isnan(x):
+                    value_possible_list.append(x)
+                else:
+                    value_possible_list.append(x)            
             importance_rank = ''
             # is_numeric: check if all non-NaN values are numeric                
             if all(isinstance(x, (int, float)) for x in value_possible_list):
@@ -166,7 +171,7 @@ class GenerateUserProfileDataset(GenerateUserProfile):
             rank_vector.append(importance_rank)
             attribute_rating_list = []
             for attribute_value in attribute_value_list:
-                if math.isnan(attribute_value):
+                if isinstance(attribute_value, (int, float)) and math.isnan(attribute_value):
                     attribute_rating = 0
                     importance_rank = ''
                 else:
