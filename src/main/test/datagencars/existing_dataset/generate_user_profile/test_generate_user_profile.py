@@ -19,7 +19,7 @@ class TestGenerateUserProfile(unittest.TestCase):
         # rating.csv:
         rating_file_path = 'resources/existing_dataset/context/preferencial_rating/sts/rating.csv'
         rating_df = pd.read_csv(rating_file_path, encoding='utf-8', index_col=False, sep=';')
-                          
+                         
         # Generate User Profile, including context:
         self.__generate_cars = GenerateUserProfileDataset(rating_df, item_df, context_df)
         # Generate User Profile, without context:
@@ -47,7 +47,7 @@ class TestGenerateUserProfile(unittest.TestCase):
         ''' 
         # Relevant attributes:
         relevant_item_attribute_list = ['category1']
-        relevant_context_attribute_list = ['distance']
+        relevant_context_attribute_list = ['distance']        
         # Generate user profile:
         user_profile_df = self.__generate_cars.generate_user_profile(item_attribute_list=relevant_item_attribute_list, context_attribute_list=relevant_context_attribute_list)
         logging.info(f'user_profile_df: {user_profile_df.shape[0]}')                
