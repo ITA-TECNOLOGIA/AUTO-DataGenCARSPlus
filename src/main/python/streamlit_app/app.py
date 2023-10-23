@@ -6,7 +6,7 @@ from streamlit_app.analysis_dataset.evaluation import (st_evaluation_cars,
                                                        st_evaluation_rs)
 from streamlit_app.analysis_dataset.visualization import st_visualization
 from streamlit_app.dashboard import user_behavior, user_register
-from streamlit_app.generate_synthetic_dataset import (wf_explicit_rating,
+from streamlit_app.generate_synthetic_dataset import (wf_dataset,
                                                       wf_implicit_rating)
 from streamlit_app.preprocess_dataset import (wf_transform_attributes,
                                               wf_extend_dataset,
@@ -50,12 +50,8 @@ with_context = st.sidebar.checkbox('With context', value=True)
 if general_option == 'Generate a synthetic dataset':
     # Selecting a rating feedback option:
     feedback_option = st.sidebar.radio(label='Select a type of user feedback:', options=config.RATING_FEEDBACK_OPTIONS)
-    # WF --> Explicit ratings:
-    if feedback_option == 'Explicit ratings':
-        wf_explicit_rating.generate_synthtetic_dataset(with_context)   
-    # # WF --> Implicit ratings:
-    # elif feedback_option == 'Implicit ratings':   
-    #     wf_implicit_rating.generate_synthtetic_dataset()
+    # WF --> Explicit and Implicit ratings:
+    wf_dataset.generate_synthtetic_dataset(with_context, feedback_option)
         
 ####### Pre-process a dataset #######
 elif general_option == 'Pre-process a dataset':    

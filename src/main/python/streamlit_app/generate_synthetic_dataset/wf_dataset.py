@@ -2,11 +2,11 @@ import streamlit as st
 from streamlit_app import config, help_information
 from streamlit_app.generate_synthetic_dataset import (wf_context, wf_item,
                                                       wf_rating, wf_user,
-                                                      wf_user_profile)
+                                                      wf_user_profile, wf_behavior)
 from streamlit_app.workflow_graph import workflow_image
 
 
-def generate_synthtetic_dataset(with_context):
+def generate_synthtetic_dataset(with_context, feedback_option):
     """
     Generates a synthetic dataset with explicit ratings.
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
@@ -18,10 +18,16 @@ def generate_synthtetic_dataset(with_context):
     workflow_image.show_wf(wf_name='GenerateSyntheticDataset(Explicit_ratings)', init_step='True', with_context=with_context, optional_value_list=[("UP", "Manual")])
     
     # Loading available tabs:
-    if with_context:        
-        tab_user, tab_item, tab_context, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_TAB_LIST)
+    if with_context:  
+        if feedback_option:      
+            tab_user, tab_item, tab_context, tab_behavior, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_TAB_LIST) 
+        else:
+            tab_user, tab_item, tab_context, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_TAB_LIST)
     else:        
-        tab_user, tab_item, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_TAB_LIST)
+        if feedback_option:      
+            tab_user, tab_item, tab_behavior, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_TAB_LIST)
+        else:
+            tab_user, tab_item, tab_behavior, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_TAB_LIST)
              
     # TAB --> User:
     with tab_user:
@@ -54,7 +60,10 @@ def generate_synthtetic_dataset(with_context):
             # Generating or uploading <context_schema.conf>:
             context_schema = wf_context.get_context_schema()            
             # Generating <context.csv>:
-            wf_context.generate_context_file(generation_config=generation_config, context_schema=context_schema)
+            wf_context.generate_context_file(generation_config=generation_config, context_schema=context_schema)    
+    if feedback_option:
+        with tab_behavior:
+            wf_behavior.generate_behavior_file()
     # TAB --> User Profile:
     with tab_user_profile:
         ###### User profile #####:
