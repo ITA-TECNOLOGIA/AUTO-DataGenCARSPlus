@@ -19,8 +19,8 @@ GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-pro
 #### Generate a synthetic dataset ####:
 RATING_FEEDBACK_OPTIONS = ['Explicit ratings', 'Implicit ratings']
 # tabs:
-CONTEXT_TAB_LIST = ['User', 'Item', 'Context', 'User Profile', 'Rating']
-WITHOUT_CONTEXT_TAB_LIST = ['User', 'Item', 'User Profile', 'Rating']
+CONTEXT_TAB_LIST = ['User', 'Item', 'Context', 'Behavior', 'User Profile', 'Rating']
+WITHOUT_CONTEXT_TAB_LIST = ['User', 'Item', 'Behavior', 'User Profile', 'Rating']
 # user:
 USER_TYPE = 'user'
 USER_PROFILE_TYPE = 'user profile'
@@ -43,6 +43,7 @@ GENERATION_CONFIG_SCHEMA_NAME = 'generation_config'
 RATING_TYPE = 'rating'
 # behavior:
 BEHAVIOR_TYPE = 'behavior'
+BEHAVIOR_SCHEMA_NAME= 'behavior_schema'
 EXAMPLE_ROOM_LIST = [{'id': 1, 'x_min': -51.69645309448242, 'x_max': 17.033428192138672, 'y_min': -8.163072506091242e-15, 'y_max': 5.32511043548584, 'z_min': -36.15760040283203, 'z_max': 33.79861068725586}]
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### Pre-process a dataset ####:
