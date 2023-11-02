@@ -19,8 +19,10 @@ GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-pro
 #### Generate a synthetic dataset ####:
 RATING_FEEDBACK_OPTIONS = ['Explicit ratings', 'Implicit ratings']
 # tabs:
-CONTEXT_TAB_LIST = ['User', 'Item', 'Context', 'Behavior', 'User Profile', 'Rating']
-WITHOUT_CONTEXT_TAB_LIST = ['User', 'Item', 'Behavior', 'User Profile', 'Rating']
+CONTEXT_IMPLICIT_TAB_LIST = ['User', 'Item', 'Context', 'Behavior', 'User Profile', 'Rating']
+CONTEXT_EXPLICIT_TAB_LIST = ['User', 'Item', 'Context', 'User Profile', 'Rating']
+WITHOUT_CONTEXT_IMPLICIT_TAB_LIST = ['User', 'Item', 'Behavior', 'User Profile', 'Rating']
+WITHOUT_CONTEXT_EXPLICIT_TAB_LIST = ['User', 'Item', 'User Profile', 'Rating']
 # user:
 USER_TYPE = 'user'
 USER_PROFILE_TYPE = 'user profile'
@@ -96,3 +98,6 @@ PREFERENCIAL_RATING_METRICS = ["MAE", "Precision", "Recall", "F1_Score", "RMSE",
 DEFAULT_PREFERENCIAL_RATING_METRICS = ["MAE", "Precision", "Recall", "F1_Score"]
 SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', 'MAE', 'MSE', 'RMSE']
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
+#### Videos from URLs ####:
+# Generate synthetic dataset:
+SYNTHETIC_DATASET_VIDEO_URL = 'https://www.youtube.com/watch?v=JRYqsG4iUpw'

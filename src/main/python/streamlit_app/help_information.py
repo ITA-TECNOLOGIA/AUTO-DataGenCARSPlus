@@ -1,6 +1,5 @@
 import streamlit as st
 from streamlit_app import config
-import os
 
 
 ####### Generate a synthetic dataset ######
@@ -8,49 +7,7 @@ def help_explicit_rating_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")    
         st.markdown("""Below are some helpful videos: """)
-
-        # Path to the video file on your local system
-        video_path = "resources/videos/synthetic_dataset/explicit_rating/generate_user_file.mp4"
-        # JavaScript to close the window when the video ends
-        close_video_js = f"""
-        <script>
-            var video = document.querySelector("video");
-            video.onended = function() {{
-                window.close();
-            }};
-        </script>
-        """
-        # Check if the file exists
-        if st.button("user file generation video"):
-            if os.path.exists(video_path):
-                # Display the video using st.video
-                st.video(video_path, start_time=0)
-                # Add JavaScript to close the window when the video ends
-                st.markdown(close_video_js, unsafe_allow_html=True)
-            else:
-                st.write("Video file not found. Please provide the correct file path.")
-
-        # # Path video: user file generation
-        # video_path = "resources/videos/synthetic_dataset/explicit_rating/generate_user_file.mp4"  
-        # # Check if the file exists
-        # if st.button("user file generation video"):
-        #     if os.path.exists(video_path):                
-        #         # Display the video using st.video
-        #         st.video(video_path)
-        #     else:
-        #         st.write("Video file not found. Please provide the correct file path.")
-            
-        # # Create a clickable link to play the video:
-        # st.markdown(f'<a href="{video_path}" target="_blank">user file generation</a>', unsafe_allow_html=True)
-        # # Create a clickable link to play the video
-                # st.markdown(f'<a href="file://{video_path}" target="_blank">user file generation</a>', unsafe_allow_html=True)
-
-        # st.video(video_path)   
-        # if st.button("Play Video"): #and st.file_exists(video_path):
-        #     # Display the video
-            
-        # else:
-        #     st.write("Video file not found. Please provide the correct file path.")                
+        help_video_from_url(video_url=config.SYNTHETIC_DATASET_VIDEO_URL, title_video='Generate a synthetic dataset')        
 
 def help_schema_file():
     with st.expander(label='Help information'):
@@ -358,3 +315,13 @@ def help_classification_algoritms(classifier_name_list):
             if classifier_name == 'HistGradientBoostingClassifier':
                 st.markdown("""- ``` HistGradientBoostingClassifier ```: Histogram-based Gradient Boosting Classification Tree. This estimator has native support for missing values (NaNs).""")
         st.markdown("""These algorithms are implemented in the [scikit-learn](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning) python library.""")
+
+####### Videos #######
+def help_video_from_file(video_file_path):
+    # Display a link to open the video in a new tab    
+    video_url = open(video_file_path, "rb").read()
+    st.markdown(f'<a href="data:video/mp4;base64,{video_url}" target="_blank">Open Video</a>', unsafe_allow_html=True)
+
+def help_video_from_url(video_url, title_video):
+    # Display a link to open the video from URL in a new tab:    
+    st.markdown(f'<a href="{video_url}" target="_blank">{title_video}</a>', unsafe_allow_html=True)

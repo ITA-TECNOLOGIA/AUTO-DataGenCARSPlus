@@ -6,8 +6,7 @@ from streamlit_app.analysis_dataset.evaluation import (st_evaluation_cars,
                                                        st_evaluation_rs)
 from streamlit_app.analysis_dataset.visualization import st_visualization
 from streamlit_app.dashboard import user_behavior, user_register
-from streamlit_app.generate_synthetic_dataset import (wf_dataset,
-                                                      wf_implicit_rating)
+from streamlit_app.generate_synthetic_dataset import wf_dataset
 from streamlit_app.preprocess_dataset import (wf_transform_attributes,
                                               wf_extend_dataset,
                                               wf_generate_user_profile,

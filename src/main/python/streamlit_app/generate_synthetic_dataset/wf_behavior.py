@@ -6,7 +6,9 @@ from streamlit_app import config
 from streamlit_app.generate_synthetic_dataset import wf_schema_util
 from streamlit_app.preprocess_dataset import wf_util
 
-
+def generate_behavior_file():
+    st.write('TODO')
+    
 # def get_generation_config_schema():
 #     """
 #     Get the schema <generating_config_user.conf> for the generation of the user file.    

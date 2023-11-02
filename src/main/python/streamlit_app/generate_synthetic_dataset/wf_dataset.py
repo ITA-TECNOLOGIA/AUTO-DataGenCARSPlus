@@ -19,15 +19,15 @@ def generate_synthtetic_dataset(with_context, feedback_option):
     
     # Loading available tabs:
     if with_context:  
-        if feedback_option:      
-            tab_user, tab_item, tab_context, tab_behavior, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_TAB_LIST) 
+        if feedback_option == 'Implicit ratings':      
+            tab_user, tab_item, tab_context, tab_behavior, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_IMPLICIT_TAB_LIST) 
         else:
-            tab_user, tab_item, tab_context, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_TAB_LIST)
+            tab_user, tab_item, tab_context, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_EXPLICIT_TAB_LIST)
     else:        
-        if feedback_option:      
-            tab_user, tab_item, tab_behavior, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_TAB_LIST)
+        if feedback_option == 'Explicit ratings':
+            tab_user, tab_item, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_EXPLICIT_TAB_LIST)
         else:
-            tab_user, tab_item, tab_behavior, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_TAB_LIST)
+            tab_user, tab_item, tab_behavior, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_IMPLICIT_TAB_LIST)
              
     # TAB --> User:
     with tab_user:
@@ -61,7 +61,7 @@ def generate_synthtetic_dataset(with_context, feedback_option):
             context_schema = wf_context.get_context_schema()            
             # Generating <context.csv>:
             wf_context.generate_context_file(generation_config=generation_config, context_schema=context_schema)    
-    if feedback_option:
+    if feedback_option == 'Implicit ratings':
         with tab_behavior:
             wf_behavior.generate_behavior_file()
     # TAB --> User Profile:

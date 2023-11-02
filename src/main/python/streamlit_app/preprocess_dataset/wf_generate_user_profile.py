@@ -134,19 +134,19 @@ def generate_user_profile_manual(number_user_profile, is_dinamic_row, attribute_
         elif attribute_column in context_possible_value_map:    
             context_possible_value_list = context_possible_value_map[attribute_column]            
             attribute_possible_value_str += f'- ```{attribute_column}``` : {context_possible_value_list}\n'     
-    with st.expander('Show possible values by attribute, in order to facilitate the importance ranking'):
-        st.markdown(attribute_possible_value_str)
+    # # with st.expander('Show possible values by attribute, in order to facilitate the importance ranking'):
+    st.markdown(attribute_possible_value_str)
     # Downloading user_profile.csv:
     is_sum_equal_to_1, user_profile_id_list = is_consistent(user_profile_df)
     if is_sum_equal_to_1:       
-        with st.expander(label='Show the generated user profile'):            
-            # Iterate through columns (except the first and last) and apply the replacement logic
-            for column in df.columns[1:-1]:                
-                user_profile_df[column] = user_profile_df[column].apply(lambda x: f"({'-' if x < 0 else '+'})|{abs(x)}" if x != 0 else x)            
-            # Transform all values in the "other" column to positive values:
-            user_profile_df['other'] = user_profile_df['other'].abs()
-            st.dataframe(user_profile_df)
-            wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')         
+        # with st.expander(label='Show the generated user profile'):            
+        # Iterate through columns (except the first and last) and apply the replacement logic
+        for column in df.columns[1:-1]:                
+            user_profile_df[column] = user_profile_df[column].apply(lambda x: f"({'-' if x < 0 else '+'})|{abs(x)}" if x != 0 else x)            
+        # Transform all values in the "other" column to positive values:
+        user_profile_df['other'] = user_profile_df['other'].abs()
+        st.dataframe(user_profile_df)
+        wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')         
     else:
         st.warning(f'The following user_profile_id does not add up to 1: {user_profile_id_list}')     
     return user_profile_df
