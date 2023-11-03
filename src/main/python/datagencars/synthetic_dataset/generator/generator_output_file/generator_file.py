@@ -21,7 +21,3 @@ class GeneratorFile(ABC):
     @abstractmethod
     def generate_file(self):
         pass
-
-    @abstractmethod
-    def generate_null_values(self, file_df):
-        pass    

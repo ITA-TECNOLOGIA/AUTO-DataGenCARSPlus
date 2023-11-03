@@ -60,20 +60,20 @@ def generate_generation_config_schema():
         generation_config_item_schema = dimension_value + '\n' + item_profile_value        
     return generation_config_item_schema
 
-def get_item_schema():
+def get_item_schema(n):
     """
     Get the schema <item_schema.conf>.
     :return: The edited item schema content.
     """
     st.header('Item Schema')        
-    if st.checkbox(f'Upload the data {config.ITEM_TYPE} schema file', value=True, key=f'is_upload_{config.ITEM_SCHEMA_NAME}_file'):
+    if st.checkbox(f'Upload the data {config.ITEM_TYPE} schema file', value=True, key=f'is_upload_{config.ITEM_SCHEMA_NAME}_file_{n}'):
         # Uploading the schema <"item_schema.conf">:
-        schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, tab_type='tab_item')
+        schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, tab_type=f'tab_item_{n}')
     else:
         # Generating the schema <"item_schema.conf">:
         schema_value = wf_schema_util.get_schema_file(schema_type=config.ITEM_SCHEMA_NAME)
     # Editing schema:
-    return wf_schema_util.edit_schema_file(schema_file_name=config.GENERATION_CONFIG_USER_SCHEMA_NAME, schema_value=schema_value, tab_type='tab_item')
+    return wf_schema_util.edit_schema_file(schema_file_name=config.GENERATION_CONFIG_USER_SCHEMA_NAME, schema_value=schema_value, tab_type=f'tab_item_{n}')
 
 def get_item_profile_schema():
     """

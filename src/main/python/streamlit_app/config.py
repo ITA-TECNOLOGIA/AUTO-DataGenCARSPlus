@@ -41,6 +41,7 @@ GENERATION_CONFIG_USER_SCHEMA_NAME = 'generation_config_user'
 GENERATION_CONFIG_ITEM_SCHEMA_NAME = 'generation_config_item'
 GENERATION_CONFIG_CONTEXT_SCHEMA_NAME = 'generation_config_context'
 GENERATION_CONFIG_SCHEMA_NAME = 'generation_config'
+GENERATION_CONFIG_BEHAVIOR_SCHEMA_NAME = 'generation_config_behavior'
 # rating:
 RATING_TYPE = 'rating'
 # behavior:

@@ -25,5 +25,6 @@
     "python.testing.pytestEnabled": false,
     "python.testing.unittestEnabled": true,
     "python.formatting.provider": "black",
+    "window.title": "AUTO-DataGenCARS",
     // "window.title": "TFM"
 }

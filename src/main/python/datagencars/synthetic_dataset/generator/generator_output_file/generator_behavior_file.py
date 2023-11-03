@@ -1,3 +1,4 @@
+import ast
 import time, random, math
 from datetime import datetime
 import numpy as np
@@ -29,8 +30,8 @@ class GeneratorBehaviorFile(GeneratorFile):
         self.minimum_radius = self.access_generation_config.get_minimum_radius()
         self.maximum_radius = self.access_generation_config.get_maximum_radius()
         self.interaction_threshold = self.access_generation_config.get_interaction_threshold() # The maximum distance for an object to be considered interactable.
-        self.minimum_year_ts = time.mktime(datetime.strptime(self.access_generation_config.get_minimum_date_timestamp(), "%Y-%m-%d").timetuple())
-        self.maximum_year_ts = time.mktime(datetime.strptime(self.access_generation_config.get_maximum_date_timestamp(), "%Y-%m-%d").timetuple())
+        self.minimum_year_ts = time.mktime(datetime.strptime(self.access_generation_config.get_minimum_date_timestamp(), "%Y").timetuple()) #%Y-%m-%d
+        self.maximum_year_ts = time.mktime(datetime.strptime(self.access_generation_config.get_maximum_date_timestamp(), "%Y").timetuple()) #%Y-%m-%d
 
         # Item schema: item_schema.conf
         item_schema_access = AccessSchema(file_str=item_schema)
@@ -82,7 +83,12 @@ class GeneratorBehaviorFile(GeneratorFile):
             if distance < self.interaction_threshold:
                 if random.random() < 0.5:  # 50% chance to interact
                     # Choose a random action from the allowed actions
-                    allowed_actions = [action for action in eval(row['object_action_types']) if action not in ['Close', 'Pause']]
+                    """
+                    Cuando se utiliza la función eval(), Python intenta evaluar la cadena como si fuera código Python. En tu caso, parece que row['object_action_types'] es una cadena que representa una lista de nombres de acciones, como "Open", "Close", etc. Cuando eval() intenta evaluar esta cadena, busca variables con estos nombres en el contexto actual. Como no existen tales variables, se produce un error.
+                    """
+                    # allowed_actions = [action for action in eval(row['object_action_types']) if action not in ['Close', 'Pause']]
+                    # allowed_actions = [action for action in ast.literal_eval(row['object_action_types']) if action not in ['Close', 'Pause']]
+                    allowed_actions = [action.strip() for action in row['object_action_types'].split(',') if action.strip() not in ['Close', 'Pause']]
                     object_action = random.choice(allowed_actions) if allowed_actions else None
                     return row['item_id'], object_action
         return None, None
@@ -99,11 +105,11 @@ class GeneratorBehaviorFile(GeneratorFile):
         :param timestamp: The timestamp of the action.
         '''
         new_record = {
+            'behavior_id': behavior_id,
             'user_id': user_id,
             'object_action': object_action,
             'item_id': item_id,
             'context_id': context_id,
-            'behavior_id': behavior_id,
             'user_position': user_position,
             'timestamp': timestamp
         }
@@ -133,11 +139,11 @@ class GeneratorBehaviorFile(GeneratorFile):
                 # print("initial position user", user_id)
                 last_position = self.door #[:2] # Get x, y and z coordinates
                 self.add_behavior_record(
+                        behavior_id=self.behavior_id,
                         user_id=user_id,
                         object_action='Update',
                         item_id='Position',
                         context_id=context_id,
-                        behavior_id=self.behavior_id,
                         user_position=last_position, 
                         timestamp=current_time
                 )

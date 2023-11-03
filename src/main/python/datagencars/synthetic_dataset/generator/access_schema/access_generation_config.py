@@ -323,24 +323,24 @@ class AccessGenerationConfig(AccessData):
         Gets the minimum date to generate the timestamp in the rating file.
         :return: The minimum date to generate the timestamp.
         '''
-        minimum_value_rating = None
+        minimum_date_timestamp = None
         try:
-            minimum_value_rating = self.file_parser.get(section='rating', option='minimum_date_timestamp')
+            minimum_date_timestamp = self.file_parser.get(section='rating', option='minimum_date_timestamp')
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
-        return minimum_value_rating
+        return minimum_date_timestamp
     
     def get_maximum_date_timestamp(self):
         '''
         Gets the maximum date to generate the timestamp in the rating file.
         :return: The maximum date to generate the timestamp.
         '''
-        maximum_value_rating = None
+        maximum_date_timestamp = None
         try:
-            maximum_value_rating = self.file_parser.get(section='rating', option='maximum_date_timestamp')
+            maximum_date_timestamp = self.file_parser.get(section='rating', option='maximum_date_timestamp')
         except (NoOptionError, NoSectionError) as e: 
             logging.error(e)
-        return maximum_value_rating
+        return maximum_date_timestamp
 
     def get_probability_percentage_profile_from_pos(self, position):
         '''
