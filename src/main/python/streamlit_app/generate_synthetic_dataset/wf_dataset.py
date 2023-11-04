@@ -20,14 +20,14 @@ def generate_synthtetic_dataset(with_context, feedback_option):
     # Loading available tabs:
     if with_context:  
         if feedback_option == 'Implicit ratings':      
-            tab_user, tab_item, tab_context, tab_behavior, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_IMPLICIT_TAB_LIST) 
+            tab_user, tab_item, tab_context, tab_behavior, tab_rating  = st.tabs(config.CONTEXT_IMPLICIT_TAB_LIST) 
         else:
             tab_user, tab_item, tab_context, tab_user_profile, tab_rating  = st.tabs(config.CONTEXT_EXPLICIT_TAB_LIST)
     else:        
         if feedback_option == 'Explicit ratings':
             tab_user, tab_item, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_EXPLICIT_TAB_LIST)
         else:
-            tab_user, tab_item, tab_behavior, tab_user_profile, tab_rating = st.tabs(config.WITHOUT_CONTEXT_IMPLICIT_TAB_LIST)
+            tab_user, tab_item, tab_behavior, tab_rating = st.tabs(config.WITHOUT_CONTEXT_IMPLICIT_TAB_LIST)
              
     # TAB --> User:
     with tab_user:
@@ -68,11 +68,12 @@ def generate_synthtetic_dataset(with_context, feedback_option):
             item_schema = wf_item.get_item_schema(n=2)
             item_file_df = wf_behavior.get_item_file_df()
             wf_behavior.generate_behavior_file(generation_config, behavior_schema, item_file_df, item_schema)
-    # TAB --> User Profile:
-    with tab_user_profile:
-        ###### User profile #####:
-        # Generating <user_profile.csv>:
-        user_profile_df = wf_user_profile.get_user_profile(with_context)
+    if feedback_option == 'Explicit ratings':
+        # TAB --> User Profile:
+        with tab_user_profile:
+            ###### User profile #####:
+            # Generating <user_profile.csv>:
+            user_profile_df = wf_user_profile.get_user_profile(with_context)
     # TAB --> Rating:
     with tab_rating: 
         ###### Generation config #####: 
@@ -81,41 +82,47 @@ def generate_synthtetic_dataset(with_context, feedback_option):
 
         ###### Item and context schemas #####:
         # Uploading <item_schema.conf> or <context_schema.conf>:
-        if with_context:
-            item_schema, context_schema = wf_rating.get_item_context_schema()
-        else:
-            item_schema = wf_rating.get_item_schema(n=3)
+        if feedback_option == 'Explicit ratings': 
+            if with_context:
+                item_schema, context_schema = wf_rating.get_item_context_schema()
+            else:
+                item_schema = wf_rating.get_item_schema(n=3)
 
         ###### User, Item and context files #####:
-        # Uploading <user.csv>, <item.csv> or <context.csv>:
+        # Uploading <user.csv>, <item.csv> or <context.csv> or <behavior.csv>:
         if with_context:
             if feedback_option == 'Implicit ratings': 
-                user_df, item_df, context_df, behavior_df = wf_rating.get_user_item_context_behavior_df() # TODO: behavior_df is not used
+                user_df, item_df, context_df, behavior_df = wf_rating.get_user_item_context_behavior_df()
             else:
                 # Explicit ratings:
                 user_df, item_df, context_df = wf_rating.get_user_item_context_df()
         else:
             if feedback_option == 'Implicit ratings': 
-                user_df, item_df, behavior_df = wf_rating.get_user_item_behavior_df() # TODO: behavior_df is not used
+                user_df, item_df, behavior_df = wf_rating.get_user_item_behavior_df()
             else:
                 # Explicit ratings:
                 user_df, item_df = wf_rating.get_user_item_df()
 
         ###### User profile #####:
         # Uploading <user_profile.csv>:
-        user_profile_df = wf_rating.get_user_profile()
+        if feedback_option == 'Explicit ratings': 
+            user_profile_df = wf_rating.get_user_profile()
 
         ###### Rating file #####:
         # Generating <rating.csv>:
         if with_context:
-            if feedback_option == 'Implicit ratings': 
-                 pass # TODO generate_implicit_rating_file()
+            if feedback_option == 'Implicit ratings':
+                # TODO generate_implicit_rating_file() 
+                wf_rating.generate_implicit_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, item_df=item_df, context_df=context_df, behavior_df=behavior_df)
             else:
-                # Explicit ratings: # TODO generate_explicit_rating_file()
-                wf_rating.generate_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema, context_df=context_df, context_schema=context_schema)
+                # Explicit ratings:
+                # TODO generate_explicit_rating_file()
+                wf_rating.generate_explicit_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema, context_df=context_df, context_schema=context_schema)
         else:
             if feedback_option == 'Implicit ratings':
-                pass # TODO generate_implicit_rating_file()
+                # TODO generate_implicit_rating_file()
+                wf_rating.generate_implicit_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, item_df=item_df, behavior_df=behavior_df)
             else:
-                # Explicit ratings: # TODO generate_explicit_rating_file()
-                wf_rating.generate_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema)
+                # Explicit ratings:
+                # TODO generate_explicit_rating_file()
+                wf_rating.generate_explicit_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema)

@@ -2,6 +2,7 @@ import console
 import pandas as pd
 import streamlit as st
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_explicit_rating_file import GeneratorExplicitRatingFile
+from datagencars.synthetic_dataset.generator.generator_output_file.generator_implicit_rating_file import GeneratorImplicitRatingFile
 from streamlit_app import config
 from streamlit_app.generate_synthetic_dataset import wf_schema_util
 from streamlit_app.preprocess_dataset import wf_util
@@ -28,31 +29,7 @@ def generate_generation_config_schema(with_context):
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
     :return: The content of the "generating_config.conf" schema.
     """
-    with st.expander(f"Generate generating_config_user.conf"):
-        # [dimension]    
-        dimension_value = '[dimension] \n'
-        user_count = st.number_input(label='Number of users to generate:', value=0)
-        item_count = st.number_input(label='Number of items to generate:', value=0)
-        if with_context:
-            context_count = st.number_input(label='Number of contexts to generate:', value=0)
-            dimension_value += ('number_user=' + str(user_count) + '\n' +
-                                'number_item=' + str(item_count) + '\n' +
-                                'number_context=' + str(context_count) + '\n')
-        else:            
-            dimension_value += ('number_user=' + str(user_count) + '\n' +
-                            'number_item=' + str(item_count) + '\n')
-        percentage_null_user = st.number_input(label='Percentage of null user values:', value=0)
-        percentage_null_item = st.number_input(label='Percentage of null item values:', value=0)
-        if with_context:
-            percentage_null_context = st.number_input(label='Percentage of null context values:', value=0)
-            dimension_value += ('percentage_user_null_value=' + str(percentage_null_user) + '\n' +
-                                'percentage_item_null_value=' + str(percentage_null_item) + '\n' +
-                                'percentage_context_null_value=' + str(percentage_null_context) + '\n')
-        else:
-            dimension_value += ('percentage_user_null_value=' + str(percentage_null_user) + '\n' +
-                            'percentage_item_null_value=' + str(percentage_null_item) + '\n')
-        st.markdown("""---""")
-        # [rating]
+    with st.expander(f"Generate generating_config_rating.conf"):
         st.write('Rating configuration')
         rating_value = '[rating] \n'
         rating_count = st.number_input(label='Number of ratings to generate:', value=0, key='rating_count')
@@ -80,29 +57,10 @@ def generate_generation_config_schema(with_context):
         rating_value += ('even_distribution='+str(even_distribution)+'\n') 
         if even_distribution == False:
             event_distribution_type = st.selectbox(label='Distribution type', options=['uniform', 'gaussian'])
-        rating_value += ('even_distribution_type='+str(event_distribution_type)+'\n') 
-        st.markdown("""---""")
-        # [item profile]
-        item_profile_value = ''            
-        with_correlation_checkbox = st.checkbox(label='Apply correlation in the generation of the item file?', value=False, key='with_correlation_checkbox')
-        if with_correlation_checkbox:
-            st.write('Item profile configuration')
-            item_profile_value = '[item profile] \n'
-            probability_percentage_profile_1 = st.number_input(label='Profile probability percentage 1:', value=10)
-            probability_percentage_profile_2 = st.number_input(label='Profile probability percentage 2:', value=30)
-            probability_percentage_profile_3 = st.number_input(label='Profile probability percentage 3:', value=60)
-            noise_percentage_profile_1 = st.number_input(label='Profile noise percentage 1:', value=20)
-            noise_percentage_profile_2 = st.number_input(label='Profile noise percentage 2:', value=20)
-            noise_percentage_profile_3 = st.number_input(label='Profile noise percentage 3:', value=20)            
-            item_profile_value += ('probability_percentage_profile_1=' + str(probability_percentage_profile_1) + '\n' +
-                                'probability_percentage_profile_2=' + str(probability_percentage_profile_2) + '\n' +
-                                'probability_percentage_profile_3=' + str(probability_percentage_profile_3) + '\n' +
-                                'noise_percentage_profile_1=' + str(noise_percentage_profile_1) + '\n' +
-                                'noise_percentage_profile_2=' + str(noise_percentage_profile_2) + '\n' +
-                                'noise_percentage_profile_3=' + str(noise_percentage_profile_3) + '\n')
-        # Generating the text of the file <generation_config.conf>:
-        generation_config_schema = dimension_value + '\n' + rating_value + '\n' + item_profile_value
-    return generation_config_schema
+        rating_value += ('even_distribution_type='+str(event_distribution_type)+'\n')
+
+        # TODO: Añadir reglas rating implicitos
+    return rating_value
 
 def get_user_item_df():
     """
@@ -116,6 +74,20 @@ def get_user_item_df():
     item_df = wf_util.load_one_file(file_type='item', wf_type='wf_generate_explicit_rating')
     return user_df, item_df
 
+def get_user_item_behavior_df():
+    """
+    Load dataframes containing user, item and behavior data.
+    :return: The user, item and behavior dataframes.    
+    """    
+    st.header('User, Item and Behavior Files')    
+    # Uploading <user.csv>:
+    user_df = wf_util.load_one_file(file_type='user', wf_type='wf_generate_implicit_rating')
+    # Uploading <item.csv>:
+    item_df = wf_util.load_one_file(file_type='item', wf_type='wf_generate_implicit_rating')
+    # Uploading <behavior.csv>:
+    behavior_df = wf_util.load_one_file(file_type='behavior', wf_type='wf_generate_implicit_rating')
+    return user_df, item_df, behavior_df
+
 def get_user_item_context_df():
     """
     Load dataframes containing user, item and context data.
@@ -128,7 +100,23 @@ def get_user_item_context_df():
     item_df = wf_util.load_one_file(file_type='item', wf_type='wf_generate_explicit_rating')
     # Uploading <context.csv>:
     context_df = wf_util.load_one_file(file_type='context', wf_type='wf_generate_explicit_rating')
-    return user_df, item_df, context_df 
+    return user_df, item_df, context_df
+
+def get_user_item_context_behavior_df():
+    """
+    Load dataframes containing user, item, context and behavior data.
+    :return: The user, item, context and behavior dataframes.             
+    """
+    st.header('User, Item, Context and Behavior Files')
+    # Uploading <user.csv>:
+    user_df = wf_util.load_one_file(file_type='user', wf_type='wf_generate_implicit_rating')
+    # Uploading <item.csv>:
+    item_df = wf_util.load_one_file(file_type='item', wf_type='wf_generate_implicit_rating')
+    # Uploading <context.csv>:
+    context_df = wf_util.load_one_file(file_type='context', wf_type='wf_generate_implicit_rating')
+    # Uploading <behavior.csv>:
+    behavior_df = wf_util.load_one_file(file_type='behavior', wf_type='wf_generate_implicit_rating')
+    return user_df, item_df, context_df, behavior_df
 
 def get_item_schema():
     """
@@ -168,7 +156,7 @@ def get_user_profile():
     user_profile_df = wf_util.load_one_file(file_type='user_profile', wf_type='wf_generate_explicit_rating')
     return user_profile_df
     
-def generate_rating_file(with_context, generation_config, user_df, user_profile_df, item_df, item_schema=None, context_df=None, context_schema=None):
+def generate_explicit_rating_file(with_context, generation_config, user_df, user_profile_df, item_df, item_schema=None, context_df=None, context_schema=None):
     """
     Generate a rating file based on the provided data and configuration.
     :param with_context: A boolean indicating whether to include context data.
@@ -220,4 +208,50 @@ def generate_rating_file(with_context, generation_config, user_df, user_profile_
                 with st.expander(label=f'Show the generated {config.RATING_TYPE}.csv file:'):
                     st.dataframe(rating_df)
                     wf_util.save_df(df_name=config.RATING_TYPE, df_value=rating_df, extension='csv')   
+    return rating_df
+
+def generate_implicit_rating_file(with_context, generation_config, user_df, item_df, behavior_df, context_df=None):
+    """
+    Generate a rating file based on the provided data and configuration.
+    :param with_context: A boolean indicating whether to include context data.
+    :param generation_config: The configuration for rating file generation.
+    :param user_df: The dataframe with user data.
+    :param item_df: The dataframe with item data.
+    :param behavior_df: The dataframe with behavior data.
+    :param context_df: The dataframe with context data (optional).
+    :return: A dataframe containing the generated rating data.
+    """
+    generator = None    
+    rating_df = pd.DataFrame()
+    if st.button(label='Generate rating file', key='button_tab_rating'):
+        if with_context:  
+            # The mandatory files to be uploaded are checked (including contextual information):
+            if (not user_df.empty) and (not item_df.empty) and (not behavior_df.empty) and (not context_df.empty):
+                # All files are uploaded:
+                if (len(generation_config) !=0):
+                    generator = GeneratorImplicitRatingFile(generation_config=generation_config, item_df=item_df, behavior_df=behavior_df, context_df=context_df)
+                else:
+                    st.warning('The generation_config file is required.')
+            else:
+                st.warning('The user, item, behavior and context files are required.')
+        else:
+            # The mandatory files to be uploaded are checked (without contextual information):
+            if (not user_df.empty) and (not item_df.empty) and (not behavior_df.empty):
+                # All files are uploaded:
+                if (len(generation_config) !=0):
+                    generator = GeneratorImplicitRatingFile(generation_config=generation_config, user_df=user_df, item_df=item_df, behavior_df=behavior_df)
+                else:
+                    st.warning('The generation_config file is required.')
+            else:
+                st.warning('The user, item and behavior files are required.')
+        # Generating rating file (rating.csv):        
+        if generator:
+            output = st.empty()
+            with console.st_log(output.code):              
+                rating_df = generator.generate_file()
+                print('Rating file generation has finished.') 
+                # Showing <rating.csv>:
+                with st.expander(label=f'Show the generated {config.RATING_TYPE}.csv file:'):
+                    st.dataframe(rating_df)
+                    wf_util.save_df(df_name=config.RATING_TYPE, df_value=rating_df, extension='csv')
     return rating_df
