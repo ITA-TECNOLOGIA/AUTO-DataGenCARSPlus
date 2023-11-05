@@ -8,7 +8,7 @@ from streamlit_app.generate_synthetic_dataset import wf_schema_util
 from streamlit_app.preprocess_dataset import wf_util
 
 
-def get_generation_config_schema(with_context):
+def get_generation_config_schema(with_context, implicit):
     """
     Get the schema <generating_config.conf> for the generation of the rating file.    
     :return: The edited content of the <generating_config.conf> rating schema.
@@ -19,14 +19,15 @@ def get_generation_config_schema(with_context):
         schema_value = wf_schema_util.upload_schema_file(schema_file_name=config.GENERATION_CONFIG_SCHEMA_NAME, tab_type='tab_rating')
     else:
         # Generating schema <"generation_config.conf">:
-        schema_value = generate_generation_config_schema(with_context)
+        schema_value = generate_generation_config_schema(with_context, implicit)
     # Editing schema:
     return wf_schema_util.edit_schema_file(schema_file_name=config.GENERATION_CONFIG_SCHEMA_NAME, schema_value=schema_value, tab_type='tab_rating') 
 
-def generate_generation_config_schema(with_context):
+def generate_generation_config_schema(with_context, implicit):
     """
     Generate the schema file "generating_config.conf".
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
+    :param implicit: It is True if the dataset to be generated will have implicit ratings, and False otherwise.
     :return: The content of the "generating_config.conf" schema.
     """
     with st.expander(f"Generate generating_config_rating.conf"):
@@ -40,7 +41,7 @@ def generate_generation_config_schema(with_context):
         rating_distribution = st.selectbox(label='Choose a distribution to generate the ratings:', options=['Uniform', 'Gaussian'])                        
         gaussian_distribution = True
         if rating_distribution == 'Uniform':
-            gaussian_distribution = False            
+            gaussian_distribution = False
         rating_value += ('number_rating=' + str(rating_count) + '\n' +
                         'minimum_value_rating=' + str(rating_min) + '\n' +
                         'maximum_value_rating=' + str(rating_max) + '\n' + 
@@ -59,7 +60,26 @@ def generate_generation_config_schema(with_context):
             event_distribution_type = st.selectbox(label='Distribution type', options=['uniform', 'gaussian'])
         rating_value += ('even_distribution_type='+str(event_distribution_type)+'\n')
 
-        # TODO: Añadir reglas rating implicitos
+        # Add implicit ratings configuration
+        if implicit:
+            st.write('Implicit Ratings Configuration')
+            # Number of rules
+            number_of_implicit_rules = st.number_input(label='Number of implicit rating rules:', value=0, key='number_of_implicit_rules')
+            rating_value += 'number_implicit_rules=' + str(number_of_implicit_rules) + '\n'
+
+            # Generate rules for implicit ratings
+            for rule_number in range(1, number_of_implicit_rules + 1):
+                st.write(f'Rule {rule_number}')
+                action = st.text_input(label=f'Action {rule_number}:', key=f'action_{rule_number}')
+                min_time = st.number_input(label=f'Min time for action {rule_number} (seconds):', value=0, key=f'min_time_{rule_number}')
+                max_time = st.number_input(label=f'Max time for action {rule_number} (seconds):', value=0, key=f'max_time_{rule_number}')
+                rating_good = st.number_input(label=f'Good rating value for action {rule_number}:', value=1, key=f'rating_good_{rule_number}')
+                rating_bad = st.number_input(label=f'Bad rating value for action {rule_number}:', value=0, key=f'rating_bad_{rule_number}')
+
+                # Append the rule to the configuration
+                rating_value += (f'rule_{rule_number}={{"action": "{action}", "min_time": {min_time}, '
+                                 f'"max_time": {max_time}, "rating_good": {rating_good}, "rating_bad": {rating_bad}}}\n')
+
     return rating_value
 
 def get_user_item_df():

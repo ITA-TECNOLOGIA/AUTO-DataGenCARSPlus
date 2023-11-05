@@ -78,7 +78,7 @@ def generate_synthtetic_dataset(with_context, feedback_option):
     with tab_rating: 
         ###### Generation config #####: 
         # Generating or uploading <generation_config.conf>:           
-        generation_config = wf_rating.get_generation_config_schema(with_context)
+        generation_config = wf_rating.get_generation_config_schema(with_context, implicit=True)
 
         ###### Item and context schemas #####:
         # Uploading <item_schema.conf> or <context_schema.conf>:
