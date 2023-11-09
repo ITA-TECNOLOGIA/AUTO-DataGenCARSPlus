@@ -45,7 +45,7 @@ class GeneratorBehaviorFile(GeneratorFile):
             except:
                 pass
 
-        self.file_df = pd.DataFrame({'user_id': [], 'object_action': [], 'user_position': [], 'behavior_id': [], 'item_id': [], 'context_id': [], 'timestamp': []})
+        self.file_df = pd.DataFrame({'behavior_id': [], 'user_id': [], 'object_action': [], 'user_position': [], 'item_id': [], 'context_id': [], 'timestamp': []})
         self.behavior_id = 1
         self.z = 5 # Fixed value of z for this scenario
 
@@ -251,5 +251,8 @@ class GeneratorBehaviorFile(GeneratorFile):
 
         # Sort by user_id
         self.file_df = self.file_df.sort_values('user_id')
+
+        # Reorder columns
+        self.file_df = self.file_df[['behavior_id', 'user_id', 'object_action', 'user_position', 'item_id', 'context_id', 'timestamp']]
         
         return self.file_df.copy()
