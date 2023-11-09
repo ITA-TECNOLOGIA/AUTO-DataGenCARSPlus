@@ -74,10 +74,10 @@ def generate_behavior_file(generation_config, behavior_schema, item_file_df, ite
                 print(f'Generating {config.BEHAVIOR_TYPE}.csv')
                 generator = GenerateSyntheticImplicitDataset(generation_config=generation_config)
                 behavior_file_df = generator.generate_behavior_file(behavior_schema=behavior_schema, item_df=item_file_df, item_schema=item_schema)
-                print('User file generation has finished.')   
+                print('Behavior file generation has finished.')   
                 with st.expander(label=f'Show the generated {config.BEHAVIOR_TYPE}.csv file:'):
                     st.dataframe(behavior_file_df)
-                    wf_util.save_df(df_name=config.USER_TYPE, df_value=behavior_file_df, extension='csv')
+                    wf_util.save_df(df_name=config.BEHAVIOR_TYPE, df_value=behavior_file_df, extension='csv')
         else:
             st.warning(f'The behavior schema (behavior_schema.conf) and general setting (general_config.conf) files are required.')
     return behavior_file_df
