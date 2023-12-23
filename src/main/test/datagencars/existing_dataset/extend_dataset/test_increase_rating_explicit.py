@@ -2,7 +2,7 @@ import logging
 import unittest
 
 import pandas as pd
-from datagencars.existing_dataset.extend_dataset.increase_rating import IncreaseRating
+from datagencars.existing_dataset.extend_dataset.increase_rating_explicit import IncreaseRatingExplicit
 
 
 class TestIncreaseRating(unittest.TestCase):
@@ -42,8 +42,8 @@ class TestIncreaseRating(unittest.TestCase):
         item_df_rs = pd.read_csv(item_file_path, encoding='utf-8', index_col=False, sep=';')        
 
         # Dataset extension generator:        
-        self.__generator_cars = IncreaseRating(rating_df=self.rating_df, user_profile_df=user_profile_df, user_df=user_df, item_df=item_df, context_df=context_df)
-        self.__generator_rs = IncreaseRating(rating_df=self.rating_df_rs, user_profile_df=user_profile_df_rs, user_df=user_df_rs, item_df=item_df_rs)
+        self.__generator_cars = IncreaseRatingExplicit(rating_df=self.rating_df, user_profile_df=user_profile_df, user_df=user_df, item_df=item_df, context_df=context_df)
+        self.__generator_rs = IncreaseRatingExplicit(rating_df=self.rating_df_rs, user_profile_df=user_profile_df_rs, user_df=user_df_rs, item_df=item_df_rs)
     
     def tearDown(self):
         del self.__generator_cars

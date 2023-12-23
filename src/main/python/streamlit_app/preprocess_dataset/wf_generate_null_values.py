@@ -40,7 +40,7 @@ def generate_item(with_context):
     generate_null_value = GenerateNullValues()
     new_item_df = pd.DataFrame()  
     with console.st_log(output.code):
-        __, item_df, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_generate_null_values')  
+        __, item_df, __, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_generate_null_values')  
         percentage_null = st.number_input("Percentage of null values", min_value=1, max_value=100, value=20, key='number_input_percentage_nulls_item')
         if st.button(label='Generate', key='button_generate_null_values_item'):            
             new_item_df = generate_null_value.regenerate_file(file_df=item_df, percentage_null=percentage_null)
@@ -70,7 +70,7 @@ def generate_context(with_context):
     generate_null_value = GenerateNullValues()
     new_context_df = pd.DataFrame()  
     with console.st_log(output.code):
-        __, __, context_df, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_generate_null_values')
+        __, __, context_df, __, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_generate_null_values')
         percentage_null = st.number_input("Percentage of null values", min_value=1, max_value=100, value=20, key='number_input_percentage_nulls_context')
         if st.button(label='Generate', key='button_generate_null_values_context'):            
             new_context_df = generate_null_value.regenerate_file(file_df=context_df, percentage_null=percentage_null)
@@ -104,14 +104,14 @@ def generate_context(with_context):
 #         file_selectibox = st.selectbox(label='Available files:', options=['item', 'context'])
 #         if file_selectibox == 'item':
 #             file_type = config.ITEM_TYPE
-#             __, df, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_generate_null_values')        
+#             __, df, __, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_generate_null_values')        
 #         elif file_selectibox == 'context':
 #             file_type = config.CONTEXT_TYPE
-#             __, __, df, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_generate_null_values')
+#             __, __, df, __, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_generate_null_values')
 #     else:
 #         st.header('Item File')
 #         file_type = config.ITEM_TYPE
-#         __, df, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_generate_null_values')    
+#         __, df, __, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_generate_null_values')    
 
 #     # Generating NULL values:
 #     output = st.empty()

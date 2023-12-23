@@ -28,14 +28,14 @@ def generate(with_context, only_automatic=False):
     # Loading dataset:   
     st.write('Upload the following files: ')     
     if with_context:
-        user_df, item_df, context_df, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_CARS, wf_type='wf_user_profile')        
+        user_df, item_df, context_df, __, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_CARS, wf_type='wf_user_profile')        
         # Getting the attribute names:    
         access_context = AccessContext(context_df=context_df)
         all_context_attribute_list = access_context.get_context_attribute_list()
         relevant_context_attribute_list = set_attribute_list(file_type=config.CONTEXT_TYPE, attribute_list=all_context_attribute_list)              
     else:
         context_df = pd.DataFrame()
-        user_df, item_df, __, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_RS, wf_type='wf_user_profile')    
+        user_df, item_df, __, __, rating_df, __ = wf_util.load_dataset(file_type_list=config.DATASET_RS, wf_type='wf_user_profile')    
     # Getting the item attribute names:
     access_item = AccessItem(item_df=item_df)
     all_item_attribute_list = access_item.get_item_attribute_list()      

@@ -56,6 +56,8 @@ if general_option == 'Generate a synthetic dataset':
 elif general_option == 'Pre-process a dataset':    
     # Selecting a workflow option:
     wf_option = st.sidebar.radio(label='Select a workflow:', options=config.WF_OPTIONS)
+    # Selecting a rating feedback option:
+    feedback_option = st.sidebar.radio(label='Select a type of user feedback:', options=config.RATING_FEEDBACK_OPTIONS)
     
     # WF --> Generate NULL values:
     if wf_option == 'Generate NULL values':        
@@ -134,11 +136,8 @@ elif general_option == 'Pre-process a dataset':
             wf_generate_user_profile.generate(with_context, only_automatic=True)
         # Apply WF: "Extend Dataset":
         with tab_extend_dataset:
-            if with_context:
-                wf_extend_dataset.generate(with_context)
-            else:
-                wf_extend_dataset.generate(with_context)
-
+            wf_extend_dataset.generate(with_context, feedback_option)
+            
     # WF --> Recalculate ratings:
     elif wf_option == 'Recalculate ratings':         
         if with_context:

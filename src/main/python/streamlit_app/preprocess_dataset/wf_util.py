@@ -47,6 +47,7 @@ def load_dataset(file_type_list, wf_type):
     user_df = pd.DataFrame()
     item_df = pd.DataFrame()
     context_df = pd.DataFrame()
+    behavior_df = pd.DataFrame()
     rating_df = pd.DataFrame()
     user_profile_df = pd.DataFrame()    
     # Uploading a dataset:
@@ -55,12 +56,14 @@ def load_dataset(file_type_list, wf_type):
     if 'item' in file_type_list:
         item_df = load_one_file(file_type='item', wf_type=wf_type)
     if 'context' in file_type_list:
-        context_df = load_one_file(file_type='context', wf_type=wf_type)   
+        context_df = load_one_file(file_type='context', wf_type=wf_type)
+    if 'behavior' in file_type_list:
+        behavior_df = load_one_file(file_type='behavior', wf_type=wf_type)   
     if 'rating' in file_type_list:
         rating_df = load_one_file(file_type='rating', wf_type=wf_type)
     if 'user profile' in file_type_list:
         user_profile_df = load_one_file(file_type='user_profile', wf_type=wf_type)    
-    return user_df, item_df, context_df, rating_df, user_profile_df
+    return user_df, item_df, context_df, behavior_df, rating_df, user_profile_df
 
 def load_one_file(file_type, wf_type):
     """

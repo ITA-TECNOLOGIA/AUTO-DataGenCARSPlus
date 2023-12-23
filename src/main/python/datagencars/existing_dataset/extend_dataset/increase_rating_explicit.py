@@ -6,9 +6,9 @@ from datagencars.existing_dataset.generate_rating import GenerateRating
 import streamlit as st
 
 
-class IncreaseRating(GenerateRating):
+class IncreaseRatingExplicit(GenerateRating):
     """
-    Extend an existing dataset.
+    Extend an existing dataset with explicit ratings.
     Input:
         [U]  user.csv
         [I]  item.csv

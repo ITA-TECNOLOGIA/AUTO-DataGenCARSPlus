@@ -26,9 +26,9 @@ def generate(with_context):
     # Loading dataset:
     st.write('Upload the following files: ')
     if with_context:
-        user_df, item_df, context_df, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_extend_dataset')
+        user_df, item_df, context_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_extend_dataset')
     else:
-        user_df, item_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_extend_dataset')   
+        user_df, item_df, __, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_extend_dataset')   
 
     # Showing the current image of the WF:
     st.markdown("""---""")

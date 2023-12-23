@@ -81,16 +81,10 @@ class GeneratorImplicitRatingFile(GeneratorFile):
                     return rule['rating_bad'], open_timestamp
 
         return None, None
-
-    def generate_file(self, with_context=False):
-        '''
-        Generates the rating file based on the provided user behaviors and item properties.
-
-        :param with_context: True if the file to be generated will be contextual and False otherwise.
-        :return: A DataFrame with rating information (user_id, item_id, context_id <optional>, rating, timestamp).
-        '''
+    
+    def preprocess_behavior_df(self, with_context=False):
         # Filter behavior_df to remove 'Update' object_actions
-        filtered_behavior = self.behavior_df[self.behavior_df['object_action'] != 'Update']
+        filtered_behavior = self.behavior_df.copy()[self.behavior_df['object_action'] != 'Update']
 
         # Convert non-numeric values in 'item_id' column to NaNs
         filtered_behavior['item_id'] = pd.to_numeric(filtered_behavior['item_id'], errors='coerce')
@@ -105,14 +99,25 @@ class GeneratorImplicitRatingFile(GeneratorFile):
 
         if with_context:
             # Filter behavior_df to get rows with 'Update' object_actions and 'Position' user_position
-            update_position_behavior = self.behavior_df[(self.behavior_df['object_action'] == 'Update') &
-                                                        (self.behavior_df['item_id'] == 'Position')]
+            update_position_behavior = self.behavior_df.copy()[(self.behavior_df['object_action'] == 'Update') &
+                                                               (self.behavior_df['item_id'] == 'Position')]
             # Convert 'context_id' column data type to int
             update_position_behavior['context_id'] = update_position_behavior['context_id'].astype(int)
             # Create a dictionary with user_id as the key and context_id as the value
             user_context_dict = update_position_behavior.set_index('user_id')['context_id'].to_dict()
             # Update context_id in filtered_behavior based on the user_context_dict
             filtered_behavior['context_id'] = filtered_behavior['user_id'].map(user_context_dict)
+
+        return filtered_behavior
+
+    def generate_file(self, with_context=False):
+        '''
+        Generates the rating file based on the provided user behaviors and item properties.
+
+        :param with_context: True if the file to be generated will be contextual and False otherwise.
+        :return: A DataFrame with rating information (user_id, item_id, context_id <optional>, rating, timestamp).
+        '''
+        filtered_behavior = self.preprocess_behavior_df(with_context=True)
 
         # Create ratings DataFrame
         ratings = filtered_behavior.copy()

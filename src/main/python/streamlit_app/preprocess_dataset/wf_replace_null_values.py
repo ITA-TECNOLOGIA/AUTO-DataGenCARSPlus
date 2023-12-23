@@ -55,7 +55,7 @@ def generate_item(with_context):
             # Showing the WF image, by replacing null values in item.csv:
             workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(False)), ('NULLValuesI', str(True))])
             # Loading item.csv file:
-            __, item_df, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_replace_nulls')
+            __, item_df, __, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_replace_nulls')
             # Infering context schema from item.csv:
             item_schema = infer_schema(df=item_df, file_type=config.ITEM_TYPE)
             # Showing and editing the inferred schema:
@@ -90,7 +90,7 @@ def generate_context(with_context):
                 # Showing the WF image, by replacing null values in context.csv:
                 workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context=with_context, optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(False))])            
                 # Loading context.csv file:        
-                __, __, context_df, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_replace_nulls')
+                __, __, context_df, __, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_replace_nulls')
                 # Infering context schema from context.csv:
                 context_schema = infer_schema(df=context_df, file_type=config.CONTEXT_TYPE)
                 # Showing and editing the inferred schema:

@@ -35,7 +35,7 @@ def transform_rating():
 
     # Loading dataset:
     st.write('Upload the following files: ')    
-    __, __, __, rating_df, __ = wf_util.load_dataset(file_type_list=['rating'], wf_type='wf_transform_rating')
+    __, __, __, __, rating_df, __ = wf_util.load_dataset(file_type_list=['rating'], wf_type='wf_transform_rating')
     st.markdown("""---""")
 
     # Transforming ratings to binary values:
@@ -101,13 +101,13 @@ def transform_user_item_context(with_context):
     else:
         file_selectibox = st.selectbox(label='Files available:', options=['user', 'item'])        
     if file_selectibox == 'user':
-        df, __, __, __, __ = wf_util.load_dataset(file_type_list=['user'], wf_type='wf_transform_uic')
+        df, __, __, __, __, __ = wf_util.load_dataset(file_type_list=['user'], wf_type='wf_transform_uic')
         file = 'U'
     elif file_selectibox == 'item':
-        __, df, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_transform_uic')
+        __, df, __, __, __, __ = wf_util.load_dataset(file_type_list=['item'], wf_type='wf_transform_uic')
         file = 'I'
     elif file_selectibox == 'context':
-        __, __, df, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_transform_uic')   
+        __, __, df, __, __, __ = wf_util.load_dataset(file_type_list=['context'], wf_type='wf_transform_uic')   
         file = 'C'    
     st.markdown("""---""")    
     
