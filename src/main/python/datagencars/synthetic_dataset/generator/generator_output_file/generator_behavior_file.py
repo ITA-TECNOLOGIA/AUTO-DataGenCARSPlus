@@ -87,8 +87,8 @@ class GeneratorBehaviorFile(GeneratorFile):
                     Cuando se utiliza la función eval(), Python intenta evaluar la cadena como si fuera código Python. En tu caso, parece que row['object_action_types'] es una cadena que representa una lista de nombres de acciones, como "Open", "Close", etc. Cuando eval() intenta evaluar esta cadena, busca variables con estos nombres en el contexto actual. Como no existen tales variables, se produce un error.
                     """
                     # allowed_actions = [action for action in eval(row['object_action_types']) if action not in ['Close', 'Pause']]
-                    # allowed_actions = [action for action in ast.literal_eval(row['object_action_types']) if action not in ['Close', 'Pause']]
-                    allowed_actions = [action.strip() for action in row['object_action_types'].split(',') if action.strip() not in ['Close', 'Pause']]
+                    allowed_actions = [action for action in ast.literal_eval(row['object_action_types']) if action not in ['Close', 'Pause']]
+                    # allowed_actions = [action.strip() for action in row['object_action_types'].split(',') if action.strip() not in ['Close', 'Pause']]
                     object_action = random.choice(allowed_actions) if allowed_actions else None
                     return row['item_id'], object_action
         return None, None
@@ -255,4 +255,4 @@ class GeneratorBehaviorFile(GeneratorFile):
         # Reorder columns
         self.file_df = self.file_df[['behavior_id', 'user_id', 'object_action', 'user_position', 'item_id', 'context_id', 'timestamp']]
         
-        return self.file_df.copy()
+        return self.file_df

@@ -84,7 +84,7 @@ class GeneratorImplicitRatingFile(GeneratorFile):
     
     def preprocess_behavior_df(self, with_context=False):
         # Filter behavior_df to remove 'Update' object_actions
-        filtered_behavior = self.behavior_df.copy()[self.behavior_df['object_action'] != 'Update']
+        filtered_behavior = self.behavior_df[self.behavior_df['object_action'] != 'Update']
 
         # Convert non-numeric values in 'item_id' column to NaNs
         filtered_behavior['item_id'] = pd.to_numeric(filtered_behavior['item_id'], errors='coerce')
@@ -99,7 +99,7 @@ class GeneratorImplicitRatingFile(GeneratorFile):
 
         if with_context:
             # Filter behavior_df to get rows with 'Update' object_actions and 'Position' user_position
-            update_position_behavior = self.behavior_df.copy()[(self.behavior_df['object_action'] == 'Update') &
+            update_position_behavior = self.behavior_df[(self.behavior_df['object_action'] == 'Update') &
                                                                (self.behavior_df['item_id'] == 'Position')]
             # Convert 'context_id' column data type to int
             update_position_behavior['context_id'] = update_position_behavior['context_id'].astype(int)
@@ -120,7 +120,7 @@ class GeneratorImplicitRatingFile(GeneratorFile):
         filtered_behavior = self.preprocess_behavior_df(with_context=True)
 
         # Create ratings DataFrame
-        ratings = filtered_behavior.copy()
+        ratings = filtered_behavior
         ratings['rating'], ratings['initial_timestamp'] = zip(*ratings.apply(lambda row: self.get_rating_and_timestamp(row, filtered_behavior), axis=1))
 
         # Drop rows with missing ratings and rename the initial_timestamp column to timestamp
@@ -138,4 +138,4 @@ class GeneratorImplicitRatingFile(GeneratorFile):
         ratings['rating'] = ratings['rating'].astype(int)
         ratings['timestamp'] = pd.to_datetime(ratings['timestamp'], unit='s')
 
-        return ratings.copy()
+        return ratings
