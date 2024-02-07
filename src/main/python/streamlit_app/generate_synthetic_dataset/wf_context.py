@@ -32,8 +32,20 @@ def generate_generation_config_schema():
         generation_config_context_schema = '[dimension] \n'
         context_count = st.number_input(label='Number of contexts to generate:', value=0)      
         generation_config_context_schema += 'number_context=' + str(context_count) + '\n'    
-        percentage_null_context = st.number_input(label='Percentage of null context values:', value=0)
-        generation_config_context_schema += 'percentage_context_null_value=' + str(percentage_null_context) + '\n'
+        generation_config_context_schema += '\n' 
+                
+        # [null values]        
+        generation_config_context_schema += '[null values] \n'        
+        if st.checkbox(label='Generate null values?', value=False, key='checkbox_null_value_context'):
+            null_value_option = st.selectbox(label='', options=['Null percentage in the complete file', 'Null percentage per attribute'], key='selectbox_null_value_context')
+            if null_value_option == 'Null percentage in the complete file':
+                percentage_null_user = st.number_input(label='Null percentage in the complete file:', value=1, min_value=1, max_value=100, key='input_null_value_context')
+                generation_config_context_schema += 'percentage_null_value_global=' + str(percentage_null_user) + '\n'            
+            elif null_value_option == 'Null percentage per attribute':
+                percentage_null_user_list = [int(number) for number in st.text_area(label='Null percentage per attribute: Provide a list detailing the percentage of null values for each attribute.', value='40, 0, 10, 97', key='textarea_null_value_context').split(',')]
+                generation_config_context_schema += 'percentage_null_value_attribute=' + str(percentage_null_user_list) + '\n' 
+        else:            
+            generation_config_context_schema += 'percentage_null_value_global=0' + '\n'
     return generation_config_context_schema
 
 def get_context_schema():

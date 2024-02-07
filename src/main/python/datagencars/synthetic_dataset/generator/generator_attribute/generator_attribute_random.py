@@ -36,16 +36,16 @@ class GeneratorAttributeRandom(GeneratorAttribute):
         attribute_name = self.schema_access.get_attribute_name_from_pos(position)       
         type_attribute = self.schema_access.get_type_attribute_from_pos(position)            
         if type_attribute == 'Integer':     
-            minimum_value = self.schema_access.get_minimum_value_attribute_from_pos(position)
-            maximum_value = self.schema_access.get_maximum_value_attribute_from_pos(position)       
-            attribute_value = random.randint(int(minimum_value), int(maximum_value))
+            minimum_value = int(self.schema_access.get_minimum_value_attribute_from_pos(position))
+            maximum_value = int(self.schema_access.get_maximum_value_attribute_from_pos(position))
+            attribute_value = int(random.randint(int(minimum_value), int(maximum_value)))
         elif type_attribute == 'Float':
-            minimum_value = self.schema_access.get_minimum_value_attribute_from_pos(position)
-            maximum_value = self.schema_access.get_maximum_value_attribute_from_pos(position)
-            attribute_value = round(random.uniform(float(minimum_value), float(maximum_value)),1)
+            minimum_value = float(self.schema_access.get_minimum_value_attribute_from_pos(position))
+            maximum_value = float(self.schema_access.get_maximum_value_attribute_from_pos(position))
+            attribute_value = float(round(random.uniform(float(minimum_value), float(maximum_value)),1))
         elif type_attribute == 'String' or type_attribute == 'List':
             possible_values_attribute_list = self.schema_access.get_possible_values_attribute_list_from_pos(position)
-            attribute_value = random.choice(possible_values_attribute_list)
+            attribute_value = str(random.choice(possible_values_attribute_list))
         elif type_attribute == 'Boolean':
             attribute_value = bool(random.choice([True, False]))  
         return attribute_name, attribute_value

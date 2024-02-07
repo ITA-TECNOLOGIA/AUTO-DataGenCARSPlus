@@ -49,41 +49,31 @@ class AccessGenerationConfig(AccessData):
             logging.error(e)
         return number_context 
     
-    def get_number_user_null(self):
+    def get_percentage_null_value_global(self):
         '''
-        Gets the percentage of null user values to generate in the dataset.
-        :return: The percentage of null values to generate in the dataset.
+        Gets the global percentage of null values to randomly generate in the complete dataset.
+        :return: The global percentage of null values to randomly generate in the complete dataset.
         '''
-        percentage_user_null = None
+        percentage_null = None
         try:
-            percentage_user_null = self.file_parser.getint(section='dimension', option='percentage_user_null_value')
+            percentage_null = self.file_parser.getint(section='null values', option='percentage_null_value_global')
+            return percentage_null   
         except (NoOptionError, NoSectionError) as e:            
             logging.error(e)
-        return percentage_user_null 
-    
-    def get_number_item_null(self):
+            return None               
+        
+    def get_percentage_null_value_attribute(self):
         '''
-        Gets the percentage of null item values to generate in the dataset.
-        :return: The percentage of null values to generate in the dataset.
+        Gets the percentage of null values to randomly generate by attribute column.
+        :return: The percentage of null values to randomly generate by attribute column.
         '''
-        percentage_item_null = None
+        percentage_null_list = []
         try:
-            percentage_item_null = self.file_parser.getint(section='dimension', option='percentage_item_null_value')
+            percentage_null_list = eval(self.file_parser.get(section='null values', option='percentage_null_value_attribute'))
+            return percentage_null_list 
         except (NoOptionError, NoSectionError) as e:            
             logging.error(e)
-        return percentage_item_null 
-    
-    def get_number_context_null(self):
-        '''
-        Gets the percentage of null context values to generate in the dataset.
-        :return: The percentage of null values to generate in the dataset.
-        '''
-        percentage_context_null = None
-        try:
-            percentage_context_null = self.file_parser.getint(section='dimension', option='percentage_context_null_value')
-        except (NoOptionError, NoSectionError) as e:            
-            logging.error(e)
-        return percentage_context_null 
+            return []
 
     def get_number_rating(self):
         '''

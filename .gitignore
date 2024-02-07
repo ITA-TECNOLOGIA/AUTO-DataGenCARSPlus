@@ -9,3 +9,4 @@ resources/generate_synthetic_dataset/*
 src/main/python/streamlit_app/workflow_graph/*.png
 src/main/python/streamlit_app/workflow_graph/GenerateSyntheticDataset(Explicit_ratings)
 *.mp4
+src/main/python/experiments_mdm_24/*

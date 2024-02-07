@@ -32,13 +32,27 @@ def generate_generation_config_schema():
         # [dimension]        
         dimension_value = '[dimension] \n'
         item_count = st.number_input(label='Number of items to generate:', value=0)      
-        dimension_value += 'number_item=' + str(item_count) + '\n'    
-        percentage_null_item = st.number_input(label='Percentage of null item values:', value=0)
-        dimension_value += 'percentage_item_null_value=' + str(percentage_null_item) + '\n'
+        dimension_value += 'number_item=' + str(item_count) + '\n'        
         
         st.markdown("""---""")
-
-        # [item profile]
+        
+        # [null values]     
+        generation_config_item_schema = ''   
+        generation_config_item_schema += '[null values] \n'        
+        if st.checkbox(label='Generate null values?', value=False, key='checkbox_null_value_item'):
+            null_value_option = st.selectbox(label='', options=['Null percentage in the complete file', 'Null percentage per attribute'], key='selectbox_null_value_item')
+            if null_value_option == 'Null percentage in the complete file':
+                percentage_null_user = st.number_input(label='Null percentage in the complete file:', value=1, min_value=1, max_value=100, key='input_null_value_item')
+                generation_config_item_schema += 'percentage_null_value_global=' + str(percentage_null_user) + '\n'            
+            elif null_value_option == 'Null percentage per attribute':
+                percentage_null_user_list = [int(number) for number in st.text_area(label='Null percentage per attribute: Provide a list detailing the percentage of null values for each attribute.', value='40, 0, 10, 97', key='textarea_null_value_item').split(',')]
+                generation_config_item_schema += 'percentage_null_value_attribute=' + str(percentage_null_user_list) + '\n' 
+        else:            
+            generation_config_item_schema += 'percentage_null_value_global=0' + '\n'
+        
+        st.markdown("""---""")
+        
+        # [item profile]        
         item_profile_value = ''            
         with_correlation_checkbox = st.checkbox(label='Apply correlation in the generation of the item file?', value=False, key='with_correlation_checkbox')
         if with_correlation_checkbox:
@@ -51,13 +65,13 @@ def generate_generation_config_schema():
             noise_percentage_profile_2 = st.number_input(label='Profile noise percentage 2:', value=20)
             noise_percentage_profile_3 = st.number_input(label='Profile noise percentage 3:', value=20)            
             item_profile_value += ('probability_percentage_profile_1=' + str(probability_percentage_profile_1) + '\n' +
-                                'probability_percentage_profile_2=' + str(probability_percentage_profile_2) + '\n' +
-                                'probability_percentage_profile_3=' + str(probability_percentage_profile_3) + '\n' +
-                                'noise_percentage_profile_1=' + str(noise_percentage_profile_1) + '\n' +
-                                'noise_percentage_profile_2=' + str(noise_percentage_profile_2) + '\n' +
-                                'noise_percentage_profile_3=' + str(noise_percentage_profile_3) + '\n')
+                                   'probability_percentage_profile_2=' + str(probability_percentage_profile_2) + '\n' +
+                                   'probability_percentage_profile_3=' + str(probability_percentage_profile_3) + '\n' +
+                                   'noise_percentage_profile_1=' + str(noise_percentage_profile_1) + '\n' +
+                                   'noise_percentage_profile_2=' + str(noise_percentage_profile_2) + '\n' +
+                                   'noise_percentage_profile_3=' + str(noise_percentage_profile_3) + '\n')
         # Generating the text of the file <generation_config.conf>:
-        generation_config_item_schema = dimension_value + '\n' + item_profile_value        
+        generation_config_item_schema = dimension_value + '\n' + generation_config_item_schema + '\n' + item_profile_value        
     return generation_config_item_schema
 
 def get_item_schema(n):
@@ -73,7 +87,7 @@ def get_item_schema(n):
         # Generating the schema <"item_schema.conf">:
         schema_value = wf_schema_util.get_schema_file(schema_type=config.ITEM_SCHEMA_NAME)
     # Editing schema:
-    return wf_schema_util.edit_schema_file(schema_file_name=config.GENERATION_CONFIG_USER_SCHEMA_NAME, schema_value=schema_value, tab_type=f'tab_item_{n}')
+    return wf_schema_util.edit_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, schema_value=schema_value, tab_type=f'tab_item_{n}')
 
 def get_item_profile_schema():
     """
