@@ -41,8 +41,8 @@ class GeneratorAttributeGaussian(GeneratorAttribute):
         else:            
             type_attribute = self.schema_access.get_type_attribute_from_pos(position)            
             if type_attribute in ['Integer', 'Float']:
-                minimum_value = self.schema_access.get_minimum_value_attribute_from_pos(position)
-                maximum_value = self.schema_access.get_maximum_value_attribute_from_pos(position)
+                minimum_value = float(self.schema_access.get_minimum_value_attribute_from_pos(position))
+                maximum_value = float(self.schema_access.get_maximum_value_attribute_from_pos(position))
                 if type_attribute == 'Integer':
                     # Generating a list of int values.   
                     array_np = np.array(list(range(int(minimum_value), int(maximum_value)+1)))
@@ -52,7 +52,21 @@ class GeneratorAttributeGaussian(GeneratorAttribute):
                 # Determining the mean and standard deviation to generate an attribute value following a Gaussian distribution:
                 mean = np.mean(array_np)
                 standard_deviation = np.std(array_np)
-                attribute_value = int(random.gauss(mu=mean, sigma=standard_deviation))                 
+                # Keep generating a value until it falls within the specified range
+                while True:
+                    attribute_value = random.gauss(mu=mean, sigma=standard_deviation)
+                    if type_attribute == 'Integer':
+                        attribute_value = int(round(attribute_value))  # Ensure attribute_value is an integer for type 'Integer'
+                    elif type_attribute == 'Float':
+                        attribute_value = float(attribute_value)  # Ensure attribute_value is a float for type 'Float'
+                    if minimum_value <= attribute_value <= maximum_value:
+                        break  # The generated value is within the range, exit the loop
+                # attribute_value = int(random.gauss(mu=mean, sigma=standard_deviation))                                                         
+                # # Clipping the generated value to ensure it is within the range
+                # if type_attribute == 'Integer':
+                #     attribute_value = int(np.clip(attribute_value, int(minimum_value), int(maximum_value)))
+                # elif type_attribute == 'Float':
+                #     attribute_value = float(np.clip(attribute_value, float(minimum_value), float(maximum_value)))           
             elif type_attribute == 'String' or type_attribute == 'List':            
                 possible_values_attribute_list = self.schema_access.get_possible_values_attribute_list_from_pos(position)
                 # Selecting one element from a str list following the normal (gauss) distribution.

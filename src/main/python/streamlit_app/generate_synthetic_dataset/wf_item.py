@@ -73,7 +73,7 @@ def get_item_schema(n):
         # Generating the schema <"item_schema.conf">:
         schema_value = wf_schema_util.get_schema_file(schema_type=config.ITEM_SCHEMA_NAME)
     # Editing schema:
-    return wf_schema_util.edit_schema_file(schema_file_name=config.GENERATION_CONFIG_USER_SCHEMA_NAME, schema_value=schema_value, tab_type=f'tab_item_{n}')
+    return wf_schema_util.edit_schema_file(schema_file_name=config.ITEM_SCHEMA_NAME, schema_value=schema_value, tab_type=f'tab_item_{n}')
 
 def get_item_profile_schema():
     """

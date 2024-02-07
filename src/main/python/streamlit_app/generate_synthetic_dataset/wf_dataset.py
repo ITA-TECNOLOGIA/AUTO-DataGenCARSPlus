@@ -41,7 +41,7 @@ def generate_synthtetic_dataset(with_context, feedback_option):
     with tab_item:
         # Generating or uploading <generation_config_item.conf>:
         generation_config_item = wf_item.get_generation_config_schema()
-        # Generating or uploading <user_schema.conf>:
+        # Generating or uploading <item_schema.conf>:
         item_schema = wf_item.get_item_schema(n=1)
         # Generating or uploading <item_profile.conf>:
         with_correlation = st.checkbox(f'Apply correlation between item attributes?', value=False, key=f'is_with_correlation_{config.ITEM_PROFILE_SCHEMA_NAME}_file')        

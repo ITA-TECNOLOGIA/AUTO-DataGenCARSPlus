@@ -49,16 +49,16 @@ class GeneratorUserFile(GeneratorFile):
         percentage_null = self.access_generation_config.get_number_user_null()
         if percentage_null > 0:
             number_user = self.access_generation_config.get_number_user()
-            number_attributes = self.schema_access.get_number_attributes() - 1 # user_profile_id cannot be null
+            number_attributes = self.schema_access.get_number_attributes()
             null_values = int((number_attributes * number_user * percentage_null) / 100)
-            # Generate random positions to be null
+            # Generate random positions to be null.
             for i in range(1, null_values+1):
-                # Generate column to remove
+                # Generate column to remove.
                 random_column = random.randint(1, number_attributes)
-                # Generate row to remove
+                # Generate row to remove.
                 random_row = random.randint(0, number_user-1)            
-                # Remove value
-                if file_df.iloc[random_row, random_column] != None:
-                    file_df.iloc[random_row, random_column] = None
-                    i = i + 1         
+                # Remove value. 
+                if file_df.iloc[random_row, random_column] != '':
+                    file_df.iloc[random_row, random_column] = ''
+                    i = i + 1     
         return file_df.copy()
