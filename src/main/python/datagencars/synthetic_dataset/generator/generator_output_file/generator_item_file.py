@@ -1,5 +1,3 @@
-import random
-
 import streamlit as st
 from datagencars.synthetic_dataset.generator.access_schema.access_item_profile import AccessItemProfile
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
@@ -82,7 +80,6 @@ class GeneratorItemFile(GeneratorFile):
                 self.file_df.loc[len(self.file_df.index)] = attribute_list
                 # Update the progress bar with each iteration
                 progress_bar.progress(text=f'Generating {i + 1} items from {number_item}', value=(i + 1) / number_item) 
-
         # Adding item_id column:
         item_id_list = list(range(1, number_item+1))
         self.file_df.insert(loc=0, column='item_id', value=item_id_list)
@@ -91,7 +88,13 @@ class GeneratorItemFile(GeneratorFile):
         if 'object_position' in self.file_df.columns:
             #Extract the 4th element from the object_position list and insert it into a new room_id column
             self.file_df['room_id'] = self.file_df['object_position'].apply(lambda x: x.pop(3))
-        return self.generate_null_values(self.file_df.copy())
+        # Generating nulls values:             
+        percentage_null_value_global = self.access_generation_config.get_percentage_null_value_global()
+        percentage_null_value_attribute_list = self.access_generation_config.get_percentage_null_value_attribute()        
+        if (percentage_null_value_global) and (percentage_null_value_global > 0):        
+            return self.generate_null_value_global(self.file_df.copy(), percentage_null_value_global)
+        elif len(percentage_null_value_attribute_list) != 0:
+            return self.generate_null_value_attribute(self.file_df.copy(), percentage_null_value_attribute_list)
     
     def update_object_action(self, df):
         """
@@ -104,26 +107,3 @@ class GeneratorItemFile(GeneratorFile):
             object_action = row['object_action_types']
             df.at[index, 'object_action_types'] = object_action[object_type]
         return df
-    
-    def generate_null_values(self, file_df):
-        """
-        Generate null values in the item dataframe based on the specified percentage.
-        :param file_df: A dataframe containing item data.
-        :return: A copy of the item dataframe with generated null values.
-        """
-        percentage_null = self.access_generation_config.get_number_item_null()
-        if percentage_null > 0:
-            number_item = self.access_generation_config.get_number_item()
-            number_attributes = self.schema_access.get_number_attributes()
-            null_values = int((number_attributes * number_item * percentage_null) / 100)
-            # Generate random positions to be null
-            for i in range(1, null_values+1):
-                # Generate column to remove
-                random_column = random.randint(1, number_attributes)
-                # Generate row to remove
-                random_row = random.randint(0, number_item-1)            
-                # Remove value
-                if file_df.iloc[random_row, random_column] != None:
-                    file_df.iloc[random_row, random_column] = None
-                    i = i + 1         
-        return file_df.copy()

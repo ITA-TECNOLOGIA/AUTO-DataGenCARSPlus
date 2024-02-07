@@ -60,20 +60,14 @@ class GeneratorAttributeGaussian(GeneratorAttribute):
                     elif type_attribute == 'Float':
                         attribute_value = float(attribute_value)  # Ensure attribute_value is a float for type 'Float'
                     if minimum_value <= attribute_value <= maximum_value:
-                        break  # The generated value is within the range, exit the loop
-                # attribute_value = int(random.gauss(mu=mean, sigma=standard_deviation))                                                         
-                # # Clipping the generated value to ensure it is within the range
-                # if type_attribute == 'Integer':
-                #     attribute_value = int(np.clip(attribute_value, int(minimum_value), int(maximum_value)))
-                # elif type_attribute == 'Float':
-                #     attribute_value = float(np.clip(attribute_value, float(minimum_value), float(maximum_value)))           
+                        break  # The generated value is within the range, exit the loop           
             elif type_attribute == 'String' or type_attribute == 'List':            
                 possible_values_attribute_list = self.schema_access.get_possible_values_attribute_list_from_pos(position)
                 # Selecting one element from a str list following the normal (gauss) distribution.
                 attribute_value = self.normal_choice(lst=possible_values_attribute_list)            
             elif type_attribute == 'Boolean':
                 # Selecting one element from a boolean list following the normal (gauss) distribution.              
-                attribute_value = self.normal_choice(lst=[True, False])   
+                attribute_value = bool(self.normal_choice(lst=[True, False]))
         return attribute_name, attribute_value
 
     def normal_choice(self, lst, mu=None, sigma=None):

@@ -1,5 +1,3 @@
-import random
-
 import streamlit as st
 from datagencars.synthetic_dataset.generator.generator_instance.generator_instance import GeneratorInstance
 from datagencars.synthetic_dataset.generator.generator_output_file.generator_file import GeneratorFile
@@ -41,31 +39,13 @@ class GeneratorContextFile(GeneratorFile):
             self.file_df.loc[len(self.file_df.index)] = attribute_list
             # Update the progress bar with each iteration                            
             progress_bar.progress(text=f'Generating context {i + 1} from {number_context}', value=(i + 1) / number_context) 
-
         # Adding context_id column:
         context_id_list = list(range(1, number_context+1))
-        self.file_df.insert(loc=0, column='context_id', value=context_id_list)        
-        return self.generate_null_values(self.file_df.copy())
-    
-    def generate_null_values(self, file_df):
-        """
-        Generate null values in the context dataframe based on the specified percentage.
-        :param file_df: A dataframe containing context data.
-        :return: A copy of the context dataframe with generated null values.
-        """
-        percentage_null = self.access_generation_config.get_number_context_null()
-        if percentage_null > 0:
-            number_context = self.access_generation_config.get_number_context()
-            number_attributes = self.schema_access.get_number_attributes()
-            null_values = int((number_attributes * number_context * percentage_null) / 100)
-            # Generate random positions to be null
-            for i in range(1, null_values+1):
-                # Generate column to remove
-                random_column = random.randint(1, number_attributes)
-                # Generate row to remove
-                random_row = random.randint(0, number_context-1)            
-                # Remove value
-                if file_df.iloc[random_row, random_column] != None:
-                    file_df.iloc[random_row, random_column] = None
-                    i = i + 1         
-        return file_df.copy()
+        self.file_df.insert(loc=0, column='context_id', value=context_id_list)
+        # Generating nulls values:             
+        percentage_null_value_global = self.access_generation_config.get_percentage_null_value_global()
+        percentage_null_value_attribute_list = self.access_generation_config.get_percentage_null_value_attribute()        
+        if (percentage_null_value_global) and (percentage_null_value_global > 0):        
+            return self.generate_null_value_global(self.file_df.copy(), percentage_null_value_global)
+        elif len(percentage_null_value_attribute_list) != 0:
+            return self.generate_null_value_attribute(self.file_df.copy(), percentage_null_value_attribute_list)
