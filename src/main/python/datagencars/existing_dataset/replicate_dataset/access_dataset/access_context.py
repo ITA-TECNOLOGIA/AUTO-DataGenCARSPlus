@@ -21,7 +21,7 @@ class AccessContext:
         '''
         return [col for col in self.context_df.columns if col != 'context_id']
 
-    def get_context_value_from_context_attributte(self, context_id, attribute_name):
+    def get_context_value_from_context_attribute(self, context_id, attribute_name):
         '''
         Gets an context value from context_id and attribute name.
         :param context_id: The context ID.
@@ -30,15 +30,21 @@ class AccessContext:
         '''
         return self.context_df.loc[self.context_df['context_id'] == context_id, attribute_name].iloc[0]
     
-    def get_context_possible_value_list_from_attributte(self, attribute_name):
+    def get_context_possible_value_list_from_attribute(self, attribute_name):
         '''
         Gets a list of context possible values from a specific attribute.
         :param attribute_name: The attribute name.
         :return: A list of context possible values from a specific attribute.
         '''
         candidate_possible_value_list = self.context_df[attribute_name].unique().tolist()
-        if self.context_df[attribute_name].isna().any():
-            context_possible_value_list = [x for x in candidate_possible_value_list if not math.isnan(x)]   
-        else:
-            context_possible_value_list = candidate_possible_value_list
-        return sorted(context_possible_value_list)   
+        # Check for NaN values and non-numeric types
+        context_possible_value_list = []
+        for value in candidate_possible_value_list:
+            if pd.isna(value):  # This will handle NaN values properly for any data type
+                continue
+            elif isinstance(value, (int, float)) and math.isnan(value):  # Check if value is numeric and NaN
+                continue
+            else:
+                context_possible_value_list.append(value)
+        return sorted(context_possible_value_list)
+

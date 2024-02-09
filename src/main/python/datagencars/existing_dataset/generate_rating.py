@@ -93,20 +93,20 @@ class GenerateRating(ABC):
         for attribute_name in atribute_name_list:
             # Getting values from item.csv
             if attribute_name in self.access_item.get_item_attribute_list():
-                attribute_value = self.access_item.get_item_value_from_item_attributte(item_id, attribute_name)                
+                attribute_value = self.access_item.get_item_value_from_item_attribute(item_id, attribute_name)                
                 if ((isinstance(attribute_value, (np.bool_, np.int64, np.float64))) or ('[' not in attribute_value)):
                     attribute_value_list.append(attribute_value)
                 else:
                     # Ckeck if is a list as str "['a', 'b']"
                     attribute_value_list.append(ast.literal_eval(attribute_value))
                 # Getting possible values of the current attribute:
-                possible_value_list.append(self.access_item.get_item_possible_value_list_from_attributte(attribute_name))
+                possible_value_list.append(self.access_item.get_item_possible_value_list_from_attribute(attribute_name))
             elif context_id:
                 # Getting values from context.csv
                 if attribute_name in self.access_context.get_context_attribute_list():
-                    attribute_value_list.append(self.access_context.get_context_value_from_context_attributte(context_id, attribute_name))                    
+                    attribute_value_list.append(self.access_context.get_context_value_from_context_attribute(context_id, attribute_name))                    
                     # Getting possible values of the current attribute:
-                    possible_value_list.append(self.access_context.get_context_possible_value_list_from_attributte(attribute_name))
+                    possible_value_list.append(self.access_context.get_context_possible_value_list_from_attribute(attribute_name))
         return attribute_value_list, possible_value_list
     
     def modify_rating_by_user_expectations(self, rating, k, user_rating_list, min_rating_value, max_rating_value, percentage_rating_variation):

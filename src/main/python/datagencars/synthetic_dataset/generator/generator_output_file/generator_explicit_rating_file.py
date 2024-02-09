@@ -76,14 +76,12 @@ class GeneratorExplicitRatingFile:
            rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'rating', 'timestamp'])
 
         # Getting the number of users.
-        number_user = self.access_generation_config.get_number_user()
+        number_user = self.user_df['user_id'].count()
         user_id_list = self.user_df['user_id'].unique().tolist()
-        # Getting the number of items.
-        # number_item = self.access_generation_config.get_number_item()
+        # Getting the number of items.        
         item_id_list = self.item_df['item_id'].unique().tolist()
         # Getting the number of contexts.
-        if not self.context_df.empty:
-            # number_context = self.access_generation_config.get_number_context()
+        if not self.context_df.empty:            
             context_id_list = self.context_df['context_id'].unique().tolist()
         # Getting the number of ratings:
         number_ratings = self.access_generation_config.get_number_rating()
@@ -313,8 +311,8 @@ class GeneratorExplicitRatingFile:
                 weight = float(weight_importance)
             sum_weight += weight
             rating += weight * attribute_rating_vector[idx]
-        if sum_weight != 1:            
-            raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
+        # if sum_weight != 1:            
+        #     raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
         return round(rating, 2)
     
     def get_attribute_value_and_possible_value_list(self, atribute_name_list, item_id, context_id=None):
@@ -344,7 +342,7 @@ class GeneratorExplicitRatingFile:
                 if self.item_schema_access:
                     possible_value_list.append(self.item_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
                 else:
-                    possible_value_list.append(self.access_item.get_item_possible_value_list_from_attributte(attribute_name))
+                    possible_value_list.append(self.access_item.get_item_possible_value_list_from_attribute(attribute_name))
             elif context_id:
                 # Getting values from context.csv                
                 if attribute_name in list(self.context_df.columns.values):
@@ -353,7 +351,7 @@ class GeneratorExplicitRatingFile:
                     if self.context_schema_access:
                         possible_value_list.append(self.context_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
                     else:
-                        possible_value_list.append(self.access_context.get_context_possible_value_list_from_attributte(attribute_name))
+                        possible_value_list.append(self.access_context.get_context_possible_value_list_from_attribute(attribute_name))
         return attribute_value_list, possible_value_list
     
     def modify_rating_by_user_expectations(self, rating, k, user_rating_list, min_rating_value, max_rating_value):

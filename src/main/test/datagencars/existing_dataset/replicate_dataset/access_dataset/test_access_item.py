@@ -33,19 +33,19 @@ class TestAccessItem(unittest.TestCase):
         logging.info(f'item_attribute_list: {item_attribute_list}')                
         self.assertEqual(len(item_attribute_list), 3)   
 
-    def test_get_item_value_from_item_attributte(self):               
+    def test_get_item_value_from_item_attribute(self):               
         '''
         Gets an item value from item_id and attribute name.
         '''
-        item_value = self.__access.get_item_value_from_item_attributte(item_id=1, attribute_name='category1')
+        item_value = self.__access.get_item_value_from_item_attribute(item_id=1, attribute_name='category1')
         logging.info(f'item_value: {item_value}')                
         self.assertEqual(item_value, 1)  
 
-    def test_get_item_possible_value_list_from_attributte(self):               
+    def test_get_item_possible_value_list_from_attribute(self):               
         '''
         Gets a list of item possible values from a specific attribute.
         '''
-        item_possible_value_list = self.__access.get_item_possible_value_list_from_attributte(attribute_name='category1')
+        item_possible_value_list = self.__access.get_item_possible_value_list_from_attribute(attribute_name='category1')
         logging.info(f'item_possible_value_list: {item_possible_value_list}')                
         self.assertEqual(len(item_possible_value_list), 27)  
     
