@@ -76,14 +76,12 @@ class GeneratorExplicitRatingFile:
            rating_df = pd.DataFrame(columns=['user_id', 'item_id', 'rating', 'timestamp'])
 
         # Getting the number of users.
-        number_user = self.access_generation_config.get_number_user()
+        number_user = self.user_df['user_id'].count()
         user_id_list = self.user_df['user_id'].unique().tolist()
-        # Getting the number of items.
-        # number_item = self.access_generation_config.get_number_item()
+        # Getting the number of items.        
         item_id_list = self.item_df['item_id'].unique().tolist()
         # Getting the number of contexts.
-        if not self.context_df.empty:
-            # number_context = self.access_generation_config.get_number_context()
+        if not self.context_df.empty:            
             context_id_list = self.context_df['context_id'].unique().tolist()
         # Getting the number of ratings:
         number_ratings = self.access_generation_config.get_number_rating()
@@ -115,7 +113,8 @@ class GeneratorExplicitRatingFile:
             # even_distribution=False: generating a random count of ratings by user.
             # Get the distribution type:
             distribution_type = self.access_generation_config.get_even_distribution_type()
-            ratings_by_user_list, __, __ = self.get_number_of_ratings_by_user(number_user, number_ratings, distribution_type)                 
+            # ratings_by_user_list, __, __ = self.get_number_of_ratings_by_user(number_user, number_ratings, distribution_type)                 
+            ratings_by_user_list = self.get_number_of_ratings_by_user(number_user, number_ratings, distribution_type)                 
 
         # Create a progress bar
         progress_bar = st.progress(0.0)
@@ -275,6 +274,33 @@ class GeneratorExplicitRatingFile:
         else:
             number_of_ratings_by_user = numeros_normalizados
         return number_of_ratings_by_user, numeros_normalizados, random_proportions
+    
+    def get_number_of_ratings_by_user(self, number_user, number_ratings, distribution_type):
+        # Define la media y la desviación estándar de la distribución gaussiana
+        mu = number_ratings / number_user  # media para que el promedio sea el número deseado de calificaciones por usuario
+        sigma = mu * 0.1  # desviación estándar como un porcentaje de la media para controlar la variabilidad
+
+        # Genera una lista de números aleatorios que sigan una distribución gaussiana
+        if distribution_type == 'uniform':
+            # Si se desea una distribución uniforme, se puede mantener esta parte
+            random_proportions = np.random.uniform(0, number_ratings, number_user)
+        elif distribution_type == 'gaussian':
+            random_proportions = np.random.normal(mu, sigma, number_user)
+
+        # Normaliza la lista para que la suma sea igual a number_ratings
+        suma_total = sum(random_proportions)
+        number_of_ratings_by_user = [int(round((x / suma_total) * number_ratings)) for x in random_proportions]
+
+        # Asegúrate de que la suma de los valores asignados sea igual a number_ratings
+        suma_post_normalizacion = sum(number_of_ratings_by_user)
+        while suma_post_normalizacion != number_ratings:
+            if suma_post_normalizacion < number_ratings:
+                number_of_ratings_by_user[np.random.randint(number_user)] += 1
+            else:
+                idx_to_decrease = np.random.choice([idx for idx, val in enumerate(number_of_ratings_by_user) if val > 0])
+                number_of_ratings_by_user[idx_to_decrease] -= 1
+            suma_post_normalizacion = sum(number_of_ratings_by_user)
+        return number_of_ratings_by_user
 
     def get_rating(self, user_profile_id, item_id, context_id=None):
         '''
@@ -297,6 +323,7 @@ class GeneratorExplicitRatingFile:
         maximum_value_rating = self.access_generation_config.get_maximum_value_rating() 
         # Getting the attribute rating vector.
         attribute_rating_vector = self.access_user_profile.get_attribute_rating_vector(atribute_value_list, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list)
+        # print('attribute_rating_vector: ', attribute_rating_vector)
 
         if len(atribute_value_list) != len(attribute_rating_vector):
             raise ValueError('The vectors have not the same size.')
@@ -344,7 +371,7 @@ class GeneratorExplicitRatingFile:
                 if self.item_schema_access:
                     possible_value_list.append(self.item_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
                 else:
-                    possible_value_list.append(self.access_item.get_item_possible_value_list_from_attributte(attribute_name))
+                    possible_value_list.append(self.access_item.get_item_possible_value_list_from_attribute(attribute_name))
             elif context_id:
                 # Getting values from context.csv                
                 if attribute_name in list(self.context_df.columns.values):
@@ -353,7 +380,7 @@ class GeneratorExplicitRatingFile:
                     if self.context_schema_access:
                         possible_value_list.append(self.context_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
                     else:
-                        possible_value_list.append(self.access_context.get_context_possible_value_list_from_attributte(attribute_name))
+                        possible_value_list.append(self.access_context.get_context_possible_value_list_from_attribute(attribute_name))
         return attribute_value_list, possible_value_list
     
     def modify_rating_by_user_expectations(self, rating, k, user_rating_list, min_rating_value, max_rating_value):

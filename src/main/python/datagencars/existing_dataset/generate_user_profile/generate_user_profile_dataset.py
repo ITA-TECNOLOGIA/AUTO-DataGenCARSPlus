@@ -10,6 +10,7 @@ from datagencars.existing_dataset.replicate_dataset.access_dataset.access_contex
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_rating import AccessRating
 import streamlit as st
+from decimal import Decimal, ROUND_HALF_DOWN
 
 
 class GenerateUserProfileDataset(GenerateUserProfile):
@@ -66,20 +67,23 @@ class GenerateUserProfileDataset(GenerateUserProfile):
             a_matrix, rank_vector = self.get_a_matrix(user_id, item_attribute_list, context_attribute_list)
             b_vector = self.get_b_vector(user_id)
             x_vector = self.get_x_weigths(A=a_matrix.to_numpy(), b=b_vector)[0].tolist()
-            not_nan_x_vector = [0.0 if np.isnan(x) else x for x in x_vector]
+            not_nan_x_vector = [0.0 if np.isnan(x) else round(x, 1) for x in x_vector]
+            if any(x < 0 or math.copysign(1, x) < 0 for x in not_nan_x_vector):                
+                # Replace negative or -0.0 values with 0.0:                
+                not_nan_x_vector = [0.0 if x < 0 or math.copysign(1, x) < 0 else round(x, 1) for x in not_nan_x_vector]
 
             # Adding other value:
             sum_weight_vector = sum(not_nan_x_vector)
-            weight_vector = []
+            weight_vector = []           
             if sum_weight_vector == 0.0:
                 weight_vector = not_nan_x_vector+[1.0]
             elif sum_weight_vector == 1:
                 weight_vector = not_nan_x_vector+[0.0]
             elif sum_weight_vector < 1:                
-                weight_vector = not_nan_x_vector+[1.0-sum_weight_vector]
+                weight_vector = not_nan_x_vector+[round(1.0-sum_weight_vector, 1)]
             elif sum_weight_vector > 1:
-                # Adjust the weight values to ensure that the sum is 1.               
-                weight_vector = [x/sum_weight_vector for x in not_nan_x_vector] +[0.0]            
+                # Adjust the weight values to ensure that the sum is 1.
+                weight_vector = self.adjust_weights(not_nan_x_vector)+[0.0]                
 
             # Adding importance rank (+) o (-) to the weight:
             rank_weigth_list = []
@@ -93,6 +97,48 @@ class GenerateUserProfileDataset(GenerateUserProfile):
             progress_bar.progress(text=f'Generating user profile {user_id} from {len(user_id_list)}', value=(user_id) / len(user_id_list))
         return user_profile_df
 
+    def adjust_weights(self, not_nan_x_vector):
+        """
+        Adjusts and normalizes a list of weights (not_nan_x_vector) to sum up to 1.0, with each weight rounded to one decimal place.
+        This method uses Decimal for precision and a more refined strategy for distributing rounding errors.
+
+        :param not_nan_x_vector: A list of non-NaN, non-negative numerical values representing initial weights.
+        :return: A list of adjusted weights, rounded to one decimal place, where the sum of all weights is exactly 1.0.
+        """
+        # Convert weights to Decimal for precise arithmetic, avoiding floating-point issues
+        weight_vector = [Decimal(str(x)) for x in not_nan_x_vector]
+
+        # Calculate the sum of the original weights
+        sum_original = sum(weight_vector)
+        if sum_original == 0:
+            return [Decimal('0.0')] * len(weight_vector)  # Avoid division by zero
+
+        # Normalize weights so they sum to 1, rounding down to minimize initial rounding error
+        normalized_weights = [x / sum_original for x in weight_vector]
+        rounded_weights = [x.quantize(Decimal('0.1'), rounding=ROUND_HALF_DOWN) for x in normalized_weights]
+
+        # Calculate the rounding error
+        rounding_error = Decimal('1.0') - sum(rounded_weights)
+
+        # Distribute the rounding error
+        for i in range(len(rounded_weights)):
+            if rounding_error <= 0:
+                break
+            if rounding_error > 0 and rounded_weights[i] < Decimal('1.0') - Decimal('0.1'):
+                # Adjust the weight, ensuring it doesn't exceed 1.0
+                rounded_weights[i] += Decimal('0.1')
+                rounding_error -= Decimal('0.1')
+
+        # Final pass to ensure sum is exactly 1.0, adjust the weight with the least impact
+        if rounding_error > 0:
+            for i in range(len(rounded_weights)):
+                if rounded_weights[i] + rounding_error <= Decimal('1.0'):
+                    rounded_weights[i] += rounding_error
+                    break
+
+        return [float(x) for x in rounded_weights]
+
+
     def get_a_matrix(self, user_id, item_attribute_list, context_attribute_list):  # sourcery skip: extract-duplicate-method, extract-method, for-append-to-extend, inline-immediately-returned-variable, low-code-quality, merge-list-append, move-assign-in-block, use-dictionary-union
         '''
         Gets the matrix A.
@@ -101,7 +147,7 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         :param context_attribute_list: List of context attribute names.
         :return: The matrix A.
         '''        
-        # Analysing ITEMS by user_id:        
+        # Analysing ITEMS by user_id:              
         # Getting item_id_list from user_id:
         item_id_list = self.access_rating.get_item_id_list_from_user(user_id)
         # Getting item values and their possible values:
@@ -110,8 +156,8 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         for item_id in item_id_list:
             value_list = []
             for item_atribute_name in item_attribute_list:
-                item_value = self.access_item.get_item_value_from_item_attributte(item_id, attribute_name=item_atribute_name)
-                item_possible_value_list = self.access_item.get_item_possible_value_list_from_attributte(attribute_name=item_atribute_name)                
+                item_value = self.access_item.get_item_value_from_item_attribute(item_id, attribute_name=item_atribute_name)
+                item_possible_value_list = self.access_item.get_item_possible_value_list_from_attribute(attribute_name=item_atribute_name)                
                 item_value_possible_dict[item_atribute_name] = item_possible_value_list
                 value_list.append(item_value)
             item_value_list.append(tuple(value_list))
@@ -127,8 +173,8 @@ class GenerateUserProfileDataset(GenerateUserProfile):
             for context_id in context_id_list:
                 value_list = []
                 for context_atribute_name in context_attribute_list:
-                    context_value = self.access_context.get_context_value_from_context_attributte(context_id, attribute_name=context_atribute_name)
-                    context_possible_value_list = self.access_context.get_context_possible_value_list_from_attributte(attribute_name=context_atribute_name)                
+                    context_value = self.access_context.get_context_value_from_context_attribute(context_id, attribute_name=context_atribute_name)
+                    context_possible_value_list = self.access_context.get_context_possible_value_list_from_attribute(attribute_name=context_atribute_name)                
                     context_value_possible_dict[context_atribute_name] = context_possible_value_list
                     value_list.append(context_value)
                 context_value_list.append(tuple(value_list))

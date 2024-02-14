@@ -34,19 +34,19 @@ class TestAccessContext(unittest.TestCase):
         logging.info(f'context_attribute_list: {context_attribute_list}')                
         self.assertEqual(len(context_attribute_list), 14)   
 
-    def test_get_context_value_from_context_attributte(self):               
+    def test_get_context_value_from_context_attribute(self):               
         '''
         Gets an context value from context_id and attribute name.
         '''
-        context_value = self.__access.get_context_value_from_context_attributte(context_id=1, attribute_name='temperature')
+        context_value = self.__access.get_context_value_from_context_attribute(context_id=1, attribute_name='temperature')
         logging.info(f'context_value: {context_value}')                
         self.assertEqual(context_value, 5)  
 
-    def test_get_context_possible_value_list_from_attributte(self):               
+    def test_get_context_possible_value_list_from_attribute(self):               
         '''
         Gets a list of context possible values from a specific attribute.
         '''
-        context_possible_value_list = self.__access.get_context_possible_value_list_from_attributte(attribute_name='temperature')
+        context_possible_value_list = self.__access.get_context_possible_value_list_from_attribute(attribute_name='temperature')
         logging.info(f'context_possible_value_list: {context_possible_value_list}')                
         self.assertEqual(len(context_possible_value_list), 6)
     

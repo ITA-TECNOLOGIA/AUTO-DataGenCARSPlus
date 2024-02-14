@@ -15,10 +15,11 @@ class ReplaceNullValues:
         """
         if self.file_df.isna().any().any():
             generation_config = '[dimension] \n'        
-            generation_config += 'number_item=' + str(self.file_df.shape[0]) + '\n'            
-            generation_config += 'percentage_item_null_value=0' + '\n'
+            generation_config += 'number_item=' + str(self.file_df.shape[0]) + '\n' 
+            generation_config += '[null values] \n'    
+            generation_config += 'percentage_null_value_global=0' + '\n'
             item_file_generator = GeneratorItemFile(generation_config=generation_config, item_schema=item_schema)
-            return item_file_generator.generate_file(self.file_df) 
+            return item_file_generator.generate_file(self.file_df)
         else:
             return self.file_df
 
@@ -31,8 +32,9 @@ class ReplaceNullValues:
         """
         if self.file_df.isna().any().any():
             generation_config = '[dimension] \n'        
-            generation_config += 'number_context=' + str(self.file_df.shape[0]) + '\n'            
-            generation_config += 'percentage_context_null_value=0' + '\n'
+            generation_config += 'number_context=' + str(self.file_df.shape[0]) + '\n'   
+            generation_config += '[null values] \n'             
+            generation_config += 'percentage_null_value_global=0' + '\n'
             context_file_generator = GeneratorContextFile(generation_config=generation_config, context_schema=context_schema)
             return context_file_generator.generate_file(self.file_df)
         else:

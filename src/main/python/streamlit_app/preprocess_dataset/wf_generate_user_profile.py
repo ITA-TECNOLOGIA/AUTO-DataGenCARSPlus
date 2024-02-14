@@ -88,12 +88,12 @@ def generate(with_context, only_automatic=False):
             # Getting the item attribute value possibles:
             item_possible_value_map = {}
             for item_attribute in relevant_item_attribute_list:
-                item_possible_value_map[item_attribute] = access_item.get_item_possible_value_list_from_attributte(attribute_name=item_attribute)        
+                item_possible_value_map[item_attribute] = access_item.get_item_possible_value_list_from_attribute(attribute_name=item_attribute)        
             if with_context:
                 # Getting the context attribute value possibles:
                 context_possible_value_map = {}
                 for context_attribute in relevant_context_attribute_list:
-                    context_possible_value_map[context_attribute] = access_context.get_context_possible_value_list_from_attributte(attribute_name=context_attribute)                    
+                    context_possible_value_map[context_attribute] = access_context.get_context_possible_value_list_from_attribute(attribute_name=context_attribute)                    
                 attribute_column_list = ['user_profile_id']+relevant_item_attribute_list+relevant_context_attribute_list+['other']
                 user_profile_df = generate_user_profile_manual(number_user_profile=int(number_user_profile), is_dinamic_row=is_dinamic_row, attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map, context_possible_value_map=context_possible_value_map)
             else:                
