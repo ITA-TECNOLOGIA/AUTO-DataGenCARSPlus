@@ -113,7 +113,8 @@ class GeneratorExplicitRatingFile:
             # even_distribution=False: generating a random count of ratings by user.
             # Get the distribution type:
             distribution_type = self.access_generation_config.get_even_distribution_type()
-            ratings_by_user_list, __, __ = self.get_number_of_ratings_by_user(number_user, number_ratings, distribution_type)                 
+            # ratings_by_user_list, __, __ = self.get_number_of_ratings_by_user(number_user, number_ratings, distribution_type)                 
+            ratings_by_user_list = self.get_number_of_ratings_by_user(number_user, number_ratings, distribution_type)                 
 
         # Create a progress bar
         progress_bar = st.progress(0.0)
@@ -273,6 +274,33 @@ class GeneratorExplicitRatingFile:
         else:
             number_of_ratings_by_user = numeros_normalizados
         return number_of_ratings_by_user, numeros_normalizados, random_proportions
+    
+    def get_number_of_ratings_by_user(self, number_user, number_ratings, distribution_type):
+        # Define la media y la desviación estándar de la distribución gaussiana
+        mu = number_ratings / number_user  # media para que el promedio sea el número deseado de calificaciones por usuario
+        sigma = mu * 0.1  # desviación estándar como un porcentaje de la media para controlar la variabilidad
+
+        # Genera una lista de números aleatorios que sigan una distribución gaussiana
+        if distribution_type == 'uniform':
+            # Si se desea una distribución uniforme, se puede mantener esta parte
+            random_proportions = np.random.uniform(0, number_ratings, number_user)
+        elif distribution_type == 'gaussian':
+            random_proportions = np.random.normal(mu, sigma, number_user)
+
+        # Normaliza la lista para que la suma sea igual a number_ratings
+        suma_total = sum(random_proportions)
+        number_of_ratings_by_user = [int(round((x / suma_total) * number_ratings)) for x in random_proportions]
+
+        # Asegúrate de que la suma de los valores asignados sea igual a number_ratings
+        suma_post_normalizacion = sum(number_of_ratings_by_user)
+        while suma_post_normalizacion != number_ratings:
+            if suma_post_normalizacion < number_ratings:
+                number_of_ratings_by_user[np.random.randint(number_user)] += 1
+            else:
+                idx_to_decrease = np.random.choice([idx for idx, val in enumerate(number_of_ratings_by_user) if val > 0])
+                number_of_ratings_by_user[idx_to_decrease] -= 1
+            suma_post_normalizacion = sum(number_of_ratings_by_user)
+        return number_of_ratings_by_user
 
     def get_rating(self, user_profile_id, item_id, context_id=None):
         '''
@@ -295,6 +323,7 @@ class GeneratorExplicitRatingFile:
         maximum_value_rating = self.access_generation_config.get_maximum_value_rating() 
         # Getting the attribute rating vector.
         attribute_rating_vector = self.access_user_profile.get_attribute_rating_vector(atribute_value_list, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list)
+        # print('attribute_rating_vector: ', attribute_rating_vector)
 
         if len(atribute_value_list) != len(attribute_rating_vector):
             raise ValueError('The vectors have not the same size.')
@@ -311,8 +340,8 @@ class GeneratorExplicitRatingFile:
                 weight = float(weight_importance)
             sum_weight += weight
             rating += weight * attribute_rating_vector[idx]
-        # if sum_weight != 1:            
-        #     raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
+        if sum_weight != 1:            
+            raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
         return round(rating, 2)
     
     def get_attribute_value_and_possible_value_list(self, atribute_name_list, item_id, context_id=None):

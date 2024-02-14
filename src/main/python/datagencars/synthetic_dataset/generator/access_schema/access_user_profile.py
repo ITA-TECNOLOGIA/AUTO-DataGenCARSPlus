@@ -16,8 +16,8 @@ class AccessUserProfile():
         Gets an attribute name list and a attribute value list for a specific user profile.
         :param user_profile_id: The ID of the user profile.
         :return: An attribute name list and a attribute value list for a specific user profile.
-        """       
-        up_vector_df = self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == user_profile_id]
+        """               
+        up_vector_df = self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == int(user_profile_id)]
         up_vector = up_vector_df.drop('user_profile_id', axis=1)
         # Get the column names:
         attribute_name_list = up_vector.columns.tolist()
