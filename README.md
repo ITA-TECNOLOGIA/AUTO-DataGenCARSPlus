@@ -26,7 +26,7 @@ It was designed with the following purposes:
   - Extend dataset
   - Recalculate ratings
   - Transform attributes
-* Analysis a dataset:
+* Analysis of a dataset:
   - Visualization:
     - user
     - item
@@ -38,6 +38,7 @@ It was designed with the following purposes:
     - CARS: pre-filtering, post-Filtering and contextual modeling paradigms
 
 ## Demo
+
 AUTO-DataGenCARS has a user-freindly [demo](https://193.144.226.31/streamlit) based on Streamlit.
 To use it the following credentials will be required.
 
@@ -56,23 +57,26 @@ With conda:
 ```
 
 For the latest version, you can also clone the repo and build the source:
-```python     
+```python   
     $ git clone https://git.itainnova.es/bigdata/misc/auto_datagencars.git  
 ``` -->
 
 ## Requirements
+
 The libraries used in this project with its respective versions can be seen in `environment.yml`.
 
 ## License
+
 Open source license: If you are creating an open source application under a license compatible with the GNU GPL license v3 you may use AUTO-DataGenCARS under its terms and conditions.
 
 ## Reference
+
 Please make sure to cite the [paper](https://www.sciencedirect.com/science/article/pii/S157411921630270X) if you use
 AUTO-DataGenCARS for your research:
 
 ```
 @article{mc2017datagencars,
-         doi = {10.1016/j.pmcj.2016.09.020},             
+         doi = {10.1016/j.pmcj.2016.09.020},           
          year = {2017},
          note = {Special Issue IEEE International Conference on Pervasive Computing and Communications (PerCom) 2016},
          publisher = {Elsevier},

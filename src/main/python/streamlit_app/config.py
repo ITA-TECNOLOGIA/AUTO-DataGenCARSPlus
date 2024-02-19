@@ -14,7 +14,7 @@ LOC_LABEL = 'loc'
 TIMEZONE_LABEL = 'timezone'
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### AUTO-DataGenCARS general options ####:
-GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis a dataset', 'Dashboard']
+GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis of a dataset', 'Dashboard']
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### Generate a synthetic dataset ####:
 RATING_FEEDBACK_OPTIONS = ['Explicit ratings', 'Implicit ratings']
@@ -70,7 +70,7 @@ WORKFLOWS_DESCRIPTION = 'resources/workflows.json'
 PLOTS_FONT = {'family': 'serif', 'color':  'black', 'weight': 'normal', 'size': 12}
 PLOTS_GRID = {'visible':True, 'color':'gray', 'linestyle':'-.', 'linewidth':0.5}
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
-#### Analysis a dataset ####:
+#### Analysis of a dataset ####:
 ANLYSIS_OPTIONS = ['Visualization', 'Evaluation']
 # Visualization:
 VISUALIZATION_OPTIONS = ['Explicit ratings', 'Implicit ratings']
