@@ -163,8 +163,8 @@ elif general_option == 'Pre-process a dataset':
     elif wf_option == 'Transform attributes':
         wf_transform_attributes.generate(with_context)
     
-####### Analysis a dataset #######
-elif general_option == 'Analysis a dataset':    
+####### Analysis of a dataset #######
+elif general_option == 'Analysis of a dataset':    
     # Selecting a analysis option:
     analysis_option = st.sidebar.radio(label='Select one option:', options=config.ANLYSIS_OPTIONS)
 

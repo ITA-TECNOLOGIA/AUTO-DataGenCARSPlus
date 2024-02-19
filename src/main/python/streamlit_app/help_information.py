@@ -161,7 +161,7 @@ def help_categorical_to_numerical():
         st.markdown("""For example, you can convert the categorical values of a rating scale to the corresponding numerical values of the scale (e.g. ```Bad -> 1```, ```Average -> 2```, ```Good -> 3```, ```Very good -> 4```, ```Excellent -> 5```).""")
         st.markdown("""To use this tool, you need to upload a CSV file containing the categorical values to convert. Then, you need to select the categorical columns to convert.""")
 
-####### Analysis a dataset #######
+####### Analysis of a dataset #######
 # VISUALIZATION:
 
 # EVALUATION:
