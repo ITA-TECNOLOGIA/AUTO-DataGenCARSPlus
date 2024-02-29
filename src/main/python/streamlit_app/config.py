@@ -1,6 +1,6 @@
 #### App Streamlit settings ####:
 APP_TITLE = 'AUTO-DataGenCARS'
-APP_ICON = 'resources/icons/logo-datagencars.jpg'
+APP_ICON = 'resources/icons/logo-autodatagencarsplus.png'
 APP_LAYOUT = ['centered', 'centered', 'wide']
 APP_INITIAL_SIDEBAR_STATE = ['auto', 'expanded', 'auto', 'collapsed']
 APP_DESCRIPTION = 'It is a complete Python-based synthetic dataset generator for the evaluation of Context-Aware Recommendation Systems (CARS) to obtain the required datasets for any type of scenario desired.'
