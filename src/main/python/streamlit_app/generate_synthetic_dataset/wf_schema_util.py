@@ -322,8 +322,10 @@ def get_schema_file(schema_type):
                     input_parameter = st.text_area(label="Attribute's input parameter:", key=schema_type+'_input_parameter_'+str(position)) 
                     value += 'input_parameter_attribute_'+str(position)+'='+input_parameter+'\n'
 
-            # Important attributes:                
-            is_important_attribute = st.checkbox(label=f'Is {attribute_name} an important attribute to include in the user profile?', value=False, key=schema_type+'_is_important_attribute_'+str(position)) 
+            # Important attributes:        
+              
+            # label=f'Is {attribute_name} an important attribute to include in the user profile?'      
+            is_important_attribute = st.checkbox(label=f"Include this attribute {attribute_name} as part of the user profile (i.e., relevant for the user's preferences).", value=False, key=schema_type+'_is_important_attribute_'+str(position)) 
             value += 'important_weight_attribute_'+str(position)+'='+str(is_important_attribute)+'\n'
             if is_important_attribute:
                 # Ranking order:
