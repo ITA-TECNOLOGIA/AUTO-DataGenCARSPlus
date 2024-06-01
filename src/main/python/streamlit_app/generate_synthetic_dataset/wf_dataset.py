@@ -12,7 +12,16 @@ def generate_synthtetic_dataset(with_context, feedback_option):
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
     """ 
     # Help information:
-    help_information.help_explicit_rating_wf()
+    if with_context:
+        if feedback_option == 'Explicit ratings':      
+            help_information.help_explicit_rating_cars_wf()
+        elif feedback_option == 'Implicit ratings':      
+            help_information.help_implicit_rating_cars_wf()        
+    else:
+        if feedback_option == 'Explicit ratings':      
+            help_information.help_explicit_rating_rs_wf()
+        elif feedback_option == 'Implicit ratings':      
+            help_information.help_implicit_rating_rs_wf()
 
     # Showing the initial image of the WF:
     workflow_image.show_wf(wf_name='GenerateSyntheticDataset(Explicit_ratings)', init_step='True', with_context=with_context, optional_value_list=[("UP", "Manual")])
@@ -86,7 +95,7 @@ def generate_synthtetic_dataset(with_context, feedback_option):
             if with_context:
                 item_schema, context_schema = wf_rating.get_item_context_schema()
             else:
-                item_schema = wf_rating.get_item_schema(n=3)
+                item_schema = wf_rating.get_item_schema() # n=3
 
         ###### User, Item and context files #####:
         # Uploading <user.csv>, <item.csv> or <context.csv> or <behavior.csv>:

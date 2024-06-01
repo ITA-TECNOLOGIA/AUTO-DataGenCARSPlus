@@ -2,6 +2,7 @@ import streamlit as st
 from streamlit_app import config
 from streamlit_app.analysis_dataset.visualization import st_visualization_rating, st_visualization_uicb
 from streamlit_app.preprocess_dataset import wf_util
+from streamlit_app import config, help_information
 
 
 def generate(with_context):
@@ -17,13 +18,17 @@ def generate(with_context):
     user_tab=item_tab=context_tab=behavior_tab=rating_tab= None
     if with_context:
         if feedback_option == 'Implicit ratings':            
+            help_information.help_visualization_dataset_implicit_cars()
             user_tab, item_tab, context_tab, behavior_tab, rating_tab = st.tabs(['Users', 'Items', 'Contexts', 'Behaviors', 'Ratings'])
-        elif feedback_option == 'Explicit ratings':            
+        elif feedback_option == 'Explicit ratings':                        
+            help_information.help_visualization_dataset_explicit_cars()
             user_tab, item_tab, context_tab, rating_tab = st.tabs(['Users', 'Items', 'Contexts', 'Ratings'])
     else:
         if feedback_option == 'Implicit ratings':            
+            help_information.help_visualization_dataset_implicit_rs() 
             user_tab, item_tab, behavior_tab, rating_tab = st.tabs(['Users', 'Items', 'Behaviors', 'Ratings'])
         elif feedback_option == 'Explicit ratings':
+            help_information.help_visualization_dataset_explicit_rs()  
             user_tab, item_tab, rating_tab = st.tabs(['Users', 'Items', 'Ratings'])
 
     # TAB --> Users:

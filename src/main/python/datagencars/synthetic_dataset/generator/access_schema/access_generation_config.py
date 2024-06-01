@@ -54,13 +54,13 @@ class AccessGenerationConfig(AccessData):
         Gets the global percentage of null values to randomly generate in the complete dataset.
         :return: The global percentage of null values to randomly generate in the complete dataset.
         '''
-        percentage_null = None
+        percentage_null = 0
         try:
             percentage_null = self.file_parser.getint(section='null values', option='percentage_null_value_global')
             return percentage_null   
         except (NoOptionError, NoSectionError) as e:            
             logging.error(e)
-            return None               
+            return 0               
         
     def get_percentage_null_value_attribute(self):
         '''

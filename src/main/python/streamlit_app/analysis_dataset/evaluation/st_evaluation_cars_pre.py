@@ -17,7 +17,7 @@ def evaluate_prefiltering_paradigm(rating_df):
     filtered_rs_rating_df = build_knowledge_base(rating_df)
 
     # Step 2: Evaluate a traditional RS.
-    if not filtered_rs_rating_df.empty:
+    if not filtered_rs_rating_df.empty:        
         st_evaluation_rs.generate(rating_df=filtered_rs_rating_df)    
     
     # Step 3: The resulting set of recommendations is adjusted (contextualized) for each user by using contextual information.

@@ -116,7 +116,7 @@ class IncreaseRatingExplicit(GenerateRating):
         max_rating_value = self.access_rating.get_max_rating()
         user_rating_list=self.access_rating.get_rating_list_from_user(user_id=user_id)
         # Modifying the generated rating.
-        modified_rating = self.modify_rating_by_user_expectations(rating, k, user_rating_list, min_rating_value, max_rating_value, percentage_rating_variation)        
+        modified_rating = self.modify_rating_by_user_expectations(rating, k, user_rating_list, min_rating_value, max_rating_value, percentage_rating_variation)
         # New generated instance:
         new_instance = {}           
         if self.with_context:            

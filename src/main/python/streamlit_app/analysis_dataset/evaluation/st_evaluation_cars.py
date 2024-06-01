@@ -12,9 +12,9 @@ def generate(rating_df):
     Evaluating Context-Aware Recommendation Systems.
     """
     output = st.empty() 
-    with console.st_log(output.code):         
+    with console.st_log(output.code): 
         if not rating_df.empty:
-            print('The rating file has been uploaded.')   
+            print('The rating file has been uploaded.')
             
             # SELECTING PARADIGM TO EVALUATE:
             st.sidebar.markdown("""---""")

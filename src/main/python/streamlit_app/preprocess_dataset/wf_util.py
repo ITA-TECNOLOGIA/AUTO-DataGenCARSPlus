@@ -25,8 +25,9 @@ def save_df(df_name, df_value, extension):
     :param df_value: The df file content.
     :param extension: The file extension ('*.csv').
     """
-    link_df = f'<a href="data:file/csv;base64,{base64.b64encode(df_value.to_csv(index=False).encode()).decode()}" download="{df_name}.{extension}">Download</a>'
-    st.markdown(link_df, unsafe_allow_html=True)
+    if not df_value.empty:
+        link_df = f'<a href="data:file/csv;base64,{base64.b64encode(df_value.to_csv(index=False).encode()).decode()}" download="{df_name}.{extension}">Download</a>'
+        st.markdown(link_df, unsafe_allow_html=True)
 
 def show_schema_file(schema_file_name, schema_value):
     """
@@ -90,7 +91,7 @@ def load_one_file(file_type, wf_type):
                         column_names[i] = "item_id"
                     elif "context" in col.lower() and "id" in col.lower():
                         column_names[i] = "context_id"
-                try:                    
+                try:
                     df = pd.read_csv(uploaded_file, sep=separator, names=column_names, engine='python')                             
                     st.dataframe(df.head())
                 except Exception as e:

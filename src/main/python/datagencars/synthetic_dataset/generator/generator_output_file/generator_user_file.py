@@ -38,7 +38,7 @@ class GeneratorUserFile(GeneratorFile):
         self.file_df.insert(loc=0, column='user_id', value=user_id_list)
         # Generating nulls values:             
         percentage_null_value_global = self.access_generation_config.get_percentage_null_value_global()
-        percentage_null_value_attribute_list = self.access_generation_config.get_percentage_null_value_attribute()        
+        percentage_null_value_attribute_list = self.access_generation_config.get_percentage_null_value_attribute()              
         if (percentage_null_value_global) and (percentage_null_value_global > 0):        
             return self.generate_null_value_global(self.file_df.copy(), percentage_null_value_global)
         elif len(percentage_null_value_attribute_list) != 0:

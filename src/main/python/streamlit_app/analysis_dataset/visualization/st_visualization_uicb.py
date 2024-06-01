@@ -1,5 +1,4 @@
 from ast import literal_eval
-from collections import defaultdict
 
 import altair as alt
 import numpy as np
@@ -8,7 +7,6 @@ import seaborn as sns
 import streamlit as st
 from datagencars.existing_dataset.replicate_dataset.extract_statistics.extract_statistics_uic import ExtractStatisticsUIC
 from matplotlib import pyplot as plt
-from streamlit_app import config
 from streamlit_app.preprocess_dataset import wf_util
 
 
@@ -20,7 +18,7 @@ def show_information(df, file_type):
     """
     if not df.empty:             
         # title:
-        st.header(file_type.title())
+        st.header(file_type.title())          
 
         # Show dataframe:
         with st.expander(label=f'Show the {file_type}.csv file'):
@@ -93,7 +91,9 @@ def show_graphic_by_attribute(extract_statistics, attribute_list, file_type):
             sort_field = alt.EncodingSortField('count', order='descending') 
         else:
             sort_field = None
-        chart = alt.Chart(data).mark_bar().encode(x=alt.X(column + ':O', title='Attribute values', sort=sort_field), y=alt.Y('count:Q', title='Count'), tooltip=[column, 'count']).interactive()
+        chart = alt.Chart(data).mark_bar().encode(x=alt.X(column + ':O', sort=sort_field, axis=alt.Axis(title=column, labelFontSize=16, titleFontSize=16)), 
+                                                  y=alt.Y('count:Q', axis=alt.Axis(title=column, labelFontSize=16, titleFontSize=16)), 
+                                                  tooltip=[column, 'count']).interactive()
         st.altair_chart(chart, use_container_width=True) 
     else:
         st.warning(f"No columns (without {file_type}_id) to show.")
