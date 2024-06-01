@@ -1,5 +1,5 @@
 #### App Streamlit settings ####:
-APP_TITLE = 'AUTO-DataGenCARS'
+APP_TITLE = 'AUTO-DataGenCARS+'
 APP_ICON = 'resources/icons/logo-autodatagencarsplus.png'
 APP_LAYOUT = ['centered', 'centered', 'wide']
 APP_INITIAL_SIDEBAR_STATE = ['auto', 'expanded', 'auto', 'collapsed']
