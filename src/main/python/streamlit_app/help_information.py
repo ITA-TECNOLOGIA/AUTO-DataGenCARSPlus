@@ -1,13 +1,46 @@
+from io import BytesIO
+import os
+from zipfile import ZipFile
 import streamlit as st
 from streamlit_app import config
 
 
 ####### Generate a synthetic dataset ######
-def help_explicit_rating_wf():
+def help_explicit_rating_rs_wf():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")    
-        st.markdown("""Below are some helpful videos: """)
-        help_video_from_url(video_url=config.SYNTHETIC_DATASET_VIDEO_URL, title_video='Generate a synthetic dataset')        
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.SYNTHETIC_DATASET_VIDEO_EXPLICIT_RS_URL, title_video='Generate a synthetic dataset for evaluation of traditional RS based on explicit ratings')        
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_RS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_RS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_RS_NAME}.zip", mime="application/zip")
+        
+def help_explicit_rating_cars_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a completely-synthetic dataset based on explicit ratings.""")    
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.SYNTHETIC_DATASET_VIDEO_EXPLICIT_CARS_URL, title_video='Generate a synthetic dataset for evaluation of CARS based on explicit ratings')        
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", mime="application/zip")
+        
+def help_implicit_rating_rs_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a completely-synthetic dataset based on implicit ratings.""")    
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.SYNTHETIC_DATASET_VIDEO_IMPLICIT_RS_URL, title_video='Generate a synthetic dataset for evaluation of traditional RS based on implicit ratings')        
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_IMPLICIT_RS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_IMPLICIT_RS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_IMPLICIT_RS_NAME}.zip", mime="application/zip")
+        
+def help_implicit_rating_cars_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a completely-synthetic dataset based on implicit ratings.""")    
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.SYNTHETIC_DATASET_VIDEO_IMPLICIT_CARS_URL, title_video='Generate a synthetic dataset for evaluation of CARS based on implicit ratings')        
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_IMPLICIT_CARS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_IMPLICIT_CARS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_IMPLICIT_CARS_NAME}.zip", mime="application/zip")
 
 def help_schema_file():
     with st.expander(label='Help information'):
@@ -163,25 +196,46 @@ def help_categorical_to_numerical():
 
 ####### Analysis of a dataset #######
 # VISUALIZATION:
-
-# EVALUATION:
-def help_contextual_modeling_paradigm():
+def help_visualization_dataset_explicit_rs():
     with st.expander(label='Help information'):
-        st.markdown(""" In the contextual modeling paradigm, the contextual information is used directly in the modeling technique as part of the estimation of ratings. """)
-        st.image(image=config.CM_IMAGE, use_column_width=True, output_format="auto")
+        st.markdown("""Visualization of a dataset.""")   
+        st.markdown("""**Example video:**""")     
+        help_video_from_url(video_url=config.VISUALIZATION_PREFERENCIAL_EXPLICIT_RS_URL, title_video='Visualization of a RS dataset with preferencial and explicit ratings')        
+        st.markdown("""**Example datasets:**""")
+        st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_RS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_EXPLICIT_RS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_RS_NAME}.zip", mime="application/zip")        
+        st.download_button(label=f"{config.STS_DATASET_BINARY_EXPLICIT_RS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_EXPLICIT_RS_PATH), file_name=f"{config.STS_DATASET_BINARY_EXPLICIT_RS_NAME}.zip", mime="application/zip")
 
-def help_prefiltering_paradigm():
+def help_visualization_dataset_explicit_cars():
     with st.expander(label='Help information'):
-        st.markdown(""" In the pre-filtering paradigm, the contextual information is used to filter the data before applying traditional recommendation algorithms. """)
-        st.image(image=config.PREFILTERING_IMAGE, use_column_width=True, output_format="auto")
+        st.markdown("""Visualization of a dataset.""")
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.VISUALIZATION_PREFERENCIAL_EXPLICIT_CARS_URL, title_video='Visualization of a CARS dataset with preferencial and explicit ratings')        
+        st.markdown("""**Example datasets:**""")
+        st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", mime="application/zip")        
+        st.download_button(label=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", mime="application/zip")
 
-def help_postfiltering_paradigm():
+def help_visualization_dataset_implicit_rs():
     with st.expander(label='Help information'):
-        st.markdown(""" In the post-filtering paradigm, the contextual information is considered only in the final step of the process. So, contextual information is initially ignored and the ratings are predicted using any conventional 2D recommendation system, taking all the potential items to recommend into account. Afterwards, the resulting set of recommendations is adjusted (contextualized) for each user by using contextual information. """)
-        st.image(image=config.POSTFILTERING_IMAGE, use_column_width=True, output_format="auto")
+        st.markdown("""Visualization of a dataset.""")   
+        st.markdown("""**Example video:**""")  
+        help_video_from_url(video_url=config.VISUALIZATION_PREFERENCIAL_IMPLICIT_RS_URL, title_video='Visualization of a RS dataset with preferencial and implicit ratings')        
+        st.markdown("""**Example datasets:**""")
+        st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_IMPLICIT_RS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_IMPLICIT_RS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_IMPLICIT_RS_NAME}.zip", mime="application/zip")        
+        st.download_button(label=f"{config.STS_DATASET_BINARY_IMPLICIT_RS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_IMPLICIT_RS_PATH), file_name=f"{config.STS_DATASET_BINARY_IMPLICIT_RS_NAME}.zip", mime="application/zip")
 
+def help_visualization_dataset_implicit_cars():
+    with st.expander(label='Help information'):
+        st.markdown("""Visualization of a dataset.""")
+        st.markdown("""**Example video:**""") 
+        help_video_from_url(video_url=config.VISUALIZATION_PREFERENCIAL_IMPLICIT_CARS_URL, title_video='Visualization of a CARS dataset with preferencial and implicit ratings')        
+        st.markdown("""**Example datasets:**""")
+        st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_IMPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_IMPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_IMPLICIT_CARS_NAME}.zip", mime="application/zip")        
+        st.download_button(label=f"{config.STS_DATASET_BINARY_IMPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_IMPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_BINARY_IMPLICIT_CARS_NAME}.zip", mime="application/zip")
+        
+# EVALUATION:    
 def help_rs_algoritms(recommender_name_list):
-    with st.expander(label='Help information'):                    
+    with st.expander(label='Help information'):    
+        st.markdown("""Evaluation of a RS using the following Collaborative Filtering techniques:""")                                           
         for recommender_name in recommender_name_list:                        
             # Basic algorithms:
             if recommender_name == 'NormalPredictor':
@@ -297,7 +351,48 @@ def help_rs_algoritms(recommender_name_list):
                 st.markdown("""
                             - ``` SlopeOne ```: A simple yet accurate collaborative filtering algorithm. This is a straightforward implementation of the SlopeOne algorithm [LM07]. [LM07] Daniel Lemire and Anna Maclachlan. [Slope one predictors for online rating-based collaborative filtering](https://arxiv.org/abs/cs/0702144). 2007.
                             """)
-        st.markdown("""These algorithms are implemented in the [surprise](https://github.com/NicolasHug/Surprise) python library.""")                                             
+        st.markdown("""These algorithms are implemented in the [surprise](https://github.com/NicolasHug/Surprise) python library.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.EVALUATION_PREFERENCIAL_RS_URL, title_video='Evaluation of a traditional RS dataset using preferencial and explicit ratings')        
+        st.markdown("""**Example datasets:**""")
+        st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_RS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_EXPLICIT_RS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_RS_NAME}.zip", mime="application/zip")        
+        st.download_button(label=f"{config.STS_DATASET_BINARY_EXPLICIT_RS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_EXPLICIT_RS_PATH), file_name=f"{config.STS_DATASET_BINARY_EXPLICIT_RS_NAME}.zip", mime="application/zip")
+           
+def help_contextual_modeling_paradigm():
+    with st.expander(label='Help information'):        
+        st.markdown(""" In the contextual modeling paradigm, the contextual information is used directly in the modeling technique as part of the estimation of ratings. """)
+        st.image(image=config.CM_IMAGE, use_column_width=True, output_format="auto")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.EVALUATION_PREFERENCIAL_CM_CARS_URL, title_video='Evaluation of a CARS (Contextual Modeling paradigm) using preferencial and explicit ratings')
+        st.markdown("""**Example datasets:**""")
+        st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", mime="application/zip")        
+        st.download_button(label=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", mime="application/zip")                
+
+def help_prefiltering_paradigm():
+    with st.expander(label='Help information'):
+        st.markdown(""" In the pre-filtering paradigm, the contextual information is used to filter the data before applying traditional recommendation algorithms. """)
+        st.image(image=config.PREFILTERING_IMAGE, use_column_width=True, output_format="auto")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.EVALUATION_PREFERENCIAL_PREFILTERING_CARS_URL, title_video='Evaluation of a CARS (Pre-Filtering paradigm) using preferencial and explicit ratings')        
+        st.markdown("""**Example datasets:**""")
+        st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", mime="application/zip")        
+        st.download_button(label=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", mime="application/zip")                
+
+def help_postfiltering_paradigm():
+    with st.expander(label='Help information'):
+        st.markdown(""" In the post-filtering paradigm, the contextual information is considered only in the final step of the process. So, contextual information is initially ignored and the ratings are predicted using any conventional 2D recommendation system, taking all the potential items to recommend into account. Afterwards, the resulting set of recommendations is adjusted (contextualized) for each user by using contextual information. """)
+        st.image(image=config.POSTFILTERING_IMAGE, use_column_width=True, output_format="auto")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.EVALUATION_PREFERENCIAL_POSTFILTERING_CARS_URL, title_video='Evaluation of a CARS (Post-Filtering paradigm) using preferencial and explicit ratings')
+        st.markdown("""**Example datasets:**""")
+        st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", mime="application/zip")        
+        st.download_button(label=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", mime="application/zip")                
+
+                                             
 
 def help_classification_algoritms(classifier_name_list):
     with st.expander(label='Help information'): 
@@ -325,3 +420,31 @@ def help_video_from_file(video_file_path):
 def help_video_from_url(video_url, title_video):
     # Display a link to open the video from URL in a new tab:    
     st.markdown(f'<a href="{video_url}" target="_blank">{title_video}</a>', unsafe_allow_html=True)
+
+####### Datasets #######
+def get_zip_file(directory_path):
+    """
+    Creates an in-memory ZIP file containing all files from the specified directory and its subdirectories.
+
+    Args:
+    directory_path (str): The path to the directory whose files are to be zipped.
+
+    Returns:
+    BytesIO: An in-memory file-like object containing the ZIP file's data.
+
+    This function navigates through all folders and files in the provided directory path, adds each file into a ZIP file while maintaining their relative paths, and returns a BytesIO object with the complete ZIP file. The ZIP file is created in memory using BytesIO, which avoids the need for temporary storage and results in faster performance and better resource management.
+    """
+    # Create a buffer to hold the ZIP file in memory
+    bytes_io = BytesIO()
+    with ZipFile(bytes_io, 'w') as zip_file:
+        # Walk through the directory
+        for foldername, subfolders, filenames in os.walk(directory_path):
+            for filename in filenames:
+                # Create the full path to the file
+                file_path = os.path.join(foldername, filename)
+                # Add file to the ZIP file
+                zip_file.write(file_path, arcname=os.path.relpath(file_path, start=directory_path))
+
+    # Move the pointer to the start of the BytesIO buffer
+    bytes_io.seek(0)
+    return bytes_io

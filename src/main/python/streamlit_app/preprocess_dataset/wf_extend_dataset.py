@@ -31,7 +31,7 @@ def generate(with_context, feedback_option):
             user_df, item_df, context_df, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'context', 'rating', 'user profile'], wf_type='wf_extend_dataset')
         else:
             user_df, item_df, __, __, rating_df, user_profile_df = wf_util.load_dataset(file_type_list=['user', 'item', 'rating', 'user profile'], wf_type='wf_extend_dataset')   
-    else: # Implicit ratings
+    elif feedback_option == 'Implicit ratings':
         if with_context:
             __, item_df, context_df, behavior_df, rating_df, __ = wf_util.load_dataset(file_type_list=['item', 'context', 'behavior', 'rating'], wf_type='wf_extend_dataset')
             generation_config_behavior = wf_behavior.get_generation_config_schema()
@@ -55,7 +55,7 @@ def generate(with_context, feedback_option):
         percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
         k = st.number_input(label='Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
         option = st.selectbox(label='How would you like to extend the dataset?', options=['Select one option', 'N ratings randomly (some users)', 'N ratings for each user'])
-    else: # Implicit ratings
+    elif feedback_option == 'Implicit ratings':
         number_rating = st.number_input(label='Enter the number of ratings to extend in the rating file:', min_value=1, step=1, value=1)
         option = st.selectbox(label='How would you like to extend the dataset?', options=['Select one option', 'N ratings randomly (some users)', 'N ratings for each user'])
     
@@ -65,7 +65,7 @@ def generate(with_context, feedback_option):
             new_rating_df = button_extend_dataset(feedback_option, with_context, rating_df, user_profile_df, user_df, item_df, number_rating, percentage_rating_variation, k, option, output, context_df)
         else:
             new_rating_df = button_extend_dataset(feedback_option, with_context, rating_df, user_profile_df, user_df, item_df, number_rating, percentage_rating_variation, k, option, output)
-    else: # Implicit ratings
+    elif feedback_option == 'Implicit ratings':
         if with_context:
             new_rating_df = button_extend_dataset(feedback_option, with_context, rating_df, None, None, item_df, number_rating, None, None, option, output, context_df, behavior_df, generation_config_behavior, generation_config_rating, behavior_schema, item_schema)
     return new_rating_df
@@ -109,7 +109,7 @@ def button_extend_dataset(feedback_option, with_context, rating_df, user_profile
                         print(f'The datase has been extended: {total_extended_ratings} ratings.')
                 else:
                     st.warning('The user, item, rating and user profile files must be uploaded.')
-        else: # Implicit ratings
+        elif feedback_option == 'Implicit ratings':
             if with_context:
                 if (not item_df.empty) and (not behavior_df.empty) and (not context_df.empty):
                     increase_constructor = IncreaseRatingImplicit(generation_config_behavior, generation_config_rating, behavior_schema, behavior_df, item_df, item_schema, context_df)                                  
@@ -138,14 +138,14 @@ def extend_dataset(increase_constructor, number_rating, percentage_rating_variat
         if feedback_option == 'Explicit ratings':
             if extend_button:      
                 print('Extending the rating.csv file.')
-                new_rating_df = increase_constructor.extend_rating_random(number_rating, percentage_rating_variation=None, k=None)
+                new_rating_df = increase_constructor.extend_rating_random(number_rating, percentage_rating_variation, k)
                 print('Extended data generation has finished.')
                 with st.expander(label=f'Show the extended file: {config.RATING_TYPE}.csv'):                
                     # Showing the replicated rating file:
                     st.dataframe(new_rating_df)
                     # Saving the replicated rating file:
                     wf_util.save_df(df_name='rating', df_value=new_rating_df, extension='csv')
-        else: # Implicit ratings
+        elif feedback_option == 'Implicit ratings':
             if extend_button:      
                 print('Extending the behavior.csv and rating.csv files.')
                 new_behavior_df, new_rating_df = increase_constructor.extend_rating_random(number_rating)
@@ -153,14 +153,11 @@ def extend_dataset(increase_constructor, number_rating, percentage_rating_variat
                 updated_behaviors_df = pd.concat([behavior_df, new_behavior_df]).reset_index(drop=True)
                 # Cast 'context_id' to int
                 updated_behaviors_df['context_id'] = updated_behaviors_df['context_id'].fillna(0).astype(int)
-
                 updated_behaviors_df = updated_behaviors_df.sort_values(by=['user_id']).reset_index(drop=True)
-
                 # Append new_ratings to the existing ratings dataset
                 updated_ratings_df = pd.concat([rating_df, new_rating_df]).reset_index(drop=True)
                 # Cast 'context_id' to int
                 updated_ratings_df['context_id'] = updated_ratings_df['context_id'].fillna(0).astype(int)
-
                 updated_ratings_df = updated_ratings_df.sort_values(by=['user_id']).reset_index(drop=True)
                 print('Extended data generation has finished.')
                 with st.expander(label=f'Show the extended file: rating.csv'):
@@ -173,16 +170,19 @@ def extend_dataset(increase_constructor, number_rating, percentage_rating_variat
                     st.dataframe(updated_behaviors_df)
                     # Saving the replicated rating file:
                     wf_util.save_df(df_name='behavior', df_value=updated_behaviors_df, extension='csv')
-    elif option == 'N ratings for each user':      
-        if extend_button:  
-            print('Extending the rating.csv file.')
-            new_rating_df = increase_constructor.extend_rating_by_user(number_rating, percentage_rating_variation=None, k=None)            
-            print('Extended data generation has finished.')
-            with st.expander(label=f'Show the extended file: {config.RATING_TYPE}.csv'):                
-                # Showing the replicated rating file:
-                st.dataframe(new_rating_df)    
-                # Saving the replicated rating file:
-                wf_util.save_df(df_name='rating', df_value=new_rating_df, extension='csv')
+    elif option == 'N ratings for each user':   
+        if feedback_option == 'Explicit ratings':   
+            if extend_button:  
+                print('Extending the rating.csv file.')
+                new_rating_df = increase_constructor.extend_rating_by_user(number_rating, percentage_rating_variation=None, k=None)            
+                print('Extended data generation has finished.')
+                with st.expander(label=f'Show the extended file: {config.RATING_TYPE}.csv'):                
+                    # Showing the replicated rating file:
+                    st.dataframe(new_rating_df)    
+                    # Saving the replicated rating file:
+                    wf_util.save_df(df_name='rating', df_value=new_rating_df, extension='csv')
+        elif feedback_option == 'Implicit ratings':
+            st.write('TODO')        
     else:
         if extend_button: 
             st.warning('The dataset extension type has not been selected.')

@@ -105,7 +105,7 @@
         "optional": "True",
         "condition":[["init_step", "False"], ["UP", "Manual"]]}
     ],
-    "legend":["GC", "U", "UP", "USc", "I", "ISc", "IP", "C",  "CSc", "R"]
+    "legend":["GC", "U", "UP", "USc", "I", "ISc", "IP", "C",  "CSc", "R", "+"]
     },
     {"workflow_name": "GenerateSyntheticDataset(Implicit_ratings)", 
     "nodes" : [
@@ -217,7 +217,7 @@
          "label": "[U,I,C,R]",
          "optional": "False"}
      ],
-     "legend":["GC", "U", "UP", "USc", "I", "ISc", "IP", "C",  "CSc", "R", "B", "BSc"]
+     "legend":["GC", "U", "UP", "USc", "I", "ISc", "IP", "C",  "CSc", "R", "B", "BSc", "+"]
     },
     {"workflow_name": "ReplicateDataset", 
     "nodes" : [
@@ -438,7 +438,7 @@
         "label": "[R]",
         "optional": "False"}
     ],
-    "legend":["I", "C", "R", "RSt", "UP"]
+    "legend":["I", "C", "R", "RSt", "UP", "+", "X"]
     },
     {"workflow_name": "ExtendDataset",
     "nodes" : [
@@ -649,7 +649,7 @@
          "label": "[R]",
          "optional": "False"}
      ],
-     "legend":["I", "C", "R", "UP"]     
+     "legend":["I", "C", "R", "UP", "+", "X"]     
     },
     {"workflow_name": "RecalculateRatings",
     "nodes" : [
@@ -860,7 +860,7 @@
          "label": "[R]",
          "optional": "False"}
      ],
-     "legend":["I", "C", "R", "UP"]          
+     "legend":["I", "C", "R", "UP", "+", "X"]          
    }, 
    {"workflow_name": "ReplaceNULLValues", 
     "nodes" : [
@@ -963,7 +963,7 @@
          "optional": "True", 
          "condition": [["init_step", "True"]]}
      ],
-     "legend":["I", "C"]
+     "legend":["I", "C", "X"]
     },
    {"workflow_name": "GenerateNULLValues", 
     "nodes" : [
@@ -1015,7 +1015,7 @@
             "optional": "True", 
             "condition": [["init_step", "True"]]}         
      ],
-     "legend":["I", "C"]
+     "legend":["I", "C", "X"]
     },
     {"workflow_name": "GenerateUserProfile",
     "nodes" : [
@@ -1270,7 +1270,7 @@
          "optional": "True", 
          "condition": [["init_step", "True"]]}
      ],
-     "legend":["I", "C", "R", "UP"]        
+     "legend":["I", "C", "R", "UP", "+", "X"]        
    },   
     {"workflow_name": "TransformRating", 
      "nodes" : [
@@ -1368,7 +1368,7 @@
          "optional":"True",
          "condition": [["init_step", "False"], ["Num2Cat", "True"]]}
      ],
-     "legend":["F", "U", "I", "C"]
+     "legend":["F", "U", "I", "C", "X"]
     }
 ],
 "legend": {
@@ -1386,6 +1386,8 @@
     "B": "behavour.csv",
     "BSc": "behavour_schema.conf",
     "F": "File from U, I, C (if CARS)", 
+    "X": "Diverge Gateway",
+    "+": "Parallel Diverge Gateway",
     "Threshold": "Input parameter from interface"
 }
 }

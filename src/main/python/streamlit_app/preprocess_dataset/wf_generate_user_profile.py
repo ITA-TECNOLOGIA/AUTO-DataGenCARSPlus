@@ -131,7 +131,7 @@ def generate_user_profile_manual(number_user_profile, is_dinamic_row, attribute_
         if attribute_column in item_possible_value_map:
             item_possible_value_list = item_possible_value_map[attribute_column]
             attribute_possible_value_str += f'- ```{attribute_column}``` : {item_possible_value_list}\n'
-        elif attribute_column in context_possible_value_map:    
+        elif context_possible_value_map and attribute_column in context_possible_value_map:
             context_possible_value_list = context_possible_value_map[attribute_column]            
             attribute_possible_value_str += f'- ```{attribute_column}``` : {context_possible_value_list}\n'     
     # # with st.expander('Show possible values by attribute, in order to facilitate the importance ranking'):

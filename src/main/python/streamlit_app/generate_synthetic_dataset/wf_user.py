@@ -41,11 +41,14 @@ def generate_generation_config_schema():
             if null_value_option == 'Null percentage in the complete file':
                 percentage_null_user = st.number_input(label='Null percentage in the complete file:', value=1, min_value=1, max_value=100, key='input_null_value_user')
                 generation_config_user_schema += 'percentage_null_value_global=' + str(percentage_null_user) + '\n'            
+                generation_config_user_schema += 'percentage_null_value_attribute=[]' + '\n'
             elif null_value_option == 'Null percentage per attribute':
                 percentage_null_user_list = [int(number) for number in st.text_area(label='Null percentage per attribute: Provide a list detailing the percentage of null values for each attribute.', value='40, 0, 10, 97', key='textarea_null_value_user').split(',')]
                 generation_config_user_schema += 'percentage_null_value_attribute=' + str(percentage_null_user_list) + '\n' 
+                generation_config_user_schema += 'percentage_null_value_global=0' + '\n'            
         else:            
             generation_config_user_schema += 'percentage_null_value_global=0' + '\n'
+            generation_config_user_schema += 'percentage_null_value_attribute=[]' + '\n'
     return generation_config_user_schema
 
 def get_user_schema():

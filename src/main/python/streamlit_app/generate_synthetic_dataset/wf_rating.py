@@ -55,7 +55,8 @@ def generate_generation_config_schema(with_context, implicit):
             rating_value += ('minimum_date_timestamp='+str(min_year_ts)+'\n' +
                             'maximum_date_timestamp='+str(max_year_ts)+'\n')        
         even_distribution = st.checkbox(label='Users ratings should have a even distribution?', value=False, key='even_distribution')    
-        rating_value += ('even_distribution='+str(even_distribution)+'\n') 
+        rating_value += ('even_distribution='+str(even_distribution)+'\n')   
+        event_distribution_type = 'uniform'      
         if even_distribution == False:
             event_distribution_type = st.selectbox(label='Distribution type', options=['uniform', 'gaussian'])
         rating_value += ('even_distribution_type='+str(event_distribution_type)+'\n')

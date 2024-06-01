@@ -14,9 +14,10 @@ def generate(rating_df):
     """    
     output = st.empty() 
     with console.st_log(output.code):
-        if not rating_df.empty:
+        if not rating_df.empty:            
             st.header('Evaluation of traditional RS')
-            print('The rating file has been uploaded.') 
+            print('The rating file has been uploaded.')
+            
             if 'context_id' in rating_df.columns:
                 st.error(f'The uploaded {config.RATING_TYPE} file must not contain contextual information (context_id).')
 
@@ -318,10 +319,27 @@ def draw_graph_by_mean(df, increment_yaxis):
     # Create trace for each column:
     fig = go.Figure()
     for column in df.columns[1:]:
-        fig.add_trace(go.Bar(x=df['Algorithm'], y=df[column], name=column))      
+        fig.add_trace(go.Bar(x=df['Algorithm'], y=df[column], name=column))
+    
     # Create figure:
     selected_metric_list = df.columns[1:].tolist()
-    fig.update_layout(title='Performance Comparison of Recommendation Algorithms', xaxis_title='Recommendation Algorithm', yaxis_title='Performance', legend=dict(title="Metrics"), barmode='group', yaxis_range=[0, df[selected_metric_list].max().max()+increment_yaxis])
+    fig.update_layout(
+        title='Performance Comparison of Recommendation Algorithms',
+        xaxis_title='Recommendation Algorithm',
+        yaxis_title='Performance',
+        legend=dict(title="Metrics"),
+        barmode='group',
+        yaxis_range=[0, df[selected_metric_list].max().max() + increment_yaxis],
+        # Configuring X and Y axes font sizes
+        xaxis=dict(
+            title_font=dict(size=16),  # Tamaño del título del eje X
+            tickfont=dict(size=16)     # Tamaño de los ticks (números/etiquetas) del eje X
+        ),
+        yaxis=dict(
+            title_font=dict(size=16),  # Tamaño del título del eje Y
+            tickfont=dict(size=16)     # Tamaño de los ticks (números/etiquetas) del eje Y
+        )
+    )
     # Show plot:                        
     st.plotly_chart(fig, use_container_width=True)
 
@@ -338,7 +356,24 @@ def draw_graph_by_fold(df, metric, increment_yaxis):
         # Filter the dataframe for the current algorithm
         filtered_df = df[df["Algorithm"] == algorithm]
         # Create the line chart for the current metric
-        fig.add_trace(go.Scatter(x=filtered_df["Fold"], y=filtered_df[metric], name=algorithm))
-    fig.update_layout(xaxis_title="Fold", yaxis_title="Performance", legend=dict(title="Recommendation algorithms"), yaxis_range=[0, df[metric].max().max()+increment_yaxis])
+        fig.add_trace(go.Scatter(x=filtered_df["Fold"], y=filtered_df[metric], name=algorithm, mode='lines+markers'))
+    
+    # Update layout with font size changes
+    fig.update_layout(
+        title='Evaluation Results by Fold',
+        xaxis=dict(
+            title='Fold',
+            title_font=dict(size=16),  # Tamaño del título del eje X
+            tickfont=dict(size=16)     # Tamaño de las etiquetas del eje X
+        ),
+        yaxis=dict(
+            title='Performance',
+            title_font=dict(size=16),  # Tamaño del título del eje Y
+            tickfont=dict(size=16)     # Tamaño de las etiquetas del eje Y
+        ),
+        legend=dict(title='Recommendation Algorithms'),
+        yaxis_range=[0, df[metric].max() + increment_yaxis]
+    )
+    # Show plot:                        
     st.plotly_chart(fig, use_container_width=True)
     

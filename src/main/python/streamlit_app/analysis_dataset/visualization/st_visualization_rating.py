@@ -92,12 +92,17 @@ def show_rating_histogram(rating_df):
     Shows a histogram of ratings.
     :param rating_df: The rating dataframe.
     """
-    st.header("Histogram of ratings")
+    st.header("Histogram of Ratings")
     # Count the frequency of each rating:
-    counts = np.bincount(rating_df['rating'])[np.nonzero(np.bincount(rating_df['rating']))] 
-    histogram_df = pd.DataFrame({'Type of ratings': np.arange(1, len(counts) + 1), 'Number of ratings': counts})
-    chart = alt.Chart(histogram_df).mark_bar(color='#0099CC').encode(x=alt.X('Type of ratings:O', axis=alt.Axis(title='Type of ratings')), y=alt.Y('Number of ratings:Q', axis=alt.Axis(title='Number of ratings')), tooltip=['Type of ratings', 'Number of ratings']) # .properties(title={'text': 'Histogram of ratings', 'fontSize': 16,})
+    counts = np.bincount(rating_df['rating'])[np.nonzero(np.bincount(rating_df['rating']))]
+    histogram_df = pd.DataFrame({'Type of Ratings': np.arange(1, len(counts) + 1), 'Number of Ratings': counts})
+    chart = alt.Chart(histogram_df).mark_bar(color='#0099CC').encode(
+        x=alt.X('Type of Ratings:O', axis=alt.Axis(title='Type of Ratings', labelFontSize=16, titleFontSize=16)), 
+        y=alt.Y('Number of Ratings:Q', axis=alt.Axis(title='Number of Ratings', labelFontSize=16, titleFontSize=16)), 
+        tooltip=['Type of Ratings', 'Number of Ratings']
+    ).properties(width=800, height=400)  # Ajustando el tamaño del gráfico para mejor visualización
     st.altair_chart(chart, use_container_width=True)
+
 
 def show_rating_statistics(with_context, rating_df):
     """
@@ -137,7 +142,11 @@ def show_ratings_by_user(rating_df):
     elif sort_order == "desc":
         user_item_count_df = user_item_count_df.sort_values(by='Number of ratings', ascending=False)
     # Create a bar chart using Altair
-    chart = alt.Chart(user_item_count_df).mark_bar().encode(x=alt.X('User:N', sort=None), y='Number of ratings:Q', tooltip=['User:N', 'Number of ratings:Q']).properties(width=600, height=400) # title=f'Histogram of the number of items rated by user', 
+    chart = alt.Chart(user_item_count_df).mark_bar().encode(
+        x=alt.X('User:N', sort=None, axis=alt.Axis(title='User', labelFontSize=16, titleFontSize=16)),  # Aumentando tamaño de texto y números del eje X
+        y=alt.Y('Number of ratings:Q', axis=alt.Axis(title='Number of Ratings', labelFontSize=16, titleFontSize=16)),  # Aumentando tamaño de texto y números del eje Y
+        tooltip=[alt.Tooltip('User:N', title='User'), alt.Tooltip('Number of ratings:Q', title='Number of Ratings')]
+    ).properties(width=800, height=400)  # Ajustando el tamaño del gráfico para mejor visualización
     # Display the chart in Streamlit
     st.altair_chart(chart, use_container_width=True)
     # Showing user_item_count_df:
@@ -164,8 +173,8 @@ def show_histogram_ratings_by_user(rating_df):
     # Display the histogram    
     fig, ax = plt.subplots()    
     ax.hist(sorted_value_counts['count'].values, bins=num_bins, density=True, alpha=0.6)
-    plt.xlabel('Number ratings by user')
-    plt.ylabel('Frequency')      
+    plt.xlabel('Number ratings by user', fontsize=12)
+    plt.ylabel('Frequency', fontsize=12)      
     st.pyplot(fig)
 
 def show_user_preference_evolution(user_id, rating_df):
