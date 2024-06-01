@@ -43,4 +43,6 @@ class GeneratorUserFile(GeneratorFile):
             return self.generate_null_value_global(self.file_df.copy(), percentage_null_value_global)
         elif len(percentage_null_value_attribute_list) != 0:
             return self.generate_null_value_attribute(self.file_df.copy(), percentage_null_value_attribute_list)
+        else:
+            return self.file_df.copy()
             
