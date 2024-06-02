@@ -96,7 +96,7 @@ def generate_user_profile(user_schema, item_schema, context_schema=None):
             context_attribute_name_list = context_access_schema.get_important_attribute_name_list()
             attribute_column_list.extend(context_attribute_name_list)            
             for context_attribute_name in context_attribute_name_list:
-                context_possible_value_map = context_access_schema.get_possible_values_attribute_list_from_name(attribute_name=context_attribute_name)
+                context_possible_value_map[context_attribute_name] = context_access_schema.get_possible_values_attribute_list_from_name(attribute_name=context_attribute_name)
         # Adding column "other":
         attribute_column_list.extend(['other']) 
         # Introducing the number of user profiles to generate:            
@@ -106,6 +106,6 @@ def generate_user_profile(user_schema, item_schema, context_schema=None):
         st.warning('**Observations:**')
         st.warning('- The number of profiles has been previously defined in the ```user_profile_id``` attribute of the ```user_schema.conf``` file. If you want to change it, you must first modify the ```user_schema.conf``` file.')                            
         st.warning('- If there is no contextual information in the matrix (based on item and/or context attributes), it is because the ```important_weight_attribute_x``` field of the item and/or context schemas is False. If certain item and/or context attribute names are required to be displayed in the matrix, you must edit the item and/or context schemas and set the ```important_weight_attribute_x field=True```.')
-        # Generate user profile manual:                
-        user_profile_df = wf_generate_user_profile.generate_user_profile_manual(number_user_profile, attribute_column_list, item_possible_value_map, context_possible_value_map)
+        # Generate user profile manual:
+        user_profile_df = wf_generate_user_profile.generate_user_profile_manual(number_user_profile=number_user_profile, is_dinamic_row=False, attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map, context_possible_value_map=context_possible_value_map)
     return user_profile_df
