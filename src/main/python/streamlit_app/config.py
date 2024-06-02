@@ -103,8 +103,8 @@ SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', 'MAE', 'MS
 
 ####### Generate a synthetic dataset ######
 # Explicit ratings:
-SYNTHETIC_DATASET_VIDEO_EXPLICIT_RS_URL = 'https://youtu.be/Z_4sOkuem6c'
-SYNTHETIC_DATASET_VIDEO_EXPLICIT_CARS_URL = ''
+SYNTHETIC_DATASET_VIDEO_EXPLICIT_RS_URL = 'https://youtu.be/dmasluESDHQ'
+SYNTHETIC_DATASET_VIDEO_EXPLICIT_CARS_URL = 'https://youtu.be/6FLu-MqSo_o'
 # Implicit ratings:
 SYNTHETIC_DATASET_VIDEO_IMPLICIT_RS_URL = ''
 SYNTHETIC_DATASET_VIDEO_IMPLICIT_CARS_URL = ''

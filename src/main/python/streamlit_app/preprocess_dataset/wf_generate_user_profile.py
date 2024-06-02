@@ -107,19 +107,32 @@ def generate_user_profile_manual(number_user_profile, is_dinamic_row, attribute_
     """
     Generate manually a user profile.
     :param number_user_profile: The number of user profiles to be generated.
+    :param is_dinamic_row: Boolean to specify if rows can be dynamically added or not.
     :param attribute_column_list: The attribute name list.
     :param item_possible_value_map: A map with item possible values.
     :param context_possible_value_map: A map with context possible values.
     :return: A dataframe with the content of the manually generated user profiles.
-    """  
-    weight_np = np.zeros(shape=(number_user_profile, len(attribute_column_list)), dtype=str)
-    df = pd.DataFrame(weight_np, columns=attribute_column_list)
-    for column in df.columns:
-        df[column] = 0
-    df['user_profile_id'] = df.index+1
-    df['other'] = 1
-    # Change the type of the first column to integer and the remaining columns to float:
-    df['user_profile_id'] = df['user_profile_id'].astype(int)
+    """      
+    # Create an array of zeros with the correct shape:
+    weight_np = np.zeros(shape=(number_user_profile, len(attribute_column_list)), dtype=object)
+    # Create the DataFrame with attribute columns:
+    df = pd.DataFrame(weight_np, columns=attribute_column_list)    
+    # Check if 'user_profile_id' already exists to avoid duplication:
+    if 'user_profile_id' not in df.columns:
+        # Insert 'user_profile_id' at the beginning if it does not exist
+        user_profile_ids = list(range(1, number_user_profile + 1))
+        df.insert(0, 'user_profile_id', user_profile_ids)
+    else:
+        # If it already exists, just ensure it's correctly set (optional: reset or assert values)
+        df['user_profile_id'] = list(range(1, number_user_profile + 1))  
+    # Set the type of 'user_profile_id' to int:
+    df['user_profile_id'] = df['user_profile_id'].astype(int)        
+    # Las demás columnas inicializarlas en 0.0:
+    for column in df.columns[1:]:  # Avoid the 'user_profile_id' column.
+        df[column] = 0.0
+    # Adding the "other" column:
+    df['other'] = 1.0                      
+    # Convierte todos los tipos de datos de las columnas del df a tipo float, excepto la primera columna: 
     df.iloc[:, 1:] = df.iloc[:, 1:].astype(float)
     if is_dinamic_row:        
         user_profile_df = st.experimental_data_editor(df, num_rows="dynamic")
@@ -134,13 +147,15 @@ def generate_user_profile_manual(number_user_profile, is_dinamic_row, attribute_
         elif context_possible_value_map and attribute_column in context_possible_value_map:
             context_possible_value_list = context_possible_value_map[attribute_column]            
             attribute_possible_value_str += f'- ```{attribute_column}``` : {context_possible_value_list}\n'     
-    # # with st.expander('Show possible values by attribute, in order to facilitate the importance ranking'):
+    st.markdown("""---""")
+    st.markdown("""**Show possible values by attribute, in order to facilitate the importance ranking:**""")
     st.markdown(attribute_possible_value_str)
+    st.markdown("""---""")
     # Downloading user_profile.csv:
     is_sum_equal_to_1, user_profile_id_list = is_consistent(user_profile_df)
     if is_sum_equal_to_1:       
-        # with st.expander(label='Show the generated user profile'):            
-        # Iterate through columns (except the first and last) and apply the replacement logic
+        st.markdown("""**Show the generated user profile:**""")
+        # Iterate through columns (except the first and last) and apply the replacement logic:
         for column in df.columns[1:-1]:                
             user_profile_df[column] = user_profile_df[column].apply(lambda x: f"({'-' if x < 0 else '+'})|{abs(x)}" if x != 0 else x)            
         # Transform all values in the "other" column to positive values:
