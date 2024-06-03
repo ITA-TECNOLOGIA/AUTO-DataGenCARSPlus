@@ -101,9 +101,32 @@ def help_replace_nulls_wf():
         st.markdown("""Workflow to complete unknown contextual information.""")
 
 # WF --> Generate NULL values:
-def help_generate_nulls_wf():
+def help_generate_nulls_wf_item_rs():
     with st.expander(label='Help information'):
         st.markdown("""Workflow to generate a percentage with unknown contextual information.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.GENERATE_NULL_VALUES_ITEM_RS_URL, title_video='Generate NULL values in an item file')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_RS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_RS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_RS_NAME}.zip", mime="application/zip", key='help_generate_nulls_wf_item_rs')
+
+def help_generate_nulls_wf_item_cars():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a percentage with unknown contextual information.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.GENERATE_NULL_VALUES_ITEM_CARS_URL, title_video='Generate NULL values in an item file')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", mime="application/zip", key='help_generate_nulls_wf_item_cars')
+        
+def help_generate_nulls_wf_context_cars():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a percentage with unknown contextual information.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.GENERATE_NULL_VALUES_CONTEXT_CARS_URL, title_video='Generate NULL values in a context file')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", mime="application/zip", key='help_generate_nulls_wf_context_cars')
 
 # WF --> Replicate dataset:
 def help_replicate_dataset_wf():

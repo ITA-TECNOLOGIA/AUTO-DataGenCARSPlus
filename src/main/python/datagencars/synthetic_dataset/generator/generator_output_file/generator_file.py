@@ -31,7 +31,7 @@ class GeneratorFile(ABC):
         :return: A copy of the user complete dataframe with generated null values.
         """    
         # Calculate the total number of rows in the dataframe
-        total_rows = file_df.shape[0]                         
+        total_rows = file_df.shape[0]
         number_attributes = self.schema_access.get_number_attributes()
         null_values = int((number_attributes * total_rows * percentage_null_value_global) / 100)
         # Generate random positions to be null.
