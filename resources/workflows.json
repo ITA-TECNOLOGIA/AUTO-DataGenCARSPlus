@@ -965,58 +965,92 @@
      ],
      "legend":["I", "C", "X"]
     },
-   {"workflow_name": "GenerateNULLValues", 
-    "nodes" : [
-        {"node_name": "BEGIN", 
-         "optional" : "False"},
-        {"node_name": "Generate NULL Values <item>", 
-         "optional" : "True", 
-         "condition": [["NULLValuesI","True"]]},  
-        {"node_name": "Generate NULL Values <context>", 
-         "optional" : "True",
-         "condition": [["CARS", "True"], ["NULLValuesC","True"]]},                  
-        {"node_name": "END", 
-         "optional" : "False"}
-    ], 
-    "gateways":[       
-       {"type": "X", 
-        "name": "ConvergeGateway1",
-        "optional": "True",
-        "condition": [["init_step", "True"]]}
-    ],
-    "arrows" : [       
-          {"init_node": "BEGIN", 
-           "end_node": "Generate NULL Values <item>", 
-           "label": "[I]", 
-           "optional": "True", 
-           "condition": [["init_step", "True"],["NULLValuesI", "True"]]},
-
-          {"init_node": "BEGIN", 
-           "end_node": "Generate NULL Values <context>", 
-           "label": "[C]", 
-           "optional": "True", 
-           "condition": [["init_step", "True"],["NULLValuesC", "True"]]},     
-
-          {"init_node": "Generate NULL Values <item>", 
-           "end_node": "ConvergeGateway1", 
-           "label": "[I]", 
-           "optional": "True", 
-           "condition": [["init_step", "True"]]},
-
-          {"init_node": "Generate NULL Values <context>", 
-           "end_node": "ConvergeGateway1", 
-           "label": "[C]", 
-           "optional": "True", 
-           "condition": [["init_step", "True"]]},
-
-           {"init_node": "ConvergeGateway1", 
-            "end_node": "END", 
-            "label": "[I,C]", 
-            "optional": "True", 
-            "condition": [["init_step", "True"]]}         
-     ],
-     "legend":["I", "C", "X"]
-    },
+    {"workflow_name": "GenerateNULLValues",
+        "nodes": [
+          {
+            "node_name": "BEGIN",
+            "optional": "False"
+          },
+          {
+            "node_name": "Generate NULL Values <item>",
+            "optional": "True",
+            "condition": [["NULLValuesI", "True"]]
+          },
+          {
+            "node_name": "Generate NULL Values <context>",
+            "optional": "True",
+            "condition": [["CARS", "True"], ["NULLValuesC", "True"]]
+          },
+          {
+            "node_name": "END",
+            "optional": "False"
+          }
+        ],
+        "gateways": [
+          {
+            "type": "X",
+            "name": "ConvergeGateway1",
+            "optional": "True",
+            "condition": [["NULLValuesI", "True"], ["CARS", "True"], ["NULLValuesC", "True"]]
+          }
+        ],
+        "arrows": [
+          {
+            "init_node": "BEGIN",
+            "end_node": "Generate NULL Values <item>",
+            "label": "[I]",
+            "optional": "True",
+            "condition": [["NULLValuesI", "True"]]
+          },
+          {
+            "init_node": "BEGIN",
+            "end_node": "Generate NULL Values <context>",
+            "label": "[C]",
+            "optional": "True",
+            "condition": [["CARS", "True"], ["NULLValuesC", "True"]]
+          },
+          {
+            "init_node": "Generate NULL Values <item>",
+            "end_node": "ConvergeGateway1",
+            "label": "[I]",
+            "optional": "True",
+            "condition": [["NULLValuesI", "True"], ["CARS", "True"], ["NULLValuesC", "True"]]
+          },
+          {
+            "init_node": "Generate NULL Values <context>",
+            "end_node": "ConvergeGateway1",
+            "label": "[C]",
+            "optional": "True",
+            "condition": [["CARS", "True"], ["NULLValuesC", "True"], ["NULLValuesI", "True"]]
+          },
+          {
+            "init_node": "ConvergeGateway1",
+            "end_node": "END",
+            "label": "[I,C]",
+            "optional": "True",
+            "condition": [["NULLValuesI", "True"], ["CARS", "True"], ["NULLValuesC", "True"]]
+          },
+          {
+            "init_node": "Generate NULL Values <item>",
+            "end_node": "END",
+            "label": "[I]",
+            "optional": "True",
+            "condition": [["NULLValuesI", "True"], ["CARS", "False"]]
+          },
+          {
+            "init_node": "Generate NULL Values <context>",
+            "end_node": "END",
+            "label": "[C]",
+            "optional": "True",
+            "condition": [["CARS", "True"], ["NULLValuesC", "True"], ["NULLValuesI", "False"]]
+          }
+        ],
+        "legend": {
+          "I": "item.csv",
+          "C": "context.csv",
+          "X": "Diverge Gateway"
+        }
+      },
     {"workflow_name": "GenerateUserProfile",
     "nodes" : [
         {"node_name": "BEGIN", 

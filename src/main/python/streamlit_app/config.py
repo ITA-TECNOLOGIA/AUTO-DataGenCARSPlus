@@ -51,6 +51,8 @@ EXAMPLE_ROOM_LIST = [{'id': 1, 'x_min': -51.69645309448242, 'x_max': 17.03342819
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### Pre-process a dataset ####:
 WF_OPTIONS = ['Generate NULL values', 'Replace NULL values', 'Generate user profile', 'Replicate dataset', 'Extend dataset', 'Recalculate ratings', 'Transform attributes']
+# WF --> Generate NULL values:
+NULL_VALUES_GENERATE_OPTIONS = ['Select one option', 'Global', 'By Attribute']
 # WF --> Replace NULL values:
 IC_WF_REPLACE_NULL_VALUES=['item', 'context']
 I_WF_REPLACE_NULL_VALUES=['item']
@@ -111,10 +113,12 @@ SYNTHETIC_DATASET_VIDEO_IMPLICIT_CARS_URL = ''
 
 ####### Pre-process a dataset #######
 # WORKFLOWS:
+# WF --> Generate NULL values:
+GENERATE_NULL_VALUES_ITEM_RS_URL = 'https://youtu.be/wlr6SMGfJRk'
+GENERATE_NULL_VALUES_ITEM_CARS_URL = 'https://youtu.be/uuy9BO40ecU'
+GENERATE_NULL_VALUES_CONTEXT_CARS_URL = 'https://youtu.be/-cg_jA8plJs'
 # WF --> Replace NULL values:
 REPLACE_NULL_VALUES_URL = ''
-# WF --> Generate NULL values:
-GENERATE_NULL_VALUES_URL = ''
 # WF --> Replicate dataset:
 REPLICATE_DATASET_URL = ''
 # WF --> Extend dataset:
