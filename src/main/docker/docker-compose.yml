@@ -7,7 +7,7 @@ services:
       dockerfile: ./src/main/docker/nginx.dockerfile
     volumes:
       - ./src/main/nginx:/etc/nginx/conf.d/
-      - ./cert/itainnova.es/:/certificates
+      - ./cert/ita.es/:/certificates
     restart: always
     ports:
       - "443:443"
