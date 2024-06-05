@@ -33,13 +33,15 @@ def generate_item(with_context):
     :param with_context: It is True if the dataset to be generated will have contextual information, and False otherwise.
     """
     # WF --> Replace NULL values:
-    st.header(f'Workflow: Replace NULL values')
-    # Help information:
-    help_information.help_replace_nulls_wf()
+    st.header(f'Workflow: Replace NULL values')    
     # Showing the initial image of the WF:
     if with_context:
+        # Help information:
+        help_information.help_replace_nulls_wf_item_cars()
         workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="True", with_context="True", optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
     else:
+        # Help information:
+        help_information.help_replace_nulls_wf_item_rs()
         workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="False", with_context="False", optional_value_list=[('NULLValuesI', str(True))])
     st.markdown("""---""")
     
@@ -72,7 +74,7 @@ def generate_context(with_context):
     # WF --> Replace NULL values:
     st.header(f'Workflow: Replace NULL values')
     # Help information:
-    help_information.help_replace_nulls_wf()
+    help_information.help_replace_nulls_wf_context_cars()
     # Showing the initial image of the WF:
     workflow_image.show_wf(wf_name='ReplaceNULLValues', init_step="True", with_context="True", optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
     st.markdown("""---""")
@@ -314,7 +316,7 @@ def button_replace_null_values(schema_type, df, schema):
             if new_df.equals(df):
                 st.warning(f'There are no Nulls values in the {schema_type} file. Below is the original {schema_type} file (without being transformed).')
             else:
-                st.success(f'In the {schema_type}, null values have been replaced successfully.')
+                st.success(f'In the {schema_type} file, null values have been replaced successfully.')
             with st.expander(label=f'Show the replaced file: {schema_type}.csv'):
                 # Show the new item schema file with replaced null values:    
                 st.dataframe(new_df)

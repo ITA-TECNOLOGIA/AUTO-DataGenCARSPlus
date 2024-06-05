@@ -118,16 +118,18 @@ GENERATE_NULL_VALUES_ITEM_RS_URL = 'https://youtu.be/wlr6SMGfJRk'
 GENERATE_NULL_VALUES_ITEM_CARS_URL = 'https://youtu.be/uuy9BO40ecU'
 GENERATE_NULL_VALUES_CONTEXT_CARS_URL = 'https://youtu.be/-cg_jA8plJs'
 # WF --> Replace NULL values:
-REPLACE_NULL_VALUES_URL = ''
+REPLACE_NULL_VALUES_ITEM_RS_URL = 'https://youtu.be/sTih8-nNsUw'
+REPLACE_NULL_VALUES_ITEM_CARS_URL = 'https://youtu.be/Ukm1j_jHfcI'
+REPLACE_NULL_VALUES_CONTEXT_CARS_URL = 'https://youtu.be/OTIaliyJ9bo'
+# WF --> Generate user profile:
+GENERATE_USER_PROFILE_RS_URL = 'https://youtu.be/Thpy6yeLN8s'
+GENERATE_USER_PROFILE_CARS_URL = 'https://youtu.be/EdM_mqSuSFo'
 # WF --> Replicate dataset:
 REPLICATE_DATASET_URL = ''
 # WF --> Extend dataset:
 EXTEND_DATASET_URL = ''
 # WF --> Recalculate ratings:
 RECALCULATE_RATINGS_URL = ''
-# WF --> Generate user profile:
-GENERATE_USER_PROFILE_MANUAL_URL = ''
-GENERATE_USER_PROFILE_AUTOMATIC_URL = ''
 # WF --> Cast rating:
 CAST_RATING_URL = ''
 # WF --> Data converter:

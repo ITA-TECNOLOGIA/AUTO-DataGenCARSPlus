@@ -54,6 +54,7 @@ def generate_item(with_context):
     st.header(f'Workflow: Generate NULL values')        
     # Showing the initial image of the WF:
     if with_context:
+        # Help information:
         help_information.help_generate_nulls_wf_item_cars()
         workflow_image.show_wf(wf_name='GenerateNULLValues', init_step="True", with_context="True", optional_value_list=[('NULLValuesC', str(True)), ('NULLValuesI', str(True))])
     else:
