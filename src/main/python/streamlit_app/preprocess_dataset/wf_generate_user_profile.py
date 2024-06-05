@@ -19,11 +19,17 @@ def generate(with_context, only_automatic=False):
     # WF --> Generate user profile:
     st.header('Workflow: Generate user profile')
     # Help information:
-    help_information.help_user_profile_wf()
-    # Worflow image:
-    optional_value_list = [('NULLValues', str(True)), ('NULLValuesC', str(True)), ('NULLValuesI', str(True)), ('UPManual', 'True'), ('UPAutomatic', 'True')]
-    workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='True', with_context=True, optional_value_list=optional_value_list)
-    st.markdown("""---""")
+    if with_context:
+        help_information.help_user_profile_wf_cars()
+        # Worflow image:
+        optional_value_list = [('NULLValues', str(True)), ('NULLValuesC', str(True)), ('NULLValuesI', str(True)), ('UPManual', 'True'), ('UPAutomatic', 'True')]
+        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='True', with_context=True, optional_value_list=optional_value_list)        
+    else:
+        help_information.help_user_profile_wf_rs()
+        # Worflow image:
+        optional_value_list = [('NULLValues', str(True)), ('NULLValuesC', str(True)), ('NULLValuesI', str(True)), ('UPManual', 'True'), ('UPAutomatic', 'True')]
+        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=False, optional_value_list=optional_value_list)   
+    st.markdown("""---""")  
 
     # Loading dataset:   
     st.write('Upload the following files: ')     
@@ -71,36 +77,49 @@ def generate(with_context, only_automatic=False):
                 st.warning('The item and rating files must be uploaded.')
     # Manual generation of the user profile:
     elif up_options == 'Manual':
-        if (not user_df.empty) and (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
-            # Help information:
-            help_information.help_user_profile_manual()  
-            # Showing the current image of the WF:
-            optional_value_list = [('NULLValues', str(st.session_state['replace_context'] or st.session_state['replace_item'])), ('NULLValuesC', str(st.session_state['replace_context'])), ('NULLValuesI', str(st.session_state['replace_item'])), ('UPManual', 'True'), ('UPAutomatic', 'False')]            
-            workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=optional_value_list) 
-
-            # Getting the number of user profiles to be generated:
-            access_user = AccessUser(user_df=user_df)
-            number_user_profile = access_user.get_count_user_profile_id()
-            is_dinamic_row = False
-            if number_user_profile == 0:
-                number_user_profile = st.number_input(label='Specifies the number of user profiles to be generated:', value=3, key='number_user_profile')
-                is_dinamic_row = True
-            # Getting the item attribute value possibles:
-            item_possible_value_map = {}
-            for item_attribute in relevant_item_attribute_list:
-                item_possible_value_map[item_attribute] = access_item.get_item_possible_value_list_from_attribute(attribute_name=item_attribute)        
-            if with_context:
+        # Help information:
+        help_information.help_user_profile_manual()  
+        # Showing the current image of the WF:
+        optional_value_list = [('NULLValues', str(st.session_state['replace_context'] or st.session_state['replace_item'])), ('NULLValuesC', str(st.session_state['replace_context'])), ('NULLValuesI', str(st.session_state['replace_item'])), ('UPManual', 'True'), ('UPAutomatic', 'False')]                
+        workflow_image.show_wf(wf_name='GenerateUserProfile', init_step='False', with_context=with_context, optional_value_list=optional_value_list)
+        if with_context: 
+            if (not user_df.empty) and (not item_df.empty) and (not context_df.empty) and (not rating_df.empty):
+                # Getting the number of user profiles to be generated:
+                access_user = AccessUser(user_df=user_df)
+                number_user_profile = access_user.get_count_user_profile_id()
+                is_dinamic_row = False
+                if number_user_profile == 0:
+                    number_user_profile = st.number_input(label='Specifies the number of user profiles to be generated:', value=3, key='number_user_profile')
+                    is_dinamic_row = False
+                # Getting the item attribute value possibles:
+                item_possible_value_map = {}
+                for item_attribute in relevant_item_attribute_list:
+                    item_possible_value_map[item_attribute] = access_item.get_item_possible_value_list_from_attribute(attribute_name=item_attribute)                        
                 # Getting the context attribute value possibles:
                 context_possible_value_map = {}
                 for context_attribute in relevant_context_attribute_list:
                     context_possible_value_map[context_attribute] = access_context.get_context_possible_value_list_from_attribute(attribute_name=context_attribute)                    
                 attribute_column_list = ['user_profile_id']+relevant_item_attribute_list+relevant_context_attribute_list+['other']
-                user_profile_df = generate_user_profile_manual(number_user_profile=int(number_user_profile), is_dinamic_row=is_dinamic_row, attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map, context_possible_value_map=context_possible_value_map)
-            else:                
+                user_profile_df = generate_user_profile_manual(number_user_profile=int(number_user_profile), is_dinamic_row=is_dinamic_row, attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map, context_possible_value_map=context_possible_value_map)                
+            else:
+                st.warning('The user, item, context and rating files must be uploaded.')                
+        else:
+            if (not user_df.empty) and (not item_df.empty) and (not rating_df.empty):
+                # Getting the number of user profiles to be generated:
+                access_user = AccessUser(user_df=user_df)
+                number_user_profile = access_user.get_count_user_profile_id()
+                is_dinamic_row = False
+                if number_user_profile == 0:
+                    number_user_profile = st.number_input(label='Specifies the number of user profiles to be generated:', value=3, key='number_user_profile')
+                    is_dinamic_row = False
+                # Getting the item attribute value possibles:
+                item_possible_value_map = {}
+                for item_attribute in relevant_item_attribute_list:
+                    item_possible_value_map[item_attribute] = access_item.get_item_possible_value_list_from_attribute(attribute_name=item_attribute)                                        
                 attribute_column_list = ['user_profile_id']+relevant_item_attribute_list+['other']
                 user_profile_df = generate_user_profile_manual(number_user_profile=int(number_user_profile), is_dinamic_row=is_dinamic_row, attribute_column_list=attribute_column_list, item_possible_value_map=item_possible_value_map)
-        else:
-            st.warning('All files must be uploaded.')
+            else:
+                st.warning('The user, item and rating files must be uploaded.')                     
     return user_profile_df
 
 def generate_user_profile_manual(number_user_profile, is_dinamic_row, attribute_column_list, item_possible_value_map, context_possible_value_map=None):  

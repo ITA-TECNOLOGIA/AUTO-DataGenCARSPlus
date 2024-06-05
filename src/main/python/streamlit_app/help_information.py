@@ -95,11 +95,6 @@ def help_user_profile_id():
 
 ####### Pre-process a dataset #######
 # WORKFLOWS:
-# WF --> Replace NULL values:
-def help_replace_nulls_wf():
-    with st.expander(label='Help information'):
-        st.markdown("""Workflow to complete unknown contextual information.""")
-
 # WF --> Generate NULL values:
 def help_generate_nulls_wf_item_rs():
     with st.expander(label='Help information'):
@@ -128,25 +123,52 @@ def help_generate_nulls_wf_context_cars():
         st.markdown("""**Example dataset:**""")
         st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", mime="application/zip", key='help_generate_nulls_wf_context_cars')
 
-# WF --> Replicate dataset:
-def help_replicate_dataset_wf():
+# WF --> Replace NULL values:
+def help_replace_nulls_wf_item_rs():
     with st.expander(label='Help information'):
-        st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
-
-# WF --> Extend dataset:
-def help_extend_dataset_wf():
+        st.markdown("""Workflow to complete unknown contextual information.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.REPLACE_NULL_VALUES_ITEM_RS_URL, title_video='Replace NULL values in an item file')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_RS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_RS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_RS_NAME}.zip", mime="application/zip", key='help_replace_nulls_wf_item_rs')
+        
+def help_replace_nulls_wf_item_cars():
     with st.expander(label='Help information'):
-        st.markdown("""Workflow to generate a dataset of ratings incrementally.""")
-
-# WF --> Recalculate ratings:
-def help_recalculate_ratings_wf():
+        st.markdown("""Workflow to complete unknown contextual information.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.REPLACE_NULL_VALUES_ITEM_CARS_URL, title_video='Replace NULL values in an item file')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", mime="application/zip", key='help_replace_nulls_wf_item_cars')
+        
+def help_replace_nulls_wf_context_cars():
     with st.expander(label='Help information'):
-        st.markdown("""Workflow to recalculate ratings in a dataset.""")
+        st.markdown("""Workflow to complete unknown contextual information.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.REPLACE_NULL_VALUES_CONTEXT_CARS_URL, title_video='Replace NULL values in a context file')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", mime="application/zip", key='help_replace_nulls_wf_context_cars')
 
 # WF --> Generate user profile:
-def help_user_profile_wf():
+def help_user_profile_wf_rs():
     with st.expander(label='Help information'):
-        st.markdown("""Workflow to generate an user profile automatically or manually.""")
+        st.markdown("""Workflow to automatically or manually generate a user profile.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.GENERATE_USER_PROFILE_RS_URL, title_video='Generate a user profile')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_RS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_RS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_RS_NAME}.zip", mime="application/zip", key='help_generate_user_profile_wf_rs')
+        
+def help_user_profile_wf_cars():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to automatically or manually generate a user profile.""")
+        
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.GENERATE_USER_PROFILE_CARS_URL, title_video='Generate a user profile')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH), file_name=f"{config.RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME}.zip", mime="application/zip", key='help_generate_user_profile_wf_cars')
 
 def help_user_profile_manual():
     with st.expander(label='Help information'):
@@ -192,6 +214,21 @@ def help_user_profile_automatic():
         * **Example 2:** The user with ```user_profile_id=3```, with a ```weight=1``` in the attribute ```other```, represents users who behave in a completely unpredictable way. This is because the ratings provided by users cannot be explained by any of the attributes that define the user profile. """)
         st.write('Example of user profile matrix:')
         st.image(image=config.USER_PROFILE_IMAGE, use_column_width=True, output_format="auto")
+        
+# WF --> Replicate dataset:
+def help_replicate_dataset_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a synthetic dataset similar to an existing one.""")
+
+# WF --> Extend dataset:
+def help_extend_dataset_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to generate a dataset of ratings incrementally.""")
+
+# WF --> Recalculate ratings:
+def help_recalculate_ratings_wf():
+    with st.expander(label='Help information'):
+        st.markdown("""Workflow to recalculate ratings in a dataset.""")
 
 # WF --> Cast rating:
 def help_cast_rating_wf():
