@@ -1,0 +1,68 @@
+services:
+  argon-nginx:
+    container_name: argon-nginx
+    image: argon-nginx
+    build:
+      context: ./
+      dockerfile: ./src/main/docker/nginx.dockerfile
+    volumes:
+      - ./src/main/nginx:/etc/nginx/conf.d/
+      - ./cert/itainnova.es/:/certificates
+    restart: always
+    ports:
+      - "443:443"
+    depends_on:
+      - conda
+    logging: &logging
+      driver: journald
+      options:
+        tag: "{{.ImageName}}/{{.Name}}"
+    networks:
+      - frontend
+      - backend
+    environment: &environment
+      - TZ=Europe/Madrid
+      - LOGLEVEL=DEBUG
+    healthcheck: &healthcheck
+      test: ["CMD", "curl", "-f", "https://argon-nginx/health/" ,"--tls-max" ,"1.1" ]
+      interval: 1m30s
+      timeout: 5s
+      retries: 3
+      start_period: 2s
+
+ 
+  conda:
+    container_name: conda
+    image: conda
+    build:
+      context: ./
+      dockerfile: ./src/main/docker/conda.dockerfile
+    environment: 
+      - TZ=Europe/Madrid
+      - LOGLEVEL=DEBUG
+      - PYTHONPATH=./
+    restart: always
+    #volumes:
+    #  - ./data/count/data/output/RSU/:/app/data/:ro
+    command: ["streamlit", "run", "./streamlit_app/app.py"]
+    networks:
+      - backend
+    logging: *logging
+    healthcheck: &healthcheck
+      test: ["CMD", "curl", "-f", "http://streamlit:8501/"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 3
+      start_period: 2s
+
+networks:
+  frontend:
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.7.0.0/16"
+  backend:
+    ipam:
+      driver: default
+      config:
+        - subnet: "10.8.0.0/16"
