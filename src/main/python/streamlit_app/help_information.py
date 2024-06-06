@@ -259,6 +259,7 @@ def help_categorical_to_numerical():
 def help_visualization_dataset_explicit_rs():
     with st.expander(label='Help information'):
         st.markdown("""Visualization of a dataset.""")   
+        
         st.markdown("""**Example video:**""")     
         help_video_from_url(video_url=config.VISUALIZATION_PREFERENCIAL_EXPLICIT_RS_URL, title_video='Visualization of a RS dataset with preferencial and explicit ratings')        
         st.markdown("""**Example datasets:**""")
@@ -268,6 +269,7 @@ def help_visualization_dataset_explicit_rs():
 def help_visualization_dataset_explicit_cars():
     with st.expander(label='Help information'):
         st.markdown("""Visualization of a dataset.""")
+        
         st.markdown("""**Example video:**""")
         help_video_from_url(video_url=config.VISUALIZATION_PREFERENCIAL_EXPLICIT_CARS_URL, title_video='Visualization of a CARS dataset with preferencial and explicit ratings')        
         st.markdown("""**Example datasets:**""")
@@ -276,7 +278,8 @@ def help_visualization_dataset_explicit_cars():
 
 def help_visualization_dataset_implicit_rs():
     with st.expander(label='Help information'):
-        st.markdown("""Visualization of a dataset.""")   
+        st.markdown("""Visualization of a dataset.""")  
+         
         st.markdown("""**Example video:**""")  
         help_video_from_url(video_url=config.VISUALIZATION_PREFERENCIAL_IMPLICIT_RS_URL, title_video='Visualization of a RS dataset with preferencial and implicit ratings')        
         st.markdown("""**Example datasets:**""")
@@ -286,6 +289,7 @@ def help_visualization_dataset_implicit_rs():
 def help_visualization_dataset_implicit_cars():
     with st.expander(label='Help information'):
         st.markdown("""Visualization of a dataset.""")
+        
         st.markdown("""**Example video:**""") 
         help_video_from_url(video_url=config.VISUALIZATION_PREFERENCIAL_IMPLICIT_CARS_URL, title_video='Visualization of a CARS dataset with preferencial and implicit ratings')        
         st.markdown("""**Example datasets:**""")
@@ -311,7 +315,7 @@ def help_rs_algoritms(recommender_name_list):
                                 > - ```learning_rate```: Learning rate for optimization algorithms (SGD). Default is 0.005.
                             """)           
             # KNN-based CF algorithms:
-            if recommender_name == 'KNNBasic':                              
+            if recommender_name == 'User-Based KNNBasic' or recommender_name == 'Item-Based KNNBasic':                              
                 st.markdown("""
                             - ``` KNNBasic ```: A basic collaborative filtering algorithm derived from a basic nearest neighbors approach.
                             Parameter settings:
@@ -321,7 +325,7 @@ def help_rs_algoritms(recommender_name_list):
                                 > - ```user_based```: A boolean indicating whether to use user-based or item-based similarity.     
                                 > - ```min_support```: Minimum number of common items/users required to compute similarity.
                             """)            
-            if recommender_name == 'KNNBaseline':                
+            if recommender_name == 'User-Based KNNBaseline' or recommender_name == 'Item-Based KNNBaseline':                
                 st.markdown("""
                             - ``` KNNBaseline ```: A basic collaborative filtering algorithm taking into account a baseline rating.
                             Parameter settings:
@@ -335,7 +339,7 @@ def help_rs_algoritms(recommender_name_list):
                                 > - ```n_epochs```: The number of iterations for optimization algorithms (e.g., SGD). Default is 10.
                                 > - ```learning_rate```: Learning rate for optimization algorithms (SGD). Default is 0.005.
                             """)                 
-            if recommender_name == 'KNNWithMeans':
+            if recommender_name == 'User-Based KNNWithMeans' or recommender_name == 'Item-Based KNNWithMeans':
                 st.markdown("""
                             - ``` KNNWithMeans ```: A basic collaborative filtering algorithm, taking into account the mean ratings of each user.
                             Parameter settings:
@@ -345,7 +349,7 @@ def help_rs_algoritms(recommender_name_list):
                                 > - ```user_based```: A boolean indicating whether to use user-based or item-based similarity.     
                                 > - ```min_support```: Minimum number of common items/users required to compute similarity.
                             """)
-            if recommender_name == 'KNNWithZScore':
+            if recommender_name == 'User-Based KNNWithZScore' or recommender_name == 'Item-Based KNNWithZScore':
                 st.markdown("""
                             - ``` KNNWithZScore ```: A basic collaborative filtering algorithm, taking into account the z-score normalization of each user.
                             Parameter settings:
@@ -452,8 +456,6 @@ def help_postfiltering_paradigm():
         st.download_button(label=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_PREFERENCIAL_EXPLICIT_CARS_NAME}.zip", mime="application/zip")        
         st.download_button(label=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", data=get_zip_file(config.STS_DATASET_BINARY_EXPLICIT_CARS_PATH), file_name=f"{config.STS_DATASET_BINARY_EXPLICIT_CARS_NAME}.zip", mime="application/zip")                
 
-                                             
-
 def help_classification_algoritms(classifier_name_list):
     with st.expander(label='Help information'): 
         for classifier_name in classifier_name_list:
@@ -470,6 +472,35 @@ def help_classification_algoritms(classifier_name_list):
             if classifier_name == 'HistGradientBoostingClassifier':
                 st.markdown("""- ``` HistGradientBoostingClassifier ```: Histogram-based Gradient Boosting Classification Tree. This estimator has native support for missing values (NaNs).""")
         st.markdown("""These algorithms are implemented in the [scikit-learn](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning) python library.""")
+
+# USE CASES: 
+def help_uc_enlarge_dataset():
+    with st.expander(label='Enlarge an existing dataset'):
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.UC_ENLARGE_DATASET_URL, title_video='Enlarge an existing dataset')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.ENLARGE_DATASET_UC_NAME}.zip", data=get_zip_file(config.ENLARGE_DATASET_UC_PATH), file_name=f"{config.ENLARGE_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_enlarge_dataset')
+        
+def help_uc_incorporate_context_data_into_dataset():
+    with st.expander(label='Incorporate Context Data into an Existing Dataset'):
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.UC_INCORPORATE_CONTEXT_DATASET_URL, title_video='Incorporate Context Data into an Existing Dataset')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.INCORPORATE_CONTEXT_IN_DATASET_UC_NAME}.zip", data=get_zip_file(config.INCORPORATE_CONTEXT_IN_DATASET_UC_PATH), file_name=f"{config.INCORPORATE_CONTEXT_IN_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_incorporate_context_data_into_dataset')
+        
+def help_uc_reduce_bias_in_dataset():
+    with st.expander(label='Reduce Bias in an Existing Dataset'):
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.UC_REDUCE_BIAS_DATASET_URL, title_video='Reduce Bias in an Existing Dataset')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.REDUCE_BIAS_IN_DATASET_UC_NAME}.zip", data=get_zip_file(config.REDUCE_BIAS_IN_DATASET_UC_PATH), file_name=f"{config.REDUCE_BIAS_IN_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_reduce_bias_in_dataset')
+        
+def help_uc_generate_synthetic_dataset():
+    with st.expander(label='Generate a Completely Synthetic Dataset'):
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.UC_GENERATE_SYNTHETIC_DATASET_URL, title_video='Generate a Completely Synthetic Dataset')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.GENERATE_SYNTHETIC_DATASET_UC_NAME}.zip", data=get_zip_file(config.GENERATE_SYNTHETIC_DATASET_UC_PATH), file_name=f"{config.GENERATE_SYNTHETIC_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_generate_synthetic_dataset')
 
 ####### Videos #######
 def help_video_from_file(video_file_path):
