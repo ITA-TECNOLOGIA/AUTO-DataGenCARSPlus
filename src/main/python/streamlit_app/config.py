@@ -14,7 +14,7 @@ LOC_LABEL = 'loc'
 TIMEZONE_LABEL = 'timezone'
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### AUTO-DataGenCARS general options ####:
-GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis of a dataset', 'Dashboard']
+GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis of a dataset', 'Use cases', 'Dashboard']
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### Generate a synthetic dataset ####:
 RATING_FEEDBACK_OPTIONS = ['Explicit ratings', 'Implicit ratings']
@@ -80,7 +80,7 @@ VISUALIZATION_OPTIONS = ['Explicit ratings', 'Implicit ratings']
 # Evaluation:
 # RS:
 BASIC_RS=['BaselineOnly', 'NormalPredictor']
-CF_RS = ['KNNBasic', 'KNNWithMeans', 'KNNWithZScore', 'KNNBaseline', 'SVD', 'SVDpp', 'NMF', 'SlopeOne', 'CoClustering']
+CF_RS = ['User-Based KNNBasic', 'Item-Based KNNBasic', 'User-Based KNNWithMeans', 'Item-Based KNNWithMeans', 'User-Based KNNWithZScore', 'Item-Based KNNWithZScore', 'User-Based KNNBaseline', 'Item-Based KNNBaseline', 'SVD', 'SVDpp', 'NMF', 'SlopeOne', 'CoClustering']
 CB_RS = ['PENDING TODO']
 # CARS:
 PARDIGM_OTPIONS = ["Contextual Modeling", "Pre-filtering", "Post-filtering"]
@@ -101,8 +101,8 @@ PREFERENCIAL_RATING_METRICS = ["MAE", "Precision", "Recall", "F1_Score", "RMSE",
 DEFAULT_PREFERENCIAL_RATING_METRICS = ["MAE", "Precision", "Recall", "F1_Score"]
 SCIKIT_LEARN_METRICS = ['Precision', 'Recall', 'F1 score', 'ROC-AUC', 'MAE', 'MSE', 'RMSE']
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
-#### Videos from URLs ####:
 
+#### Videos from URLs ####:
 ####### Generate a synthetic dataset ######
 # Explicit ratings:
 SYNTHETIC_DATASET_VIDEO_EXPLICIT_RS_URL = 'https://youtu.be/dmasluESDHQ'
@@ -147,6 +147,16 @@ EVALUATION_PREFERENCIAL_CM_CARS_URL = 'https://youtu.be/ByLR2gPz9oo'
 EVALUATION_PREFERENCIAL_PREFILTERING_CARS_URL = ''
 EVALUATION_PREFERENCIAL_POSTFILTERING_CARS_URL = ''
 
+####### Analysis of a dataset #######
+# Enlarge an Existing Dataset:
+UC_ENLARGE_DATASET_URL = ''
+# Incorporate Context Data into an Existing Dataset:
+UC_INCORPORATE_CONTEXT_DATASET_URL = ''
+# Reduce Bias in an Existing Dataset:
+UC_REDUCE_BIAS_DATASET_URL = ''
+# Generate a Completely Synthetic Dataset:
+UC_GENERATE_SYNTHETIC_DATASET_URL = ''
+
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### Datasets ####:
 DATASETS_PATH = './resources/datasets/'
@@ -182,3 +192,18 @@ RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME = 'restaurant_schema_explicit_cars'
 RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH = DATASETS_PATH + RESTAURANT_SCHEMA_EXPLICIT_CARS_NAME + '/'
 RESTAURANT_SCHEMA_IMPLICIT_CARS_NAME = 'metaverso_schema_implicit_cars'
 RESTAURANT_SCHEMA_IMPLICIT_CARS_PATH = DATASETS_PATH + RESTAURANT_SCHEMA_IMPLICIT_CARS_NAME + '/'
+
+# Use case datasets:
+USE_CASES_PATH = './resources/use_cases/'
+# Enlarge an Existing Dataset:
+ENLARGE_DATASET_UC_NAME = 'enlarge_dataset'
+ENLARGE_DATASET_UC_PATH = USE_CASES_PATH + ENLARGE_DATASET_UC_NAME + '/'
+# Incorporate Context Data into an Existing Dataset:
+INCORPORATE_CONTEXT_IN_DATASET_UC_NAME = 'incorporate_context_in_dataset'
+INCORPORATE_CONTEXT_IN_DATASET_UC_PATH = USE_CASES_PATH + INCORPORATE_CONTEXT_IN_DATASET_UC_NAME + '/'
+# Reduce Bias in an Existing Dataset:
+REDUCE_BIAS_IN_DATASET_UC_NAME = 'reduce_bias_in_dataset'
+REDUCE_BIAS_IN_DATASET_UC_PATH = USE_CASES_PATH + REDUCE_BIAS_IN_DATASET_UC_NAME + '/'
+# Generate a Completely Synthetic Dataset:
+GENERATE_SYNTHETIC_DATASET_UC_NAME = 'generate_synthetic_dataset'
+GENERATE_SYNTHETIC_DATASET_UC_PATH = USE_CASES_PATH + GENERATE_SYNTHETIC_DATASET_UC_NAME + '/'

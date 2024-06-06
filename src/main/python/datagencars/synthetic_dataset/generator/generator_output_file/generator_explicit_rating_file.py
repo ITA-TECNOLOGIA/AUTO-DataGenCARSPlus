@@ -141,14 +141,18 @@ class GeneratorExplicitRatingFile:
                 if not self.context_df.empty:
                     context_id = random.choice(context_id_list)
                     row_rating_list.append(context_id)
-                # Generating a rating for a specified user profile:                   
-                user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id, 'user_profile_id'].iloc[0]
+                # Generating a rating for a specified user profile:     
+                if 'user_profile_id' in self.user_df.columns.tolist():
+                    user_profile_id = self.user_df.loc[self.user_df['user_id'] == user_id, 'user_profile_id'].iloc[0]
+                else:
+                    user_profile_id = user_id                    
                 if not self.context_df.empty:
                     rating = self.get_rating(user_profile_id, item_id, context_id)
                 else:
                     rating = self.get_rating(user_profile_id, item_id)        
                 # Modifying the generated rating.                
                 modified_rating = self.modify_rating_by_user_expectations(rating, k, user_rating_list, min_rating_value, max_rating_value)
+                # print(user_id, item_id, context_id, rating, modified_rating)
                 user_rating_list.append(rating)
                 row_rating_list.append(modified_rating)
                 # Generating timestamp:

@@ -25,13 +25,17 @@ def create_algorithm(algo_name, params=None):
         return BaselineOnly()
     elif algo_name == "NormalPredictor":
         return NormalPredictor()
-    elif algo_name == "KNNBasic":
-        return KNNBasic(**params)
-    elif algo_name == "KNNWithMeans":
+    elif algo_name == "User-Based KNNBasic":
+        ub_knnbasic = KNNBasic(**params)    
+        return ub_knnbasic
+    elif algo_name == "Item-Based KNNBasic":
+        ib_knnbasic = KNNBasic(**params)
+        return ib_knnbasic
+    elif algo_name == "User-Based KNNWithMeans" or algo_name == "Item-Based KNNWithMeans":
         return KNNWithMeans(**params)
-    elif algo_name == "KNNWithZScore":
+    elif algo_name == "User-Based KNNWithZScore" or algo_name == "Item-Based KNNWithZScore":
         return KNNWithZScore(**params)
-    elif algo_name == "KNNBaseline":
+    elif algo_name == "User-Based KNNBaseline" or algo_name == "Item-Based KNNBaseline":
         return KNNBaseline(**params)
     else:
         raise ValueError("Invalid algorithm name")

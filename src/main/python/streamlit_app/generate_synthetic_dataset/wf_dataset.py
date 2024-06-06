@@ -84,7 +84,7 @@ def generate_synthtetic_dataset(with_context, feedback_option):
             # Generating <user_profile.csv>:
             user_profile_df = wf_user_profile.get_user_profile(with_context)
     # TAB --> Rating:
-    with tab_rating: 
+    with tab_rating:
         ###### Generation config #####: 
         # Generating or uploading <generation_config.conf>:           
         generation_config = wf_rating.get_generation_config_schema(with_context, implicit=True)
@@ -121,17 +121,13 @@ def generate_synthtetic_dataset(with_context, feedback_option):
         # Generating <rating.csv>:
         if with_context:
             if feedback_option == 'Implicit ratings':
-                # TODO generate_implicit_rating_file() 
                 wf_rating.generate_implicit_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, item_df=item_df, context_df=context_df, behavior_df=behavior_df)
             else:
-                # Explicit ratings:
-                # TODO generate_explicit_rating_file()
+                # Explicit ratings:                
                 wf_rating.generate_explicit_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema, context_df=context_df, context_schema=context_schema)
         else:
-            if feedback_option == 'Implicit ratings':
-                # TODO generate_implicit_rating_file()
+            if feedback_option == 'Implicit ratings':                
                 wf_rating.generate_implicit_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, item_df=item_df, behavior_df=behavior_df)
             else:
-                # Explicit ratings:
-                # TODO generate_explicit_rating_file()
+                # Explicit ratings:                
                 wf_rating.generate_explicit_rating_file(with_context=with_context, generation_config=generation_config, user_df=user_df, user_profile_df=user_profile_df, item_df=item_df, item_schema=item_schema)

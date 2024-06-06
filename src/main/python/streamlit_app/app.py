@@ -2,6 +2,7 @@
 # sys.path.append("/data/bfranco/auto_datagencars/src/main/python")
 import streamlit as st
 from streamlit_app import config
+import help_information
 from streamlit_app.analysis_dataset.evaluation import (st_evaluation_cars,
                                                        st_evaluation_rs)
 from streamlit_app.analysis_dataset.visualization import st_visualization
@@ -198,6 +199,21 @@ elif general_option == 'Analysis of a dataset':
         # Traditional RS Evaluation:
         else:
             st_evaluation_rs.generate(rating_df)
+
+####### Use Cases #######    
+elif general_option == 'Use cases':
+    st.header('Use cases')    
+    # Enlarge an Existing Dataset:
+    help_information.help_uc_enlarge_dataset()
+    
+    # Incorporate Context Data into an Existing Dataset:
+    help_information.help_uc_incorporate_context_data_into_dataset()
+    
+    # Reduce Bias in an Existing Dataset:
+    help_information.help_uc_reduce_bias_in_dataset()
+    
+    # Generate a Completely Synthetic Dataset:
+    help_information.help_uc_generate_synthetic_dataset()
 
 ####### Dashboard #######    
 elif general_option == 'Dashboard':

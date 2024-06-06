@@ -64,7 +64,7 @@ def select_recommendation_algorithms():
     for rs_algorithm in recommender_name_list:                                          
         rs_parameters_map = select_rs_parameters_map(rs_algorithm)                        
         recommender_instance = surprise_helpers.create_algorithm(rs_algorithm, rs_parameters_map)
-        recommender_list.append(recommender_instance)
+        recommender_list.append((rs_algorithm, recommender_instance))
     print(f'The recommendation algorithm {recommender_name_list} have been selected.')    
     return recommender_list
     
@@ -89,37 +89,65 @@ def select_rs_parameters_map(recommendation_algorithm):
         
         ## KNN-based CF algorithms:
         # KNNBasic: A basic collaborative filtering algorithm derived from a basic nearest neighbors approach.
-        if recommendation_algorithm == "KNNBasic":
-            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbasic'),
-                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnbasic'),
-                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnbasic'),
-                                    "user_based": st.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnbasic'),
-                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnbasic')}}
+        if recommendation_algorithm == "User-Based KNNBasic":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_ub_knnbasic'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_ub_knnbasic'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_ub_knnbasic'),                                    
+                                    "user_based": "user",
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_ub_knnbasic')}}
+        if recommendation_algorithm == "Item-Based KNNBasic":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_ib_knnbasic'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_ib_knnbasic'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_ib_knnbasic'),                                    
+                                    "user_based": "item",
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_ib_knnbasic')}}            
         # KNNBaseline: A basic collaborative filtering algorithm taking into account a baseline rating.
-        if recommendation_algorithm == "KNNBaseline":
-            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnbaseline'),
-                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnbaseline'),
-                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnbaseline'),
-                                    "user_based": st.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnbaseline')},
+        if recommendation_algorithm == "User-Based KNNBaseline":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_ub_knnbaseline'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_ub_knnbaseline'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_ub_knnbaseline'),                                    
+                                    "user_based": "user"},
                     "bsl_options": {"method": st.selectbox("Baseline method", ["als", "sgd"], key='method_knnbaseline'),
-                                    "reg_i": st.number_input("Regularization parameter for items", min_value=1, max_value=100, value=10, key='reg_i_knnbaseline'),
-                                    "reg_u": st.number_input("Regularization parameter for users", min_value=1, max_value=100, value=15, key='reg_u_knnbaseline'),
-                                    "n_epochs": st.number_input("Number of epochs for optimization algorithms (ALS or SGD)", min_value=10, max_value=100, value=10, key='n_epochs_knnbaseline'),
-                                    "learning_rate": st.number_input("Controls the step size during the SGD optimization process", min_value=0.0, max_value=0.1, value=0.005, step=0.01, key='learning_rate_knnbaseline')}}
+                                    "reg_i": st.number_input("Regularization parameter for items", min_value=1, max_value=100, value=10, key='reg_i_ub_knnbaseline'),
+                                    "reg_u": st.number_input("Regularization parameter for users", min_value=1, max_value=100, value=15, key='reg_u_ub_knnbaseline'),
+                                    "n_epochs": st.number_input("Number of epochs for optimization algorithms (ALS or SGD)", min_value=10, max_value=100, value=10, key='n_epochs_ub_knnbaseline'),
+                                    "learning_rate": st.number_input("Controls the step size during the SGD optimization process", min_value=0.0, max_value=0.1, value=0.005, step=0.01, key='learning_rate_ub_knnbaseline')}}
+        if recommendation_algorithm == "Item-Based KNNBaseline":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_ib_knnbaseline'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_ib_knnbaseline'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_ib_knnbaseline'),                                    
+                                    "user_based": "item"},
+                    "bsl_options": {"method": st.selectbox("Baseline method", ["als", "sgd"], key='method_ib_knnbaseline'),
+                                    "reg_i": st.number_input("Regularization parameter for items", min_value=1, max_value=100, value=10, key='reg_i_ib_knnbaseline'),
+                                    "reg_u": st.number_input("Regularization parameter for users", min_value=1, max_value=100, value=15, key='reg_u_ib_knnbaseline'),
+                                    "n_epochs": st.number_input("Number of epochs for optimization algorithms (ALS or SGD)", min_value=10, max_value=100, value=10, key='n_epochs_ib_knnbaseline'),
+                                    "learning_rate": st.number_input("Controls the step size during the SGD optimization process", min_value=0.0, max_value=0.1, value=0.005, step=0.01, key='learning_rate_ib_knnbaseline')}}
         # KNNWithMeans: A basic collaborative filtering algorithm, taking into account the mean ratings of each user.
-        if recommendation_algorithm == "KNNWithMeans":
-            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithmeans'),
-                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnwithmeans'),
-                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnwithmeans'),
-                                    "user_based": st.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnwithmeans'),
-                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnwithmeans')}}
+        if recommendation_algorithm == "User-Based KNNWithMeans":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_ub_knnwithmeans'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_ub_knnwithmeans'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_ub_knnwithmeans'),                                    
+                                    "user_based": "user",
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_ub_knnwithmeans')}}
+        if recommendation_algorithm == "Item-Based KNNWithMeans":
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_ib_knnwithmeans'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_ib_knnwithmeans'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_ib_knnwithmeans'),                                    
+                                    "user_based": "item",
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_ib_knnwithmeans')}}
         # KNNWithZScore: A basic collaborative filtering algorithm, taking into account the z-score normalization of each user.
-        if recommendation_algorithm == "KNNWithZScore":            
-            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_knnwithzscore'),
-                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_knnwithzscore'),
-                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_knnwithzscore'),
-                                    "user_based": st.selectbox("User-based or item-based similarity", ["user", "item"], key='sim_options_user_based_knnwithzscore'),
-                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_knnwithzscore')}}
+        if recommendation_algorithm == "User-Based KNNWithZScore":            
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_ub_knnwithzscore'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_ub_knnwithzscore'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_ub_knnwithzscore'),                                    
+                                    "user_based": "user",
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_ub_knnwithzscore')}}
+        if recommendation_algorithm == "Item-Based KNNWithZScore":            
+            return {"k": st.number_input("Number of nearest neighbors", min_value=1, max_value=1000, value=40, key='k_ib_knnwithzscore'),
+                    "min_k": st.number_input("Minimum number of neighbors", min_value=1, max_value=10, value=1, key='mink_ib_knnwithzscore'),
+                    "sim_options": {"name": st.selectbox("Similarity measure", ["pearson", "cosine", "msd"], key='sim_options_name_ib_knnwithzscore'),                                    
+                                    "user_based": "user",
+                                    "min_support": st.number_input("Minimum number of common items/users required to compute similarity", min_value=1, max_value=10, value=1, key='sim_options_min_support_ib_knnwithzscore')}}
         
         # Matrix factorization-based CF algorithms:    
         # SVD (Singular Value Decomposition): The famous SVD algorithm, as popularized by Simon Funk <https://sifter.org/~simon/journal/20061211.html>:
@@ -223,10 +251,10 @@ def evaluate(surprise_data, recommender_list, split_strategy_instance, metric_li
             with st.spinner("Evaluating algorithms..."):
                 for recommender in recommender_list:
                     fold_count += 1
-                    cross_validate_results = evaluation.cross_validate(algo=recommender, data=surprise_data, measures=metric_list, cv=split_strategy_instance)
+                    cross_validate_results = evaluation.cross_validate(algo=recommender[1], data=surprise_data, measures=metric_list, cv=split_strategy_instance)
                     for i in range(split_strategy_instance.n_splits):
                         row = {}
-                        algo_name = type(recommender).__name__
+                        algo_name = recommender[0]
                         row["Algorithm"] = algo_name
 
                         # Modify the name of the metrics to be more readable:
