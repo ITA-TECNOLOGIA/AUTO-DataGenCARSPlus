@@ -33,9 +33,12 @@ class GeneratorFile(ABC):
         # Calculate the total number of rows in the dataframe
         total_rows = file_df.shape[0]
         number_attributes = self.schema_access.get_number_attributes()
+        # Ignoring user_profile_id column:
+        if 'user_profile_id' in file_df.columns.tolist():
+            number_attributes = number_attributes - 1
         null_values = int((number_attributes * total_rows * percentage_null_value_global) / 100)
         # Generate random positions to be null.
-        for i in range(1, null_values+1):
+        for i in range(1, null_values+1):            
             # Generate column to remove.
             random_column = random.randint(1, number_attributes)
             # Generate row to remove.
@@ -56,9 +59,15 @@ class GeneratorFile(ABC):
         :return: A modified copy of the dataframe with generated null values.
         """
         # Calculate the total number of rows in the dataframe
-        total_rows = file_df.shape[0]        
+        total_rows = file_df.shape[0]      
+        # Ignoring user_id y user_profile_id column:
+        if 'user_profile_id' in file_df.columns.tolist():
+            sub_file_df = file_df.columns[1:-1]  
+        else:
+            # Ignoring user_id:
+            sub_file_df = file_df.columns[1:]
         # Iterate over each column in the dataframe        
-        for index_column, column_name in enumerate(file_df.columns[1:], start=0):
+        for index_column, column_name in enumerate(sub_file_df, start=0):
             percentage_null_value_column = percentage_null_value_attribute_list[index_column]
             # Calculate the number of null values to generate for the column
             null_values_count = int((total_rows * percentage_null_value_column) / 100)

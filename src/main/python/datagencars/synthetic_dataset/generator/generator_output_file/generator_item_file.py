@@ -91,10 +91,12 @@ class GeneratorItemFile(GeneratorFile):
         # Generating nulls values:             
         percentage_null_value_global = self.access_generation_config.get_percentage_null_value_global()
         percentage_null_value_attribute_list = self.access_generation_config.get_percentage_null_value_attribute()        
-        if (percentage_null_value_global is not None) and (percentage_null_value_global >= 0):        
+        if (percentage_null_value_global is not None) and (percentage_null_value_global > 0):        
             return self.generate_null_value_global(self.file_df.copy(), percentage_null_value_global)
         elif len(percentage_null_value_attribute_list) != 0:
             return self.generate_null_value_attribute(self.file_df.copy(), percentage_null_value_attribute_list)
+        else:
+            return self.file_df.copy()
     
     def update_object_action(self, df):
         """
