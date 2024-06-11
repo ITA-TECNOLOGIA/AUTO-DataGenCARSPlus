@@ -1,4 +1,5 @@
 import ast
+import math
 import random
 
 import numpy as np
@@ -33,9 +34,10 @@ class GeneratorExplicitRatingFile:
     provided by the same or by different users at approximately the same time.
      
     @author Maria del Carmen Rodriguez-Hernandez 
-    '''
-
+    '''        
+    
     def __init__(self, generation_config, user_df, user_profile_df, item_df, item_schema=None, context_df=None, context_schema=None):
+        random.seed(42)
         # User profile access: user_profile.csv        
         self.access_user_profile = AccessUserProfile(user_profile_df)
         # Schema access: generation_config.conf
@@ -122,7 +124,7 @@ class GeneratorExplicitRatingFile:
         for user_index in range(1, number_user+1):            
             row_rating_list = []
             # Generating user_id:
-            user_id = user_id_list[user_index-1]            
+            user_id = user_id_list[user_index-1]
             row_rating_list.append(user_id)            
             # Determining the initial timestamp for the current user:
             initial_timestamp = timestamp_list[random.randint(0, len(timestamp_list)-1)]     
@@ -149,11 +151,22 @@ class GeneratorExplicitRatingFile:
                 if not self.context_df.empty:
                     rating = self.get_rating(user_profile_id, item_id, context_id)
                 else:
-                    rating = self.get_rating(user_profile_id, item_id)        
+                    rating = self.get_rating(user_profile_id, item_id)      
+                # Handle cases where the context is completely NULL and the rating is 0:
+                if rating == 0.0:
+                    # Random rating strategy (normal distribution):                    
+                    # Calcular la media, el punto medio del rango
+                    mu = (min_rating_value + max_rating_value) / 2
+                    # Calcular la desviación estándar para que aproximadamente el 95% de los valores caigan entre el mínimo y el máximo
+                    sigma = (max_rating_value - mu) / 2                
+                    # Rating with noise (normal distribution):
+                    rating = random.normalvariate(mu, sigma)
+                    # Asegúrate de que el valor generado esté dentro de los límites permitidos:
+                    rating = max(min_rating_value, min(max_rating_value, round(rating)))                                           
+                user_rating_list.append(rating)       
                 # Modifying the generated rating.                
                 modified_rating = self.modify_rating_by_user_expectations(rating, k, user_rating_list, min_rating_value, max_rating_value)
-                # print(user_id, item_id, context_id, rating, modified_rating)
-                user_rating_list.append(rating)
+                # print(user_id, item_id, context_id, rating, modified_rating)                
                 row_rating_list.append(modified_rating)
                 # Generating timestamp:
                 timestamp = initial_timestamp+pd.Timedelta(days=random.randint(1, 30), minutes=random.randint(1, 1440))                
@@ -313,7 +326,7 @@ class GeneratorExplicitRatingFile:
         :param item_id: The item ID.
         :param context_id: The context ID.
         :return: A rating value.
-        '''       
+        '''        
         # Getting the attribute name list and atribute value list of the user_profile_id.        
         atribute_name_list, atribute_value_list = self.access_user_profile.get_vector_from_user_profile(user_profile_id)
 
@@ -321,19 +334,18 @@ class GeneratorExplicitRatingFile:
         if context_id:
             attribute_value_list, attribute_possible_value_list = self.get_attribute_value_and_possible_value_list(atribute_name_list, item_id, context_id)
         else:
-            attribute_value_list, attribute_possible_value_list = self.get_attribute_value_and_possible_value_list(atribute_name_list, item_id)                 
+            attribute_value_list, attribute_possible_value_list = self.get_attribute_value_and_possible_value_list(atribute_name_list, item_id)              
         # Getting the range of rating values:
         minimum_value_rating = self.access_generation_config.get_minimum_value_rating()
-        maximum_value_rating = self.access_generation_config.get_maximum_value_rating() 
+        maximum_value_rating = self.access_generation_config.get_maximum_value_rating()         
         # Getting the attribute rating vector.
-        attribute_rating_vector = self.access_user_profile.get_attribute_rating_vector(atribute_value_list, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list)
-        # print('attribute_rating_vector: ', attribute_rating_vector)
+        attribute_rating_vector = self.access_user_profile.get_attribute_rating_vector(atribute_value_list, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list, is_gaussian_distribution=self.access_generation_config.is_gaussian_distribution())        
 
         if len(atribute_value_list) != len(attribute_rating_vector):
             raise ValueError('The vectors have not the same size.')
         
         rating = 0
-        sum_weight = 0 # self.user_profile_df.loc[self.user_profile_df['user_profile_id'] == user_profile_id, 'other'].iloc[0]
+        sum_weight = 0
         for idx, weight_importance in enumerate(atribute_value_list):
             # Getting importance and weight values:
             weight_importance_list = str(weight_importance).split('|')
@@ -344,7 +356,8 @@ class GeneratorExplicitRatingFile:
                 weight = float(weight_importance)
             sum_weight += weight
             rating += weight * attribute_rating_vector[idx]
-        if sum_weight != 1:            
+                           
+        if not math.isclose(sum_weight, 1.0, rel_tol=1e-9):
             raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
         return round(rating, 2)
     
@@ -357,11 +370,11 @@ class GeneratorExplicitRatingFile:
         :return: The attribute value and its possible values.
         '''
         attribute_value_list = []
-        possible_value_list = []
+        possible_value_list = []        
         for attribute_name in atribute_name_list:
             # Getting values from item.csv
             if attribute_name in list(self.item_df.columns.values):
-                attribute_value = self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]                   
+                attribute_value = self.item_df.loc[self.item_df['item_id'] == item_id, attribute_name].iloc[0]                                                
                 # Check if the attribute value is None:
                 if attribute_value is None:                    
                     attribute_value_list.append(None)                
@@ -379,12 +392,12 @@ class GeneratorExplicitRatingFile:
             elif context_id:
                 # Getting values from context.csv                
                 if attribute_name in list(self.context_df.columns.values):
-                    attribute_value_list.append(self.context_df.loc[self.context_df['context_id'] == context_id, attribute_name].iloc[0])
+                    attribute_value_list.append(self.context_df.loc[self.context_df['context_id'] == context_id, attribute_name].iloc[0])                    
                     # Getting possible values of the current attribute:
                     if self.context_schema_access:
                         possible_value_list.append(self.context_schema_access.get_possible_values_attribute_list_from_name(attribute_name))
                     else:
-                        possible_value_list.append(self.access_context.get_context_possible_value_list_from_attribute(attribute_name))
+                        possible_value_list.append(self.access_context.get_context_possible_value_list_from_attribute(attribute_name))                    
         return attribute_value_list, possible_value_list
     
     def modify_rating_by_user_expectations(self, rating, k, user_rating_list, min_rating_value, max_rating_value):

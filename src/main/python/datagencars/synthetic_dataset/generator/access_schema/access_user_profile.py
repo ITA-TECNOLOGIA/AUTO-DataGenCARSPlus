@@ -39,7 +39,7 @@ class AccessUserProfile():
         """
         return [col for col in self.user_profile_df.columns if col not in ['user_profile_id', 'other']]
     
-    def get_attribute_rating_vector(self, weight_vector, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list):
+    def get_attribute_rating_vector(self, weight_vector, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list, is_gaussian_distribution):
         '''
         Get the attribute rating vector determined by using the user profile.
         :param weight_vector: The weight vector specified in the user profile.
@@ -61,8 +61,39 @@ class AccessUserProfile():
             # If the attribute is relevant for the user:
             attribute_rating = 0
             if (importance_rank is None and user_profile_attribute_list[idx] == 'other'):
-                # Rating with noise (randomly):
-                attribute_rating = random.randint(minimum_value_rating, maximum_value_rating)
+                weight_importance = float(weight_importance_list[0])
+                if weight_importance == 1.0:
+                    if is_gaussian_distribution:                    
+                        # Rating with noise (randomly using a normal distribution):                               
+                        # Calcular la media, el punto medio del rango
+                        mu = (minimum_value_rating + maximum_value_rating) / 2
+                        # Calcular la desviación estándar para que aproximadamente el 95% de los valores caigan entre el mínimo y el máximo
+                        sigma = (maximum_value_rating - mu) / 2                
+                        # Rating with noise (normal distribution):
+                        attribute_rating = random.normalvariate(mu, sigma)
+                        # Asegúrate de que el valor generado esté dentro de los límites permitidos:
+                        attribute_rating = max(minimum_value_rating, min(maximum_value_rating, round(attribute_rating)))      
+                    else:
+                        # Rating with noise (randomly):
+                        attribute_rating = random.randint(minimum_value_rating, maximum_value_rating)                            
+                elif weight_importance == 0.0:
+                    attribute_rating = 0
+                elif weight_importance > 0.0 and weight_importance < 1.0:
+                    if is_gaussian_distribution:
+                        # Calcular la media, el punto medio del rango
+                        mu = (minimum_value_rating + maximum_value_rating) / 2
+                        # Porcentaje de ruido deseado (k %)
+                        k = weight_importance*100
+                        # Calcular la desviación estándar para que el ruido sea k % del rango total
+                        range = maximum_value_rating - minimum_value_rating
+                        sigma = (range * k / 100) / 2
+                        # Generar el rating con ruido (distribución normal):
+                        attribute_rating = random.normalvariate(mu, sigma)
+                        # Asegurarte de que el valor generado esté dentro de los límites permitidos:
+                        attribute_rating = max(minimum_value_rating, min(maximum_value_rating, round(attribute_rating)))
+                    else:
+                        # Rating with noise (randomly):
+                        attribute_rating = random.randint(minimum_value_rating, maximum_value_rating)
             elif importance_rank:                
                 # Determining position_array: the position of "attribute_value" in "possible_value_list". For example, for: possible_value_list = ['free', '$', '$$', '$$$', '$$$$'] and attribute_value = '$', the position_array = 1
                 if isinstance(attribute_value_list[idx], list):

@@ -220,16 +220,31 @@ def generate_explicit_rating_file(with_context, generation_config, user_df, user
             else:
                 st.warning('The user and item files are required.')
         # Generating rating file (rating.csv):        
-        if generator:
-            output = st.empty()
-            with console.st_log(output.code):              
+        if generator:            
+            output = st.empty()                    
+            with console.st_log(output.code):            
                 rating_df = generator.generate_file()
                 print('Rating file generation has finished.') 
                 # Showing <rating.csv>:
                 with st.expander(label=f'Show the generated {config.RATING_TYPE}.csv file:'):
                     st.dataframe(rating_df)
-                    wf_util.save_df(df_name=config.RATING_TYPE, df_value=rating_df, extension='csv')   
+                    wf_util.save_df(df_name=config.RATING_TYPE, df_value=rating_df, extension='csv')
     return rating_df
+
+def set_fixed_size_scroll(output_element):
+    # Ajusta el tamaño y el desplazamiento del elemento de salida
+    st.markdown(
+        """
+        <style>
+        .stMarkdown { 
+            height: 300px; 
+            overflow-y: scroll;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    return output_element
 
 def generate_implicit_rating_file(with_context, generation_config, user_df, item_df, behavior_df, context_df=None):
     """
