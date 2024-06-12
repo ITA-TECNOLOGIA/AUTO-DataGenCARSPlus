@@ -19,16 +19,15 @@ def show_user_map(df):
         df['latitude'] = pd.to_numeric(df['latitude'], errors='coerce')
         df['longitude'] = pd.to_numeric(df['longitude'], errors='coerce')    
         # Remove rows with NaN values in 'latitude' or 'longitude' columns
-        df = df.dropna(subset=['latitude', 'longitude'])
-        # Check if there are any rows left to plot
-        if df.empty:
-            st.warning("No valid data for plotting.")
-        else:
-            # Create a map in Streamlit
-            st.header('Map of countries using AUTO-DataGenCARS')
-            data = df.loc[:, ['latitude', 'longitude']]
-            st.map(data)
-            with st.expander(label='Show details'):
+        df = df.dropna(subset=['latitude', 'longitude'])                          
+        with st.expander(label='Show Map'):
+            # Check if there are any rows left to plot
+            if df.empty:
+                st.warning("No valid data for plotting.")
+            else: 
+                # Create a map in Streamlit            
+                data = df.loc[:, ['latitude', 'longitude']]
+                st.map(data)
                 # Calculate the frequency of values in the "country" column
                 country_frequency_df = df['country'].value_counts().reset_index()
                 country_frequency_df.columns = ['country', 'frequency']
