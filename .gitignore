@@ -1,5 +1,4 @@
 cert/
-resources/
 *.pyc
 *.conf
 *.txt
