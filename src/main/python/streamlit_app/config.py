@@ -1,9 +1,9 @@
 #### App Streamlit settings ####:
-APP_TITLE = 'AUTO-DataGenCARS+'
+APP_TITLE = 'AUTO-DataGenCARS+: Advanced Pyton-Based User orienTed tOol DataGenCARS'
 APP_ICON = 'resources/icons/logo-autodatagencarsplus.png'
 APP_LAYOUT = ['centered', 'centered', 'wide']
 APP_INITIAL_SIDEBAR_STATE = ['auto', 'expanded', 'auto', 'collapsed']
-APP_DESCRIPTION = 'It is a complete Python-based synthetic dataset generator for the evaluation of Context-Aware Recommendation Systems (CARS) to obtain the required datasets for any type of scenario desired.'
+APP_DESCRIPTION = 'It is a powerful graphical user interface implemented in Python that can be used to generate synthetic data for the evaluation of Recommender Systems (RS) and Context-Aware Recommender Systems (CARS), providing the necessary datasets for any desired scenario.'
 #### User information register ####:
 USER_INFORMATION_LOG_PATH = 'resources/user_information_log/user_information_log.csv'
 IP_LABEL = 'ip'
@@ -14,7 +14,7 @@ LOC_LABEL = 'loc'
 TIMEZONE_LABEL = 'timezone'
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### AUTO-DataGenCARS general options ####:
-GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis of a dataset', 'Use cases', 'Dashboard']
+GENERAL_OPTIONS = ['Select one option', 'Generate a synthetic dataset', 'Pre-process a dataset', 'Analysis of a dataset', 'Use cases', 'About us']
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### Generate a synthetic dataset ####:
 RATING_FEEDBACK_OPTIONS = ['Explicit ratings', 'Implicit ratings']
@@ -193,7 +193,8 @@ RESTAURANT_SCHEMA_EXPLICIT_CARS_PATH = DATASETS_PATH + RESTAURANT_SCHEMA_EXPLICI
 RESTAURANT_SCHEMA_IMPLICIT_CARS_NAME = 'metaverso_schema_implicit_cars'
 RESTAURANT_SCHEMA_IMPLICIT_CARS_PATH = DATASETS_PATH + RESTAURANT_SCHEMA_IMPLICIT_CARS_NAME + '/'
 
-# Use case datasets:
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------
+#### Use cases ####:
 USE_CASES_PATH = './resources/use_cases/'
 # Enlarge an Existing Dataset:
 ENLARGE_DATASET_UC_NAME = 'enlarge_dataset'
@@ -207,3 +208,7 @@ REDUCE_BIAS_IN_DATASET_UC_PATH = USE_CASES_PATH + REDUCE_BIAS_IN_DATASET_UC_NAME
 # Generate a Completely Synthetic Dataset:
 GENERATE_SYNTHETIC_DATASET_UC_NAME = 'generate_synthetic_dataset'
 GENERATE_SYNTHETIC_DATASET_UC_PATH = USE_CASES_PATH + GENERATE_SYNTHETIC_DATASET_UC_NAME + '/'
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------
+#### About us ####:
+DATAGENCARS_VS_AUTODATAGENCARSPLUS_TABLE = 'resources/icons/datagencars_auto-datagencarsplus.png'

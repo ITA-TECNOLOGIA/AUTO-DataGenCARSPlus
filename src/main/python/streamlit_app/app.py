@@ -24,30 +24,30 @@ st.set_page_config(page_title=config.APP_TITLE,
                    initial_sidebar_state=config.APP_INITIAL_SIDEBAR_STATE[0],
                    menu_items= None)
 
-# Description, title and icon:
-st.markdown("""---""")
-col1, col2 = st.columns(2)
-with col1:
-    # Title:
-    st.header(config.APP_TITLE)
-    # Description:
-    st.write(config.APP_DESCRIPTION)
-with col2:    
-    # Icon:
-    st.image(image=config.APP_ICON, use_column_width=False, output_format="auto", width=180)
-
-# User Information register:
-user_register.generate_implicit()
-st.markdown("""---""")
-
 # AUTO-DataGenCARS forms:
 # Tool bar with AUTO-DataGenCARS options:
 general_option = st.sidebar.selectbox(label='**Options available:**', options=config.GENERAL_OPTIONS)
 # Selecting whether the dataset has contextual information:
 with_context = st.sidebar.checkbox('With context', value=True)
 
+if general_option == 'Select one option':
+    # Description, title and icon:
+    st.markdown("""---""")
+    # Title:
+    st.header(config.APP_TITLE)
+    col1, col2 = st.columns(2)
+    with col1:   
+        # Description:
+        st.write(config.APP_DESCRIPTION)
+    with col2:    
+        # Icon:
+        st.image(image=config.APP_ICON, use_column_width=False, output_format="auto", width=150)    
+    st.markdown("""---""")
+    # User Information register:
+    user_register.generate_implicit()
+    
 ####### Generate a synthetic dataset #######
-if general_option == 'Generate a synthetic dataset':
+elif general_option == 'Generate a synthetic dataset':
     # Selecting a rating feedback option:
     feedback_option = st.sidebar.radio(label='Select a type of user feedback:', options=config.RATING_FEEDBACK_OPTIONS)
     # WF --> Explicit and Implicit ratings:
@@ -200,9 +200,9 @@ elif general_option == 'Analysis of a dataset':
         else:
             st_evaluation_rs.generate(rating_df)
 
-####### Use Cases #######    
+####### Use Cases #######
 elif general_option == 'Use cases':
-    st.header('Use cases')    
+    st.header('Use cases')
     # Enlarge an Existing Dataset:
     help_information.help_uc_enlarge_dataset()
     
@@ -215,8 +215,27 @@ elif general_option == 'Use cases':
     # Generate a Completely Synthetic Dataset:
     help_information.help_uc_generate_synthetic_dataset()
 
-####### Dashboard #######    
-elif general_option == 'Dashboard':
-    user_database_df = user_register.load_user_database()
-    user_behavior.show_user_map(df=user_database_df)
+####### About us #######    
+elif general_option == 'About us':        
+    st.header(config.APP_TITLE)    
+    st.image(image=config.APP_ICON, use_column_width=False, output_format="auto", width=150)
     
+    st.header('Description')
+    st.write(config.APP_DESCRIPTION)
+    with st.expander(label='Main functionalities of AUTO-DataGenCARS+ and DataGenCARS'):        
+        st.image(image=config.DATAGENCARS_VS_AUTODATAGENCARSPLUS_TABLE)
+    
+    st.header('Contributors')
+    st.markdown("""**Researchers**""")
+    st.markdown("""- [Sergio Ilarri](http://webdiis.unizar.es/~silarri/) [silarri@unizar.es]""")
+    st.markdown("""- [María del Carmen Rodríguez Hernández](https://www.linkedin.com/in/macrodher/) [mcrodriguez@ita.es]""")
+    st.markdown("""- [Raquel Trillo Lado](http://webdiis.unizar.es/~raqueltl/) [raqueltl@unizar.es]""")
+    st.markdown("""- [Ramón Hermoso](http://webdiis.unizar.es/~rhermoso/) [rhermoso@unizar.es]""")
+    
+    st.markdown("""**Students**""")    
+    st.markdown("""- [Marcos Caballero Yus](https://www.linkedin.com/in/itxmarcos/) [mcabally@gmail.com] (final master’s project)""")
+    
+    # Map:
+    st.header('Map of countries using AUTO-DataGenCARS+')
+    map_df = user_register.load_user_database()    
+    user_behavior.show_user_map(df=map_df)
