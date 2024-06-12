@@ -27,8 +27,6 @@ st.set_page_config(page_title=config.APP_TITLE,
 # AUTO-DataGenCARS forms:
 # Tool bar with AUTO-DataGenCARS options:
 general_option = st.sidebar.selectbox(label='**Options available:**', options=config.GENERAL_OPTIONS)
-# Selecting whether the dataset has contextual information:
-with_context = st.sidebar.checkbox('With context', value=True)
 
 if general_option == 'Select one option':
     # Description, title and icon:
@@ -48,13 +46,17 @@ if general_option == 'Select one option':
     
 ####### Generate a synthetic dataset #######
 elif general_option == 'Generate a synthetic dataset':
+    # Selecting whether the dataset has contextual information:
+    with_context = st.sidebar.checkbox(label='With context', value=True)
     # Selecting a rating feedback option:
     feedback_option = st.sidebar.radio(label='Select a type of user feedback:', options=config.RATING_FEEDBACK_OPTIONS)
     # WF --> Explicit and Implicit ratings:
     wf_dataset.generate_synthtetic_dataset(with_context, feedback_option)
         
 ####### Pre-process a dataset #######
-elif general_option == 'Pre-process a dataset':    
+elif general_option == 'Pre-process a dataset': 
+    # Selecting whether the dataset has contextual information:
+    with_context = st.sidebar.checkbox(label='With context', value=True)   
     # Selecting a workflow option:
     wf_option = st.sidebar.radio(label='Select a workflow:', options=config.WF_OPTIONS)
     # Selecting a rating feedback option:
@@ -179,7 +181,9 @@ elif general_option == 'Pre-process a dataset':
         wf_transform_attributes.generate(with_context)
     
 ####### Analysis of a dataset #######
-elif general_option == 'Analysis of a dataset':    
+elif general_option == 'Analysis of a dataset':   
+    # Selecting whether the dataset has contextual information:
+    with_context = st.sidebar.checkbox(label='With context', value=True) 
     # Selecting a analysis option:
     analysis_option = st.sidebar.radio(label='Select one option:', options=config.ANLYSIS_OPTIONS)
 
