@@ -3,6 +3,7 @@ cert/
 *.conf
 *.txt
 *.ipynb
+*.pdf
 cert/
 resources/datasets/*
 resources/existing_dataset/*

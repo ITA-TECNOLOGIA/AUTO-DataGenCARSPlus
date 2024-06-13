@@ -241,5 +241,5 @@ elif general_option == 'About us':
     
     # Map:
     st.header('Map of countries using AUTO-DataGenCARS+')
-    map_df = user_register.load_user_database()    
+    map_df = user_register.load_user_database()
     user_behavior.show_user_map(df=map_df)

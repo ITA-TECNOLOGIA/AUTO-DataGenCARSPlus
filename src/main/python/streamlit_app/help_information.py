@@ -3,6 +3,7 @@ import os
 from zipfile import ZipFile
 import streamlit as st
 from streamlit_app import config
+from streamlit_app.preprocess_dataset.wf_util import save_file
 
 
 ####### Generate a synthetic dataset ######
@@ -497,10 +498,13 @@ def help_uc_reduce_bias_in_dataset():
         
 def help_uc_generate_synthetic_dataset():
     with st.expander(label='Generate a Completely Synthetic Dataset'):
+        st.markdown("""**Manual document:**""")           
+        save_file(file_name='generate_synthetic_dataset_guide', file_value=config.GENERATE_SYNTHETIC_DATASET_UC_MANUAL_PATH, extension='pdf')       
         st.markdown("""**Example video:**""")
-        help_video_from_url(video_url=config.UC_GENERATE_SYNTHETIC_DATASET_URL, title_video='Generate a Completely Synthetic Dataset')      
+        help_video_from_url(video_url=config.GENERATE_SYNTHETIC_DATASET_UC_URL, title_video='Generate a Completely Synthetic Dataset')      
         st.markdown("""**Example dataset:**""")
         st.download_button(label=f"{config.GENERATE_SYNTHETIC_DATASET_UC_NAME}.zip", data=get_zip_file(config.GENERATE_SYNTHETIC_DATASET_UC_PATH), file_name=f"{config.GENERATE_SYNTHETIC_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_generate_synthetic_dataset')
+        
 
 ####### Videos #######
 def help_video_from_file(video_file_path):

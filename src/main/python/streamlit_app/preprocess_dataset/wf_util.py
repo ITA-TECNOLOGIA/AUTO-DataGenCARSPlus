@@ -7,16 +7,24 @@ import streamlit as st
 ####### Common methods ######
 def save_file(file_name, file_value, extension):
     """
-    Save a schema file.
-    :param file_name: The name of the schema file.
-    :param file_value: The content of the schema file.
-    :param extension: The file extension ('*.conf' or '*.csv').
+    Save a file as a downloadable link. This function generates an HTML link element
+    that allows users to download the file in various formats including configuration
+    files, CSVs, and PDF documents.
+    :param file_name: The name of the file.
+    :param file_value: The content of the file, which should be a string for text-based
+                       formats or bytes for binary formats like PDF.
+    :param extension: The file extension ('conf', 'csv', or 'pdf').
     """
     if extension == 'conf':
         link_file = f'<a href="data:text/plain;base64,{base64.b64encode(file_value.encode()).decode()}" download="{file_name}.{extension}">Download</a>'
     elif extension == 'csv':
         link_file = f'<a href="data:file/csv;base64,{base64.b64encode(file_value.encode()).decode()}" download="{file_name}.{extension}">Download</a>'
+    elif extension == 'pdf':
+        with open(file_value, 'rb') as pdf_file:
+            pdf_content = pdf_file.read()
+        link_file = f'<a href="data:application/pdf;base64,{base64.b64encode(pdf_content).decode()}" download="{file_name}.{extension}">Download</a>'
     st.markdown(link_file, unsafe_allow_html=True)    
+    
 
 def save_df(df_name, df_value, extension):
     """
