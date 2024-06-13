@@ -209,7 +209,7 @@ REDUCE_BIAS_IN_DATASET_UC_PATH = USE_CASES_PATH + REDUCE_BIAS_IN_DATASET_UC_NAME
 GENERATE_SYNTHETIC_DATASET_UC_NAME = 'generate_synthetic_dataset'
 GENERATE_SYNTHETIC_DATASET_UC_PATH = USE_CASES_PATH + GENERATE_SYNTHETIC_DATASET_UC_NAME + '/'
 GENERATE_SYNTHETIC_DATASET_UC_URL = 'https://youtu.be/FjYJKeZeo5Q'
-GENERATE_SYNTHETIC_DATASET_UC_MANUAL_PATH = './resources/use_cases_manual/generate_synthetic_dataset/uc_description.pdf'
+GENERATE_SYNTHETIC_DATASET_UC_MANUAL_PATH = 'resources/use_cases_manual/generate_synthetic_dataset/uc_description.pdf'
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### About us ####:
