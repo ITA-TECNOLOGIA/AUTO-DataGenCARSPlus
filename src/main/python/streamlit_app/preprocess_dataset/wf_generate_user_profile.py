@@ -185,13 +185,13 @@ def generate_user_profile_manual(number_user_profile, is_dinamic_row, attribute_
         st.warning(f'The following user_profile_id does not add up to 1: {user_profile_id_list}')     
     return user_profile_df
 
-def is_consistent(df):
-    # Check if the sum of values in each row is 1, ignoring the "user_profile_id" column:
-    row_sums = df.iloc[:, 1:].abs().sum(axis=1)
-    is_sum_equal_to_1 = row_sums.eq(1)    
-    # Get user_profile_id values that do not sum to 1
-    user_profile_id_list = df[~is_sum_equal_to_1]['user_profile_id'].tolist()    
-    return is_sum_equal_to_1.all(), user_profile_id_list
+def is_consistent(df, tolerance=1e-5):
+    # Check if the sum of values in each row is close to 1, considering a tolerance
+    row_sums = df.iloc[:, 1:].abs().sum(axis=1)    
+    is_sum_close_to_1 = row_sums.sub(1).abs().le(tolerance)    
+    # Get user_profile_id values that do not sum to 1 within the tolerance
+    user_profile_id_list = df[~is_sum_close_to_1]['user_profile_id'].tolist()    
+    return is_sum_close_to_1.all(), user_profile_id_list
 
 def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, context_df=None, context_attribute_list=None):
     """
