@@ -2,7 +2,7 @@
 
 ## Overview
 
-AUTO_DataGenCARS is a complete Python-based synthetic dataset generator for the valuation of Traditional Recommendation Systems (RS) and Context-Aware Recommendation Systems (CARS).
+AUTO_DataGenCARS+ is a complete Python-based synthetic dataset generator for the valuation of Traditional Recommendation Systems (RS) and Context-Aware Recommendation Systems (CARS).
 
 The generator presents features such as:
 
@@ -39,7 +39,7 @@ It was designed with the following purposes:
 
 ## Demo
 
-AUTO-DataGenCARS has a user-freindly [demo](https://193.144.226.31/streamlit) based on Streamlit.
+AUTO-DataGenCARS has a user-freindly [demo](https://auto-datagencarsplus.ita.es/web/) based on Streamlit.
 To use it the following credentials will be required.
 
 - **user**: `autodatagencars`
@@ -76,17 +76,28 @@ AUTO-DataGenCARS for your research:
 
 ```
 @article{mc2017datagencars,
-         doi = {10.1016/j.pmcj.2016.09.020},           
-         year = {2017},
+         title = {DataGenCARS: A generator of synthetic data for the evaluation of context-aware recommendation systems},
+         journal = {Pervasive and Mobile Computing},                      
          note = {Special Issue IEEE International Conference on Pervasive Computing and Communications (PerCom) 2016},
+         year = {2017},
          publisher = {Elsevier},
+         doi = {10.1016/j.pmcj.2016.09.020},      
          volume = {38},
          number = {2},
          pages = {516-541},
          issn = {1574-1192},
-         author = {María del Carmen Rodríguez-Hernández and Sergio Ilarri and Ramón Hermoso and Raquel Trillo-Lado},
-         title = {DataGenCARS: A generator of synthetic data for the evaluation of context-aware recommendation systems},
-         journal = {Pervasive and Mobile Computing}
+         author = {María del Carmen Rodríguez-Hernández and Sergio Ilarri and Ramón Hermoso and Raquel Trillo-Lado}         
+        }
+```
+
+```
+@inproceedings{mc2024autodatagencarsplus,   
+        title = {An Approach for Social-Distance Preserving Location-Aware Recommender Systems: A Use Case in a Hospital Environment},        
+        author = {Marcos Caballero and María del Carmen Rodríguez-Hernández and Raúl Parada and Sergio Ilarri and Raquel Trillo-Lado and Ramón Hermoso and Óscar Rubio}, 
+        booktitle = {35th DEXA Conferences and Workshops},    
+        year = {2024},        
+        pages = {1-6},  
+        publisher = {Springer}
         }
 ```
 
