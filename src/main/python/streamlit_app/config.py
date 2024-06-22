@@ -196,6 +196,11 @@ RESTAURANT_SCHEMA_IMPLICIT_CARS_PATH = DATASETS_PATH + RESTAURANT_SCHEMA_IMPLICI
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### Use cases ####:
 USE_CASES_PATH = './resources/use_cases/'
+# Generate a Completely Synthetic Dataset:
+GENERATE_SYNTHETIC_DATASET_UC_NAME = 'generate_synthetic_dataset'
+GENERATE_SYNTHETIC_DATASET_UC_PATH = USE_CASES_PATH + GENERATE_SYNTHETIC_DATASET_UC_NAME + '/'
+GENERATE_SYNTHETIC_DATASET_UC_URL = 'https://youtu.be/FjYJKeZeo5Q'
+GENERATE_SYNTHETIC_DATASET_UC_MANUAL_PATH = 'resources/use_cases_manual/generate_synthetic_dataset/uc_description.pdf'
 # Enlarge an Existing Dataset:
 ENLARGE_DATASET_UC_NAME = 'enlarge_dataset'
 ENLARGE_DATASET_UC_PATH = USE_CASES_PATH + ENLARGE_DATASET_UC_NAME + '/'
@@ -207,11 +212,6 @@ INCORPORATE_CONTEXT_IN_DATASET_UC_PATH = USE_CASES_PATH + INCORPORATE_CONTEXT_IN
 # Reduce Bias in an Existing Dataset:
 REDUCE_BIAS_IN_DATASET_UC_NAME = 'reduce_bias_in_dataset'
 REDUCE_BIAS_IN_DATASET_UC_PATH = USE_CASES_PATH + REDUCE_BIAS_IN_DATASET_UC_NAME + '/'
-# Generate a Completely Synthetic Dataset:
-GENERATE_SYNTHETIC_DATASET_UC_NAME = 'generate_synthetic_dataset'
-GENERATE_SYNTHETIC_DATASET_UC_PATH = USE_CASES_PATH + GENERATE_SYNTHETIC_DATASET_UC_NAME + '/'
-GENERATE_SYNTHETIC_DATASET_UC_URL = 'https://youtu.be/FjYJKeZeo5Q'
-GENERATE_SYNTHETIC_DATASET_UC_MANUAL_PATH = 'resources/use_cases_manual/generate_synthetic_dataset/uc_description.pdf'
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### About us ####:

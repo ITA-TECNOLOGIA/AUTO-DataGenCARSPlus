@@ -475,10 +475,21 @@ def help_classification_algoritms(classifier_name_list):
         st.markdown("""These algorithms are implemented in the [scikit-learn](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning) python library.""")
 
 # USE CASES: 
+def help_uc_generate_synthetic_dataset():
+    with st.expander(label='Generate a Completely Synthetic Dataset'):
+        st.markdown("""**Manual document:**""")           
+        save_file(file_name='generate_synthetic_dataset_guide', file_value=config.GENERATE_SYNTHETIC_DATASET_UC_MANUAL_PATH, extension='pdf')       
+        st.markdown("""**Example video:**""")
+        help_video_from_url(video_url=config.GENERATE_SYNTHETIC_DATASET_UC_URL, title_video='Generate a Completely Synthetic Dataset')      
+        st.markdown("""**Example dataset:**""")
+        st.download_button(label=f"{config.GENERATE_SYNTHETIC_DATASET_UC_NAME}.zip", data=get_zip_file(config.GENERATE_SYNTHETIC_DATASET_UC_PATH), file_name=f"{config.GENERATE_SYNTHETIC_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_generate_synthetic_dataset')
+        
 def help_uc_enlarge_dataset():
     with st.expander(label='Enlarge an existing dataset'):
+        st.markdown("""**Manual document:**""")           
+        save_file(file_name='generate_synthetic_dataset_guide', file_value=config.ENLARGE_DATASET_UC_MANUAL_PATH, extension='pdf') 
         st.markdown("""**Example video:**""")
-        help_video_from_url(video_url=config.UC_ENLARGE_DATASET_URL, title_video='Enlarge an existing dataset')      
+        help_video_from_url(video_url=config.ENLARGE_DATASET_UC_URL, title_video='Enlarge an existing dataset')      
         st.markdown("""**Example dataset:**""")
         st.download_button(label=f"{config.ENLARGE_DATASET_UC_NAME}.zip", data=get_zip_file(config.ENLARGE_DATASET_UC_PATH), file_name=f"{config.ENLARGE_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_enlarge_dataset')
         
@@ -495,15 +506,6 @@ def help_uc_reduce_bias_in_dataset():
         help_video_from_url(video_url=config.UC_REDUCE_BIAS_DATASET_URL, title_video='Reduce Bias in an Existing Dataset')      
         st.markdown("""**Example dataset:**""")
         st.download_button(label=f"{config.REDUCE_BIAS_IN_DATASET_UC_NAME}.zip", data=get_zip_file(config.REDUCE_BIAS_IN_DATASET_UC_PATH), file_name=f"{config.REDUCE_BIAS_IN_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_reduce_bias_in_dataset')
-        
-def help_uc_generate_synthetic_dataset():
-    with st.expander(label='Generate a Completely Synthetic Dataset'):
-        st.markdown("""**Manual document:**""")           
-        save_file(file_name='generate_synthetic_dataset_guide', file_value=config.GENERATE_SYNTHETIC_DATASET_UC_MANUAL_PATH, extension='pdf')       
-        st.markdown("""**Example video:**""")
-        help_video_from_url(video_url=config.GENERATE_SYNTHETIC_DATASET_UC_URL, title_video='Generate a Completely Synthetic Dataset')      
-        st.markdown("""**Example dataset:**""")
-        st.download_button(label=f"{config.GENERATE_SYNTHETIC_DATASET_UC_NAME}.zip", data=get_zip_file(config.GENERATE_SYNTHETIC_DATASET_UC_PATH), file_name=f"{config.GENERATE_SYNTHETIC_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_generate_synthetic_dataset')
         
 
 ####### Videos #######
