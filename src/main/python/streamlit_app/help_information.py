@@ -487,7 +487,7 @@ def help_uc_generate_synthetic_dataset():
 def help_uc_enlarge_dataset():
     with st.expander(label='Enlarge an existing dataset'):
         st.markdown("""**Manual document:**""")           
-        save_file(file_name='generate_synthetic_dataset_guide', file_value=config.ENLARGE_DATASET_UC_MANUAL_PATH, extension='pdf') 
+        save_file(file_name='enlarge_dataset_guide', file_value=config.ENLARGE_DATASET_UC_MANUAL_PATH, extension='pdf') 
         st.markdown("""**Example video:**""")
         help_video_from_url(video_url=config.ENLARGE_DATASET_UC_URL, title_video='Enlarge an existing dataset')      
         st.markdown("""**Example dataset:**""")
