@@ -495,15 +495,19 @@ def help_uc_enlarge_dataset():
         
 def help_uc_incorporate_context_data_into_dataset():
     with st.expander(label='Incorporate Context Data into an Existing Dataset'):
+        st.markdown("""**Manual document:**""")           
+        save_file(file_name='incorporate_context_in_dataset_guide', file_value=config.INCORPORATE_CONTEXT_IN_DATASET_UC_MANUAL_PATH, extension='pdf') 
         st.markdown("""**Example video:**""")
-        help_video_from_url(video_url=config.UC_INCORPORATE_CONTEXT_DATASET_URL, title_video='Incorporate Context Data into an Existing Dataset')      
+        help_video_from_url(video_url=config.INCORPORATE_CONTEXT_IN_DATASET_UC_URL, title_video='Incorporate Context Data into an Existing Dataset')      
         st.markdown("""**Example dataset:**""")
         st.download_button(label=f"{config.INCORPORATE_CONTEXT_IN_DATASET_UC_NAME}.zip", data=get_zip_file(config.INCORPORATE_CONTEXT_IN_DATASET_UC_PATH), file_name=f"{config.INCORPORATE_CONTEXT_IN_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_incorporate_context_data_into_dataset')
         
 def help_uc_reduce_bias_in_dataset():
     with st.expander(label='Reduce Bias in an Existing Dataset'):
+        st.markdown("""**Manual document:**""")           
+        save_file(file_name='reduce_bias_in_dataset_guide', file_value=config.REDUCE_BIAS_IN_DATASET_UC_MANUAL_PATH, extension='pdf') 
         st.markdown("""**Example video:**""")
-        help_video_from_url(video_url=config.UC_REDUCE_BIAS_DATASET_URL, title_video='Reduce Bias in an Existing Dataset')      
+        help_video_from_url(video_url=config.REDUCE_BIAS_IN_DATASET_UC_URL, title_video='Reduce Bias in an Existing Dataset')      
         st.markdown("""**Example dataset:**""")
         st.download_button(label=f"{config.REDUCE_BIAS_IN_DATASET_UC_NAME}.zip", data=get_zip_file(config.REDUCE_BIAS_IN_DATASET_UC_PATH), file_name=f"{config.REDUCE_BIAS_IN_DATASET_UC_NAME}.zip", mime="application/zip", key='help_uc_reduce_bias_in_dataset')
         
