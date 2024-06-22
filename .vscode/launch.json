@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "python": "/data/conda_envs/datagencars_env/bin/python"
         },
         {
@@ -20,6 +20,7 @@
             "module": "streamlit",
             "args": ["run","${workspaceFolder}/src/main/python/streamlit_app/app.py"],
             "console": "integratedTerminal", 
+            "justMyCode": false,
             "python": "/data/conda_envs/datagencars_env/bin/python",
             "cwd": "${workspaceFolder}",
             "env": {

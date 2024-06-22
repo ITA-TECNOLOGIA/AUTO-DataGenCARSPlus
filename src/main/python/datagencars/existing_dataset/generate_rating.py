@@ -1,4 +1,5 @@
 from abc import ABC
+import math
 import numpy as np
 import ast
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
@@ -59,7 +60,7 @@ class GenerateRating(ABC):
         minimum_value_rating = self.access_rating.get_min_rating()
         maximum_value_rating = self.access_rating.get_max_rating()
         # Getting the attribute rating vector.
-        attribute_rating_vector = self.access_user_profile.get_attribute_rating_vector(atribute_value_list, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list)
+        attribute_rating_vector = self.access_user_profile.get_attribute_rating_vector(atribute_value_list, attribute_value_list, attribute_possible_value_list, minimum_value_rating, maximum_value_rating, user_profile_attribute_list=atribute_name_list, is_gaussian_distribution=True)
 
         if len(atribute_value_list) != len(attribute_rating_vector):
             raise ValueError('The vectors have not the same size.')
@@ -75,9 +76,11 @@ class GenerateRating(ABC):
             else:
                 weight = float(weight_importance)
             sum_weight += weight
-            rating += weight * attribute_rating_vector[idx]        
-        if round(sum_weight) != 1:
-            raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
+            rating += weight * attribute_rating_vector[idx]
+        if not math.isclose(sum_weight, 1.0, rel_tol=1e-9):            
+            print(f'Error: Unable to generate the rating because the total weights for user profile {user_profile_id} do not sum to 1 (current sum: {sum_weight}). Please verify the weights in the user_profile.csv file.')
+            # raise ValueError(f'The weights not sum 1 (sum weight: {sum_weight}). You must verify the user_profile.csv file (user profile: {user_profile_id}).')
+            rating = -1
         return round(rating, 2)
     
     def get_attribute_value_and_possible_value_list(self, atribute_name_list, item_id, context_id=None):

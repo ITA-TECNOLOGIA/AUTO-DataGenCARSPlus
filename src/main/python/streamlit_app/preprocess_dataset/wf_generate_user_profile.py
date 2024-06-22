@@ -202,7 +202,19 @@ def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, con
     :return: A dataframe with the content of the automatically generated user profiles.
     """    
     output = st.empty()
-    with console.st_log(output.code):
+    with console.st_log(output.code):  
+        # Verificar si 'is_select_k_relevant_att' y 'k_relevant_attributes' ya están en el estado de la sesión
+        if 'is_select_k_relevant_att' not in st.session_state:
+            st.session_state['is_select_k_relevant_att'] = False
+        if 'k_relevant_attributes' not in st.session_state:
+            st.session_state['k_relevant_attributes'] = 0
+        # Checkbox para decidir si se quiere especificar el número de atributos relevantes
+        st.session_state['is_select_k_relevant_att'] = st.checkbox(label='Do you want to specify the number of relevant attributes per user?', value=st.session_state['is_select_k_relevant_att'])
+        if st.session_state['is_select_k_relevant_att']:
+            # Entrada numérica para seleccionar el número de atributos relevantes
+            st.session_state['k_relevant_attributes'] = st.number_input(label='Select the number of relevant attributes per user:', value=st.session_state['k_relevant_attributes'] if st.session_state['k_relevant_attributes'] > 0 else 5, min_value=1)
+            st.warning('As the number of relevant attributes per user increases, the rating values generated from the user profile will decrease.')          
+        
         # Generate user profile, by using an original dataset:
         generate_up_dataset = None
         user_profile_df = pd.DataFrame()                    
@@ -212,11 +224,23 @@ def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, con
                     if st.button(label='Generate', key='button_generate_up_cars'):
                         print('Automatically generating user profiles.')                    
                         generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df, context_df)
-                        user_profile_df = generate_up_dataset.generate_user_profile(item_attribute_list, context_attribute_list)
-                        with st.expander(label=f'Show the generated user profile file.'):
-                            st.dataframe(user_profile_df)
-                            wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')                             
-                        print('The user profile has been generated.')                                                    
+                        user_profile_df = generate_up_dataset.generate_user_profile(item_attribute_list=item_attribute_list, context_attribute_list=context_attribute_list, k_relevant_attributes=st.session_state['k_relevant_attributes'])
+                        user_profile_df_temp = user_profile_df.copy().applymap(__clean_and_convert)                    
+                        is_sum_equal_to_1, user_profile_id_list = is_consistent(user_profile_df_temp)
+                        if is_sum_equal_to_1:       
+                            st.success('The user profile has been generated.')     
+                            with st.expander(label=f'Show the generated user profile file.'):
+                                st.dataframe(user_profile_df)
+                                wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')                             
+                            print('The user profile has been generated.')                                    
+                        else:
+                            st.warning(f'User profiles have not been generated correctly. User profiles that total more than 1 are highlighted in orange.')                            
+                            with st.expander(label=f'Show the generated user profile file.'):
+                                user_profile_df_temp['sum_weights'] = user_profile_df_temp.iloc[:, 1:].sum(axis=1)
+                                user_profile_df_temp['user_profile_id'] = user_profile_df_temp['user_profile_id'].astype(int)
+                                columns_to_format = user_profile_df_temp.columns.drop(['user_profile_id'])
+                                user_profile_df_temp[columns_to_format] = user_profile_df_temp[columns_to_format].applymap(__format_float)                                               
+                                st.write(user_profile_df_temp.style.applymap(__highlight_rows, subset=['sum_weights']))                            
             else:
                 st.warning("The item, context and rating files have not been uploaded.")
         else:
@@ -225,14 +249,40 @@ def generate_user_profile_automatic(item_attribute_list, rating_df, item_df, con
                 if st.button(label='Generate', key='button_generate_up_rs'):
                     print('Automatically generating user profiles.')                    
                     generate_up_dataset = GenerateUserProfileDataset(rating_df, item_df)
-                    user_profile_df = generate_up_dataset.generate_user_profile(item_attribute_list)
-                    with st.expander(label=f'Show the generated user profile file.'):
-                        st.dataframe(user_profile_df)
-                        wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')  
-                    print('The user profile has been generated.')
+                    user_profile_df = generate_up_dataset.generate_user_profile(item_attribute_list=item_attribute_list, k_relevant_attributes=st.session_state['k_relevant_attributes'])
+                    user_profile_df_temp = user_profile_df.copy().applymap(__clean_and_convert)                    
+                    is_sum_equal_to_1, user_profile_id_list = is_consistent(user_profile_df_temp)
+                    if is_sum_equal_to_1:  
+                        st.success('The user profile has been generated.')     
+                        with st.expander(label=f'Show the generated user profile file.'):
+                            st.dataframe(user_profile_df)
+                            wf_util.save_df(df_name=config.USER_PROFILE_SCHEMA_NAME, df_value=user_profile_df, extension='csv')  
+                        print('The user profile has been generated.')
+                    else:
+                        st.warning(f'User profiles have not been generated correctly. User profiles that total more than 1 are highlighted in orange.')                        
+                        with st.expander(label=f'Show the generated user profile file.'):                            
+                            user_profile_df_temp['sum_weights'] = user_profile_df_temp.iloc[:, 1:].sum(axis=1)
+                            user_profile_df_temp['user_profile_id'] = user_profile_df_temp['user_profile_id'].astype(int)
+                            columns_to_format = user_profile_df_temp.columns.drop(['user_profile_id'])
+                            user_profile_df_temp[columns_to_format] = user_profile_df_temp[columns_to_format].applymap(__format_float)
+                            st.write(user_profile_df_temp.style.applymap(__highlight_rows, subset=['sum_weights']))                        
             else:
                 st.warning("The item and rating files have not been uploaded.")    
     return user_profile_df
+
+def __clean_and_convert(value):
+    if isinstance(value, str):
+        # Reemplazar '(-)|' y '(+)|' con cadena vacía usando expresión regular
+        value = value.replace('(-)|', '').replace('(+)|', '')
+    return float(value)
+
+def __highlight_rows(value):
+    if float(value) > 1.0:
+        return "background-color: orange"
+    return ""
+
+def __format_float(value):
+    return f"{value:.1f}"
 
 def set_attribute_list(file_type, attribute_list):
     """
@@ -246,5 +296,5 @@ def set_attribute_list(file_type, attribute_list):
     if all_attribute_relevant:
         attribute_relevant_list = attribute_list
     else:
-        attribute_relevant_list = list(st.multiselect(label=f'Select the relevant {file_type} attributes.', options=attribute_list, key=f'multiselect_relevant_attributes_{file_type}'))
+        attribute_relevant_list = list(st.multiselect(label=f'Select the relevant {file_type} attributes.', options=attribute_list, key=f'multiselect_relevant_attributes_{file_type}', default=attribute_list))
     return attribute_relevant_list

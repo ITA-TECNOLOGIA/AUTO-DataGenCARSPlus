@@ -52,8 +52,13 @@ def generate(with_context, feedback_option):
     output = st.empty()    
     if feedback_option == 'Explicit ratings':
         number_rating = st.number_input(label='Enter the number of ratings to extend in the rating file:', min_value=1, step=1, value=1)
-        percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
-        k = st.number_input(label='Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
+        is_user_expectations = st.checkbox(label='Would you like to specify how user expectations impact future ratings?', value=False)        
+        if is_user_expectations:            
+            percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+            k = st.number_input(label='Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
+        else:
+            percentage_rating_variation = 0
+            k = 0
         option = st.selectbox(label='How would you like to extend the dataset?', options=['Select one option', 'N ratings randomly (some users)', 'N ratings for each user'])
     elif feedback_option == 'Implicit ratings':
         number_rating = st.number_input(label='Enter the number of ratings to extend in the rating file:', min_value=1, step=1, value=1)

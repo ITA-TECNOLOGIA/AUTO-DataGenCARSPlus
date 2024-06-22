@@ -199,6 +199,8 @@ USE_CASES_PATH = './resources/use_cases/'
 # Enlarge an Existing Dataset:
 ENLARGE_DATASET_UC_NAME = 'enlarge_dataset'
 ENLARGE_DATASET_UC_PATH = USE_CASES_PATH + ENLARGE_DATASET_UC_NAME + '/'
+ENLARGE_DATASET_UC_URL = 'https://youtu.be/75BQ5MjdwEM'
+ENLARGE_DATASET_UC_MANUAL_PATH = 'resources/use_cases_manual/enlarge_dataset/uc_description.pdf' 
 # Incorporate Context Data into an Existing Dataset:
 INCORPORATE_CONTEXT_IN_DATASET_UC_NAME = 'incorporate_context_in_dataset'
 INCORPORATE_CONTEXT_IN_DATASET_UC_PATH = USE_CASES_PATH + INCORPORATE_CONTEXT_IN_DATASET_UC_NAME + '/'
