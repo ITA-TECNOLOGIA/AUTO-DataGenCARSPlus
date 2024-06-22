@@ -209,7 +209,7 @@ ENLARGE_DATASET_UC_MANUAL_PATH = 'resources/use_cases_manual/enlarge_dataset/uc_
 # Incorporate Context Data into an Existing Dataset:
 INCORPORATE_CONTEXT_IN_DATASET_UC_NAME = 'incorporate_context_in_dataset'
 INCORPORATE_CONTEXT_IN_DATASET_UC_PATH = USE_CASES_PATH + INCORPORATE_CONTEXT_IN_DATASET_UC_NAME + '/'
-INCORPORATE_CONTEXT_IN_DATASET_UC_URL = ''
+INCORPORATE_CONTEXT_IN_DATASET_UC_URL = 'https://youtu.be/oRyuXJyq-oo'
 INCORPORATE_CONTEXT_IN_DATASET_UC_MANUAL_PATH = 'resources/use_cases_manual/incorporate_context_in_dataset/uc_description.pdf' 
 # Reduce Bias in an Existing Dataset:
 REDUCE_BIAS_IN_DATASET_UC_NAME = 'reduce_bias_in_dataset'
