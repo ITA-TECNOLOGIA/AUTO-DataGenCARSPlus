@@ -46,4 +46,7 @@ class CalculateAttributeRating:
 	    :param x: The X value.
 	    :return: The values of y for a straight line that goes through (x0,y0) and (x1,y1).
         '''
-        return y0 + ((y1 - y0) / (x1 - x0)) * (x - x0)
+        if x1 == x0:
+            return y0
+        else:            
+            return y0 + (((y1 - y0) / (x1 - x0)) * (x - x0))

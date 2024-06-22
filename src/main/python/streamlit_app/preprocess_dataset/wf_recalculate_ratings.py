@@ -41,8 +41,15 @@ def generate(with_context):
 
     # Recalculating dataset:
     output = st.empty()
-    percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
-    k = st.number_input('Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
+    is_user_expectations = st.checkbox(label='Would you like to specify how user expectations impact future ratings?', value=False)        
+    if is_user_expectations:            
+        percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+        k = st.number_input(label='Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
+    else:
+        percentage_rating_variation = 0
+        k = 0
+    # percentage_rating_variation = st.number_input(label='Percentage of rating variation:', value=25, key='percentage_rating_variation_rs')
+    # k = st.number_input('Enter the k ratings to take in the past:', min_value=1, step=1, value=10)
     new_rating_df = pd.DataFrame()
     if with_context:
         new_rating_df = button_recalculate_dataset(with_context, rating_df, user_profile_df, user_df, item_df, percentage_rating_variation, k, output, context_df)

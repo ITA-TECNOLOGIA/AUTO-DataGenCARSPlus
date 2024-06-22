@@ -196,7 +196,7 @@ def help_user_profile_manual():
 
 def help_user_profile_automatic():
     with st.expander(label='Help information'):
-        st.markdown("""Generates user profiles automatically. A profile will be generated for each user. For that, the [LSMR](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.lsmr.html) method (An Iterative Algorithm for Sparse Least-Squares Problems) was used.""")
+        st.markdown("""Generates user profiles automatically. A profile will be generated for each user.""") # For that, the [LSMR](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.lsmr.html) method (An Iterative Algorithm for Sparse Least-Squares Problems) was used.
         st.markdown("""The resulting user profile matrix is described below:""")
         st.markdown("""* The user profile matrix consists of relevant attribute names related to the items and/or contexts. """)
         st.markdown("""* The values of the user profile matrix have values between ```[0-1]```. Except column ```user_profile_id``` which is an ```integer``` value and start at ```1```. """)

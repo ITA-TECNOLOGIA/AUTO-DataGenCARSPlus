@@ -192,7 +192,8 @@ elif general_option == 'Analysis of a dataset':
         st_visualization.generate(with_context)
 
     # Evaluation:    
-    elif analysis_option == 'Evaluation':        
+    elif analysis_option == 'Evaluation':   
+        st.header('Evaluation')             
         # Loading rating file:
         st.write('Upload the following file: ')
         rating_df = wf_util.load_one_file(config.RATING_TYPE, wf_type='evaluation_rating_df')        

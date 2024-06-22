@@ -1,19 +1,16 @@
-import logging
 import math
 import random
 
 import numpy as np
 import pandas as pd
 from datagencars.existing_dataset.generate_user_profile.calculate_attribute_rating import CalculateAttributeRating
-from datagencars.existing_dataset.generate_user_profile.generate_user_profile import GenerateUserProfile
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_context import AccessContext
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_item import AccessItem
 from datagencars.existing_dataset.replicate_dataset.access_dataset.access_rating import AccessRating
 import streamlit as st
-from decimal import Decimal, ROUND_HALF_DOWN
 
 
-class GenerateUserProfileDataset(GenerateUserProfile):
+class GenerateUserProfileDataset():
 
     '''
     Generates a user profile automatically from the original dataset. 
@@ -41,13 +38,14 @@ class GenerateUserProfileDataset(GenerateUserProfile):
             self.is_context = True         
         # Rating file: ratings.csv        
         self.access_rating = AccessRating(rating_df)  
-        self.calculate_att_rating = CalculateAttributeRating()      
+        self.calculate_att_rating = CalculateAttributeRating()                  
 
-    def generate_user_profile(self, item_attribute_list, context_attribute_list=None):
+    def generate_user_profile(self, k_relevant_attributes, item_attribute_list, context_attribute_list=None):
         '''
         Gets the value of the weights (or unknown variables) by using LSMR method to generate the user profile.
         :param item_attribute_list: List of item attribute names.
         :param context_attribute_list: List of context attribute names.
+        :param k_relevant_attributes: Number of relevant attributes to consider for generating user profiles.
         :return: A dataframe with the automatically generated user profile.
         '''
         # Getting attribute names:        
@@ -62,29 +60,61 @@ class GenerateUserProfileDataset(GenerateUserProfile):
         # Determining weigth vectors by user:
         # Create a progress bar
         progress_bar = st.progress(0.0) 
-        for user_id in user_id_list:
-            # Determining the x vector:
-            a_matrix, rank_vector = self.get_a_matrix(user_id, item_attribute_list, context_attribute_list)
+        for user_id in user_id_list:         
+            # Determining the A matrix:
+            a_matrix, rank_vector = self.get_a_matrix(user_id, item_attribute_list, context_attribute_list)                                        
+            a_matrix_df = pd.DataFrame(a_matrix)            
+            # Determining the b vector:
             b_vector = self.get_b_vector(user_id)
-            x_vector = self.get_x_weigths(A=a_matrix.to_numpy(), b=b_vector)[0].tolist()
-            not_nan_x_vector = [0.0 if np.isnan(x) else round(x, 1) for x in x_vector]
-            if any(x < 0 or math.copysign(1, x) < 0 for x in not_nan_x_vector):                
-                # Replace negative or -0.0 values with 0.0:                
-                not_nan_x_vector = [0.0 if x < 0 or math.copysign(1, x) < 0 else round(x, 1) for x in not_nan_x_vector]
-
-            # Adding other value:
-            sum_weight_vector = sum(not_nan_x_vector)
-            weight_vector = []           
+            a_matrix_df['rating'] = b_vector  
+            
+            # Determining the x vector:
+            # Seleccionar solo las columnas de géneros y multiplicar cada género por la calificación de la película
+            attribute_columns = a_matrix_df.columns[:-1]  # Todos los géneros ignorando la última columna, que es el 'rating'.         
+            weighted_attributes = a_matrix_df.loc[:, attribute_columns].multiply(a_matrix_df['rating'], axis=0)            
+            # Sumar los valores ponderados para cada género
+            sum_weighted_attributes = weighted_attributes.sum()            
+            # Normalizar el perfil de género dividiendo por la suma total para hacer comparables los valores
+            x_vector_series = sum_weighted_attributes / sum_weighted_attributes.sum()
+            x_vector_list = x_vector_series.tolist()
+            # print(x_vector_list)
+            
+            # NOTE: As the value of k_relevant_attributes nears 0, the rating values generated using the UP will be lower.
+            if k_relevant_attributes > 0:
+                # Create a zero vector of the same size as x_vector_list:
+                scaled_vector = np.zeros_like(x_vector_list)
+                # Determine the number of attributes to consider (minimum between k_relevant_attributes and the length of x_vector_list):
+                n_relevant_attributes = min(k_relevant_attributes, len(x_vector_list))
+                # Find the indices of the k_relevant_attributes highest values:
+                top_indices = np.argsort(x_vector_list)[-n_relevant_attributes:]
+                # Extract the k_relevant_attributes highest values:
+                top_values = np.array(x_vector_list)[top_indices]
+                # Scale the values so that they sum exactly to 1:
+                scaled_top = top_values / top_values.sum()
+                # Insert the scaled values in their corresponding positions:
+                scaled_vector[top_indices] = scaled_top
+                # Convert to list:
+                x_vector = scaled_vector.tolist()
+                # print(x_vector)   
+            else:
+                # If k_relevant_attributes is 0, use the original normalized list:
+                x_vector = x_vector_list.copy()  # Use copy to avoid modifying the original list if needed later                
+                             
+            # Adding 'other' column:                        
+            sum_weight_vector = round(sum(x_vector), 1)                
+            weight_vector = [0.0] * (len(attribute_columns)+1)
             if sum_weight_vector == 0.0:
-                weight_vector = not_nan_x_vector+[1.0]
-            elif sum_weight_vector == 1:
-                weight_vector = not_nan_x_vector+[0.0]
-            elif sum_weight_vector < 1:                
-                weight_vector = not_nan_x_vector+[round(1.0-sum_weight_vector, 1)]
-            elif sum_weight_vector > 1:
-                # Adjust the weight values to ensure that the sum is 1.
-                weight_vector = self.adjust_weights(not_nan_x_vector)+[0.0]                
-
+                weight_vector = x_vector+[1.0]
+            elif math.isclose(sum_weight_vector, 1.0, abs_tol=1e-9):
+                weight_vector = x_vector+[0.0]
+            elif sum_weight_vector < 1.0:
+                # Redondear la diferencia a 1 decimal y agregarlo como el peso del atributo "other"
+                weight_vector = x_vector + [round(1.0 - sum_weight_vector, 1)]
+            elif sum_weight_vector > 1.0:
+                # Ajustar los pesos para asegurar que la suma sea 1.0
+                normalized_weights = [x / sum_weight_vector for x in x_vector]
+                weight_vector = normalized_weights + [0.0]                
+            
             # Adding importance rank (+) o (-) to the weight:
             rank_weigth_list = []
             for idx, x in enumerate(weight_vector):
@@ -92,52 +122,10 @@ class GenerateUserProfileDataset(GenerateUserProfile):
                     rank_weigth_list.append(rank_vector[idx]+'|'+str(x))
                 else:
                     rank_weigth_list.append(str(x))         
-            user_profile_df.loc[len(user_profile_df)] = [int(user_id)]+rank_weigth_list # +[sum(weight_vector)]
+            user_profile_df.loc[len(user_profile_df)] = [int(user_id)]+rank_weigth_list            
             # Update the progress bar with each iteration                            
             progress_bar.progress(text=f'Generating user profile {user_id} from {len(user_id_list)}', value=(user_id) / len(user_id_list))
         return user_profile_df
-
-    def adjust_weights(self, not_nan_x_vector):
-        """
-        Adjusts and normalizes a list of weights (not_nan_x_vector) to sum up to 1.0, with each weight rounded to one decimal place.
-        This method uses Decimal for precision and a more refined strategy for distributing rounding errors.
-
-        :param not_nan_x_vector: A list of non-NaN, non-negative numerical values representing initial weights.
-        :return: A list of adjusted weights, rounded to one decimal place, where the sum of all weights is exactly 1.0.
-        """
-        # Convert weights to Decimal for precise arithmetic, avoiding floating-point issues
-        weight_vector = [Decimal(str(x)) for x in not_nan_x_vector]
-
-        # Calculate the sum of the original weights
-        sum_original = sum(weight_vector)
-        if sum_original == 0:
-            return [Decimal('0.0')] * len(weight_vector)  # Avoid division by zero
-
-        # Normalize weights so they sum to 1, rounding down to minimize initial rounding error
-        normalized_weights = [x / sum_original for x in weight_vector]
-        rounded_weights = [x.quantize(Decimal('0.1'), rounding=ROUND_HALF_DOWN) for x in normalized_weights]
-
-        # Calculate the rounding error
-        rounding_error = Decimal('1.0') - sum(rounded_weights)
-
-        # Distribute the rounding error
-        for i in range(len(rounded_weights)):
-            if rounding_error <= 0:
-                break
-            if rounding_error > 0 and rounded_weights[i] < Decimal('1.0') - Decimal('0.1'):
-                # Adjust the weight, ensuring it doesn't exceed 1.0
-                rounded_weights[i] += Decimal('0.1')
-                rounding_error -= Decimal('0.1')
-
-        # Final pass to ensure sum is exactly 1.0, adjust the weight with the least impact
-        if rounding_error > 0:
-            for i in range(len(rounded_weights)):
-                if rounded_weights[i] + rounding_error <= Decimal('1.0'):
-                    rounded_weights[i] += rounding_error
-                    break
-
-        return [float(x) for x in rounded_weights]
-
 
     def get_a_matrix(self, user_id, item_attribute_list, context_attribute_list):  # sourcery skip: extract-duplicate-method, extract-method, for-append-to-extend, inline-immediately-returned-variable, low-code-quality, merge-list-append, move-assign-in-block, use-dictionary-union
         '''
@@ -161,8 +149,8 @@ class GenerateUserProfileDataset(GenerateUserProfile):
                 item_value_possible_dict[item_atribute_name] = item_possible_value_list
                 value_list.append(item_value)
             item_value_list.append(tuple(value_list))
-        df_item_attribute_value = pd.DataFrame(item_value_list, columns=item_attribute_list)
-
+        df_item_attribute_value = pd.DataFrame(item_value_list, columns=item_attribute_list)       
+                
         # Analysing CONTEXTS by user_id:
         if self.is_context:            
             # Getting context_id_list from user_id:
@@ -207,7 +195,14 @@ class GenerateUserProfileDataset(GenerateUserProfile):
             importance_rank = ''
             # is_numeric: check if all non-NaN values are numeric                
             if all(isinstance(x, (int, float)) for x in value_possible_list):
-                importance_rank = '(-)' # The numbers are sorted from smallest to largest.                                
+                # Case: value_possible_list = [0, 1] or [1, 0], where 1 indicates presence of the attribute and 0 indicates absence.
+                if len(value_possible_list) == 2 and ((0 in value_possible_list) and (1 in value_possible_list)):
+                    if value_possible_list[0] == 0:                    
+                        importance_rank = '(+)'
+                    elif value_possible_list[0] == 1:      
+                        importance_rank = '(-)'
+                else:
+                    importance_rank = '(-)' # Asumiendo que están ordenados de menor a mayor y el valor más pequeño es el más relevante.
             elif all(isinstance(x, bool) for x in value_possible_list):
                 # is_boolean: check if all non-NaN values are boolean
                 importance_rank = '(+)' if value_possible_list[0] == False else '(-)'                       
@@ -221,8 +216,8 @@ class GenerateUserProfileDataset(GenerateUserProfile):
                     attribute_rating = 0
                     importance_rank = ''
                 else:
-                    position_array = value_possible_list.index(attribute_value)                                 
-                    attribute_rating = self.calculate_att_rating.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, attribute_value_list, importance_rank)                
+                    position_array = value_possible_list.index(attribute_value)                 
+                    attribute_rating = self.calculate_att_rating.get_attribute_rating(position_array, minimum_value_rating, maximum_value_rating, value_possible_list, importance_rank)                
                 attribute_rating_list.append(attribute_rating)                            
             a_matrix[attribute_name_column] = attribute_rating_list            
         return a_matrix, rank_vector
