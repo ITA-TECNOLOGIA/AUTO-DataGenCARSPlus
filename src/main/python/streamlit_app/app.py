@@ -208,6 +208,9 @@ elif general_option == 'Analysis of a dataset':
 ####### Use Cases #######
 elif general_option == 'Use cases':
     st.header('Use cases')
+    # Generate a Completely Synthetic Dataset:
+    help_information.help_uc_generate_synthetic_dataset()
+    
     # Enlarge an Existing Dataset:
     help_information.help_uc_enlarge_dataset()
     
@@ -216,9 +219,6 @@ elif general_option == 'Use cases':
     
     # Reduce Bias in an Existing Dataset:
     help_information.help_uc_reduce_bias_in_dataset()
-    
-    # Generate a Completely Synthetic Dataset:
-    help_information.help_uc_generate_synthetic_dataset()
 
 ####### About us #######    
 elif general_option == 'About us':        
