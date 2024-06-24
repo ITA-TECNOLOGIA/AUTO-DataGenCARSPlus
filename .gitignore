@@ -11,3 +11,4 @@ resources/generate_synthetic_dataset/*
 resources/use_cases/*
 src/main/python/streamlit_app/workflow_graph/*.png
 src/main/python/experiments_mdm_24/*
+src/main/python/experiments_momm_24/*
