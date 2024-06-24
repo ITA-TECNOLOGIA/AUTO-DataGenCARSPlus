@@ -69,7 +69,7 @@ def show_data_types(extract_statistics):
     data_type_df = extract_statistics.get_attributes_and_ranges()
     st.table(pd.DataFrame(data_type_df, columns=["Attribute name", "Data type", "Value ranges"]))
     return data_type_df
-
+             
 def show_graphic_by_attribute(extract_statistics, attribute_list, file_type):
     """
     Shows a frequency graphic by attribute.
@@ -91,9 +91,9 @@ def show_graphic_by_attribute(extract_statistics, attribute_list, file_type):
             sort_field = alt.EncodingSortField('count', order='descending') 
         else:
             sort_field = None
-        chart = alt.Chart(data).mark_bar().encode(x=alt.X(column + ':O', sort=sort_field, axis=alt.Axis(title=column, labelFontSize=16, titleFontSize=16)), 
+        chart = alt.Chart(data).mark_bar().encode(x=alt.X(column + ':O', sort=sort_field, axis=alt.Axis(title=column, labelFontSize=16, titleFontSize=16, labelLimit=250)), 
                                                   y=alt.Y('count:Q', axis=alt.Axis(title=column, labelFontSize=16, titleFontSize=16)), 
-                                                  tooltip=[column, 'count']).interactive()
+                                                  tooltip=[column, 'count']).properties(width=600).interactive()
         st.altair_chart(chart, use_container_width=True) 
     else:
         st.warning(f"No columns (without {file_type}_id) to show.")

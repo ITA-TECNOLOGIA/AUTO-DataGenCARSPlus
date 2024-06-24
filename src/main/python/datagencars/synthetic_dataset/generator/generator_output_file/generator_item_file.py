@@ -52,13 +52,13 @@ class GeneratorItemFile(GeneratorFile):
                     self.file_df.loc[len(self.file_df.index)] = attribute_list                    
                     # Update the progress bar with each iteration                    
                     current_number_item_by_profile += 1
-                    progress_bar.progress(text=f'Generating {current_number_item_by_profile} items from {number_item}', value=(current_number_item_by_profile) / number_item)
+                    progress_bar.progress(text=f'Generating {current_number_item_by_profile} items from {number_item}', value=min((current_number_item_by_profile / number_item), 1.0))
                 for i in range(int(number_item_by_profile)-number_noise_by_profile):
                     attribute_list = instance_generator.generate_instance(position_item_profile=position_item_profile, with_noise=False)
                     self.file_df.loc[len(self.file_df.index)] = attribute_list
                     # Update the progress bar with each iteration
                     current_number_item_by_profile += 1
-                    progress_bar.progress(text=f'Generating {current_number_item_by_profile} items from {number_item}', value=(current_number_item_by_profile) / number_item)                    
+                    progress_bar.progress(text=f'Generating {current_number_item_by_profile} items from {number_item}', value=min((current_number_item_by_profile / number_item), 1.0))
             # Check if there are pending items to be added in self.file_df: without correlation
             count_pending_items = number_item - len(self.file_df)
             if count_pending_items > 0:     
@@ -67,7 +67,7 @@ class GeneratorItemFile(GeneratorFile):
                     attribute_list = instance_generator.generate_instance()
                     self.file_df.loc[len(self.file_df.index)] = attribute_list
                     # Update the progress bar with each iteration
-                    progress_bar.progress(text=f'Generating {current_number_item_by_profile+count_pend_item} items from {number_item}', value=(current_number_item_by_profile+count_pend_item) / number_item)
+                    progress_bar.progress(text=f'Generating {current_number_item_by_profile+count_pend_item} items from {number_item}', value=min(((current_number_item_by_profile+count_pend_item) / number_item), 1.0))
         else:
             # Without correlation (Random or Gaussian distribution):
             instance_generator = GeneratorInstance(schema_access=self.schema_access)
