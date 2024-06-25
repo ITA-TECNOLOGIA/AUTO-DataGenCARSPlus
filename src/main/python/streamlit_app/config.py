@@ -214,7 +214,7 @@ INCORPORATE_CONTEXT_IN_DATASET_UC_MANUAL_PATH = 'resources/use_cases_manual/inco
 # Reduce Bias in an Existing Dataset:
 REDUCE_BIAS_IN_DATASET_UC_NAME = 'reduce_bias_in_dataset'
 REDUCE_BIAS_IN_DATASET_UC_PATH = USE_CASES_PATH + REDUCE_BIAS_IN_DATASET_UC_NAME + '/'
-REDUCE_BIAS_IN_DATASET_UC_URL = ''
+REDUCE_BIAS_IN_DATASET_UC_URL = 'https://youtu.be/7U5X-OlqEeE'
 REDUCE_BIAS_IN_DATASET_UC_MANUAL_PATH = 'resources/use_cases_manual/reduce_bias_in_dataset/uc_description.pdf' 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #### About us ####:
