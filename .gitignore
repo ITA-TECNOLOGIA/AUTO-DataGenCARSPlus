@@ -12,3 +12,6 @@ resources/use_cases/*
 src/main/python/streamlit_app/workflow_graph/*.png
 src/main/python/experiments_mdm_24/*
 src/main/python/experiments_momm_24/*
+resources/icons/logo-autodatagencarsplus_v1.jpg
+resources/icons/logo-autodatagencarsplus_v1.png
+resources/icons/logo-autodatagencars_v0.jpg
