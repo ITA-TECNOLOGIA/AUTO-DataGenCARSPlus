@@ -1,4 +1,4 @@
-<div style="text-align:center"><img src="./resources/icons/logo-datagencars.jpg" /></div>
+<div style="text-align:center"><img src="./resources/icons/logo-autodatagencarsplus.png" /></div>
 
 ## Overview
 
