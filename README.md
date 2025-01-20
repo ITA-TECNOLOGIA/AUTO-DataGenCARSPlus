@@ -17,7 +17,7 @@ It was designed with the following purposes:
 
 * Generate a synthetic dataset:
   - Explicit ratings
-  - Implicit ratings
+  <!-- - Implicit ratings -->
 * Pre-process a dataset:
   - Generate NULL values
   - Replace NULL values
@@ -31,7 +31,7 @@ It was designed with the following purposes:
     - user
     - item
     - context `<optional>`
-    - behavior `<optional>`
+    <!-- - behavior `<optional>` -->
     - rating
   - Evaluation:
     - RS: collaborative filtering and content-based information
@@ -39,11 +39,12 @@ It was designed with the following purposes:
 
 ## Demo
 
-AUTO-DataGenCARS has a user-freindly [demo](https://auto-datagencarsplus.ita.es/web/) based on Streamlit.
-To use it the following credentials will be required.
+AUTO-DataGenCARS+ has a user-freindly [demo](https://auto-datagencarsplus.ita.es/web/) based on Streamlit.
+To use it, credentials are required and must be requested by sending an email to [mcrodriguez@ita.es](mcrodriguez@ita.es)
+<!-- To use it the following credentials will be required. -->
 
-- **user**: `autodatagencars`
-- **password**: `Qxwsx3py`
+<!-- - **user**: `autodatagencars`
+- **password**: `Qxwsx3py` -->
 
 <!-- ## Installation:
 With pip:
@@ -67,12 +68,12 @@ The libraries used in this project with its respective versions can be seen in `
 
 ## License
 
-Open source license: If you are creating an open source application under a license compatible with the GNU GPL license v3 you may use AUTO-DataGenCARS under its terms and conditions.
+Open source license: If you are creating an open source application under a license compatible with the GNU GPL license v3 you may use AUTO-DataGenCARS+ under its terms and conditions.
 
 ## Reference
 
 Please make sure to cite the [paper](https://www.sciencedirect.com/science/article/pii/S157411921630270X) if you use
-AUTO-DataGenCARS for your research:
+AUTO-DataGenCARS+ for your research:
 
 ```
 @article{mc2017datagencars,
@@ -91,23 +92,42 @@ AUTO-DataGenCARS for your research:
 ```
 
 ```
-@inproceedings{mc2024autodatagencarsplus,   
-        title = {An Approach for Social-Distance Preserving Location-Aware Recommender Systems: A Use Case in a Hospital Environment},        
-        author = {Marcos Caballero and María del Carmen Rodríguez-Hernández and Raúl Parada and Sergio Ilarri and Raquel Trillo-Lado and Ramón Hermoso and Óscar Rubio}, 
-        booktitle = {35th DEXA Conferences and Workshops},    
-        year = {2024},        
-        pages = {1-6},  
-        publisher = {Springer}
-        }
+@inproceedings{dexa2024,
+	  author = {Marcos Caballero and María del Carmen Rodríguez-Hernández and Raúl Parada and Sergio Ilarri and Raquel Trillo-Lado and Ramón Hermoso and Óscar J. Rubio},
+	  booktitle = {35th International Conference on Database and Expert Systems Applications (DEXA 2024), Naples (Italy)},
+	  month = {August},
+	  pages = {267--273},
+	  publisher = {Springer, ISSN 0302-9743, ISSN 1611-3349 (electronic), Print ISBN 978-3-031-68308-4, Online ISBN 978-3-031-68309-1},
+	  series = {Lecture Notes in Computer Science (LNCS)},
+	  volume = {14910},
+	  title = {An Approach for Social-Distance Preserving Location-Aware Recommender Systems: A Use Case in a Hospital Environment},
+	  doi = {10.1007/978-3-031-68309-1_23},
+	  year = {2024}
+}
+```
+
+```
+@inproceedings{momm2024,
+	  author = {María del Carmen Rodríguez Hernández and Sergio Ilarri and Marcos Caballero and Raquel Trillo-Lado and Ramón Hermoso and Rafael del Hoyo Alonso},
+	  booktitle = {22nd International Conference on Advances in Mobile Computing and Multimedia Intelligence (MoMM 2024), Bratislava (Slovakia)},
+	  month = {December},
+	  pages = {176--191},
+	  title = {AUTO-DataGenCARS+: An Advanced User-Oriented Tool to Generate Data for the Evaluation of Recommender Systems},
+	  year = {2024},
+	  doi = {10.1007/978-3-031-78049-3_16},
+	  series = {Lecture Notes in Computer Science (LNCS)},
+	  publisher = {Springer, ISSN 0302-9743, ISSN 1611-3349 (electronic), Print ISBN 978-3-031-78048-6, Online ISBN 978-3-031-78049-3},
+	  editor = {Pari Delir Haghighi and Solomiia Fedushko and Gabriele Kotsis and Ismail Khalil}
+}
 ```
 
 ## Contributors
 
-The following persons have contributed to AUTO-DataGenCARS:
+The following persons have contributed to AUTO-DataGenCARS+:
 
-- María del Carmen Rodríguez Hernández - [mcrodriguez@itainnova.es](mcrodriguez@itainnova.es)
+- María del Carmen Rodríguez Hernández - [mcrodriguez@ita.es](mcrodriguez@itainnova.es)
 - Sergio Ilarri - [silarri@unizar.es](silarri@unizar.es)
 - Raquel Trillo Lado - [raqueltl@unizar.es](raqueltl@unizar.es)
 - Ramón Hermoso - [rhermoso@unizar.es](rhermoso@unizar.es)
-- Marcos Caballero Yus - [mcaballero@itainnova.es](mcaballero@itainnova.es)
-- Beatriz Franco García - [bfranco@itainnova.es](bfranco@itainnova.es)
+- Marcos Caballero Yus - [mcaballero@ita.es](mcaballero@ita.es)
+- Beatriz Franco García - [bfranco@ita.es](bfranco@ita.es)
