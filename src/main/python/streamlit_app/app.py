@@ -49,7 +49,7 @@ elif general_option == 'Generate a synthetic dataset':
     # Selecting whether the dataset has contextual information:
     with_context = st.sidebar.checkbox(label='With context', value=True)
     # Selecting a rating feedback option:
-    feedback_option = st.sidebar.radio(label='Select a type of user feedback:', options=config.RATING_FEEDBACK_OPTIONS)
+    feedback_option = config.RATING_FEEDBACK_OPTIONS[0] # st.sidebar.radio(label='Select a type of user feedback:', options=config.RATING_FEEDBACK_OPTIONS)
     # WF --> Explicit and Implicit ratings:
     wf_dataset.generate_synthtetic_dataset(with_context, feedback_option)
         
@@ -60,7 +60,7 @@ elif general_option == 'Pre-process a dataset':
     # Selecting a workflow option:
     wf_option = st.sidebar.radio(label='Select a workflow:', options=config.WF_OPTIONS)
     # Selecting a rating feedback option:
-    feedback_option = st.sidebar.radio(label='Select a type of user feedback:', options=config.RATING_FEEDBACK_OPTIONS)
+    feedback_option = config.RATING_FEEDBACK_OPTIONS[0] # st.sidebar.radio(label='Select a type of user feedback:', options=config.RATING_FEEDBACK_OPTIONS)
     
     # WF --> Generate NULL values:
     if wf_option == 'Generate NULL values':        

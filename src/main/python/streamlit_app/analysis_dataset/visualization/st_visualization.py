@@ -13,7 +13,7 @@ def generate(with_context):
     st.header('Data Visualization')
     
     # Loading a dataset:
-    feedback_option = st.radio(label='Select a type of user feedback:', options=config.VISUALIZATION_OPTIONS)
+    feedback_option = config.VISUALIZATION_OPTIONS[0] # st.radio(label='Select a type of user feedback:', options=config.VISUALIZATION_OPTIONS)
 
     user_tab=item_tab=context_tab=behavior_tab=rating_tab= None
     if with_context:

@@ -60,17 +60,17 @@ def load_dataset(file_type_list, wf_type):
     rating_df = pd.DataFrame()
     user_profile_df = pd.DataFrame()    
     # Uploading a dataset:
-    if 'user' in file_type_list:
+    if 'user' in file_type_list:        
         user_df = load_one_file(file_type='user', wf_type=wf_type)
-    if 'item' in file_type_list:
+    if 'item' in file_type_list:        
         item_df = load_one_file(file_type='item', wf_type=wf_type)
-    if 'context' in file_type_list:
+    if 'context' in file_type_list:        
         context_df = load_one_file(file_type='context', wf_type=wf_type)
     if 'behavior' in file_type_list:
         behavior_df = load_one_file(file_type='behavior', wf_type=wf_type)   
-    if 'rating' in file_type_list:
+    if 'rating' in file_type_list:        
         rating_df = load_one_file(file_type='rating', wf_type=wf_type)
-    if 'user profile' in file_type_list:
+    if 'user profile' in file_type_list:        
         user_profile_df = load_one_file(file_type='user_profile', wf_type=wf_type)    
     return user_df, item_df, context_df, behavior_df, rating_df, user_profile_df
 
@@ -82,6 +82,12 @@ def load_one_file(file_type, wf_type):
     """
     df = pd.DataFrame()    
     with st.expander(f"Upload your {file_type}.csv file"):
+        if file_type == 'rating':
+            st.markdown(f"""**Note:** In the file ```{file_type}.csv```, the expected identifiers and column names include: ```user_id```; ```item_id```; ```context_id```; ```rating```.""")        
+        elif file_type == 'user_profile':
+            st.markdown("""**Note:** In the file ```user_profile.csv```, the expected identifier is ```user_profile_id```. The name of the last column must be ```other```.""")
+        else:
+            st.markdown(f"""**Note:** In the file ```{file_type}.csv```, the expected identifier is ```{file_type}_id```.""")
         separator = st.text_input(label=f"Enter the separator for your {file_type}.csv file (default is ';')", value=";", key=f'text_input_{file_type}_{wf_type}')
         uploaded_file = st.file_uploader(label=f"Select {file_type}.csv file", type="csv", key=f'uploaded_file_{file_type}_{wf_type}')
         if uploaded_file is not None:
