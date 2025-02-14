@@ -131,3 +131,9 @@ The following persons have contributed to AUTO-DataGenCARS+:
 - Ramón Hermoso - [rhermoso@unizar.es](rhermoso@unizar.es)
 - Marcos Caballero Yus - [mcaballero@ita.es](mcaballero@ita.es)
 - Beatriz Franco García - [bfranco@ita.es](bfranco@ita.es)
+
+## Acknowledgments
+
+- Project PID2020-113037RB-I00 (funded by MICIU/AEI/10.13039/501100011033) — Next-gEnerATion dAta Management to foster suitable Behaviors and the resilience of cItizens against modErN ChallEnges (NEAT-AMBIENCE).
+- Government of Aragon (COSMOS research group; last group reference: T64_23R; previous group reference: T64_20R).
+- This work has also been partially funded by the Department of Big Data and Cognitive Systems at the Technological Institute of Aragon, by DGA-FSE IODIDE research group of the Government of Aragon (grant number T17_23R) and by the European Regional Development Fund (ERDF).
