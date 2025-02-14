@@ -21,4 +21,16 @@ dependencies:
     - altair==4.2.0
     - protobuf==3.20.0
     - geopy==2.4.0
+    - torch==2.4.1
+    # pip install huggingface-hub nltk tokenizers torchvision tqdm transformers
+    # curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    - sentence-transformers==2.1.0
+    - tqdm==4.67.1
+    - recbole==1.2.0
+    - huggingface-hub==0.27.1
+    - nltk==3.9.1
+    - regex==2024.11.6
+    - tokenizers==0.20.3
+    - torchvision==0.19.1
+    - transformers==4.46.3
 prefix: CARS
